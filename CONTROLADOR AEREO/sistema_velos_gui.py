@@ -1,16 +1,9 @@
-# Importa la librería tkinter para crear la interfaz gráfica
 import tkinter as tk
-# Importa componentes específicos de tkinter
 from tkinter import ttk, messagebox, filedialog
-# Importa la librería para interactuar con el sistema operativo
 import os
-# Importa la librería para trabajar con archivos CSV
 import csv
-# Importa la librería para manejar fechas y horas
 from datetime import datetime
-# Importa la librería para ejecutar tareas en paralelo (hilos)
 import threading
-# Importa la librería para controlar tiempos y pausas
 import time
 
 # Define constantes numéricas para acceder a los elementos de la tupla de vuelos
