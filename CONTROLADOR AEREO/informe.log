@@ -1,0 +1,12 @@
+RESUMEN
+- Tiempo simulado (min): 11
+- Vuelos atendidos: 5
+- Tiempo medio de espera (min): 2.0
+- Uso de pistas: R1=3 operaciones, R2=2 operaciones
+- Emergencias gestionadas: 1
+- Detalle de vuelos completados:
+   • IB202  (ATERRIZAJE)  t_inicio=1  t_fin=4
+   • UX303  (DESPEGUE)     t_inicio=1  t_fin=4
+   • IB101  (ATERRIZAJE)   t_inicio=5  t_fin=7
+   • VY404  (DESPEGUE)     t_inicio=5  t_fin=7
+   • AF505  (ATERRIZAJE, EMERGENCIA)  t_inicio=8  t_fin=11

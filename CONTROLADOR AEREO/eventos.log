@@ -1,0 +1,35 @@
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=1] ASIGNACION id_vuelo=IB202 pista=R1 tipo=ATERRIZAJE
+[t=1] ASIGNACION id_vuelo=UX303 pista=R2 tipo=DESPEGUE
+[t=4] COMPLETADO id_vuelo=IB202 pista=R1
+[t=4] COMPLETADO id_vuelo=UX303 pista=R2
+[t=5] ASIGNACION id_vuelo=IB101 pista=R1 tipo=ATERRIZAJE
+[t=5] ASIGNACION id_vuelo=VY404 pista=R2 tipo=DESPEGUE
+[t=6] EMERGENCIA id_vuelo=AF505 prioridad=2 motivo=combustible<=5
+[t=7] COMPLETADO id_vuelo=IB101 pista=R1
+[t=7] COMPLETADO id_vuelo=VY404 pista=R2
+[t=8] ASIGNACION id_vuelo=AF505 pista=R1 tipo=ATERRIZAJE
+[t=11] COMPLETADO id_vuelo=AF505 pista=R1
+[t=11] FIN_SIMULACION vuelos_atendidos=5
+Error en línea 2: invalid literal for int() with base 10: ''
+Error en línea 3: invalid literal for int() with base 10: ''
+Error en línea 4: invalid literal for int() with base 10: ''
+Error en línea 5: invalid literal for int() with base 10: ''
+Error en línea 6: invalid literal for int() with base 10: ''
+Cargados 0 vuelos desde vuelos.csv
+Cargadas 2 pistas desde pistas.csv
+Sistema iniciado
+Error en línea 2: invalid literal for int() with base 10: ''
+Error en línea 3: invalid literal for int() with base 10: ''
+Error en línea 4: invalid literal for int() with base 10: ''
+Error en línea 5: invalid literal for int() with base 10: ''
+Error en línea 6: invalid literal for int() with base 10: ''
+Cargados 0 vuelos desde vuelos.csv
+Cargadas 2 pistas desde pistas.csv
+Sistema iniciado
+Vuelo IB456 agregado exitosamente
