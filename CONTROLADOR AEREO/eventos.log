@@ -32,4 +32,115 @@ Error en línea 6: invalid literal for int() with base 10: ''
 Cargados 0 vuelos desde vuelos.csv
 Cargadas 2 pistas desde pistas.csv
 Sistema iniciado
-Vuelo IB456 agregado exitosamente
+[t=0] Error en línea 2: invalid literal for int() with base 10: ''
+[t=0] Error en línea 3: invalid literal for int() with base 10: ''
+[t=0] Error en línea 4: invalid literal for int() with base 10: ''
+[t=0] Error en línea 5: invalid literal for int() with base 10: ''
+[t=0] Error en línea 6: invalid literal for int() with base 10: ''
+[t=0] Cargados 0 vuelos desde vuelos.csv
+[t=0] Cargadas 2 pistas desde pistas.csv
+[t=0] Sistema iniciado
+[t=0] Error en línea 2: invalid literal for int() with base 10: ''
+[t=0] Error en línea 3: invalid literal for int() with base 10: ''
+[t=0] Error en línea 4: invalid literal for int() with base 10: ''
+[t=0] Error en línea 5: invalid literal for int() with base 10: ''
+[t=0] Error en línea 6: invalid literal for int() with base 10: ''
+[t=0] Cargados 0 vuelos desde vuelos.csv
+[t=0] Cargadas 2 pistas desde pistas.csv
+[t=0] Sistema iniciado
+[t=0] Error en línea 2: invalid literal for int() with base 10: ''
+[t=0] Error en línea 3: invalid literal for int() with base 10: ''
+[t=0] Error en línea 4: invalid literal for int() with base 10: ''
+[t=0] Error en línea 5: invalid literal for int() with base 10: ''
+[t=0] Error en línea 6: invalid literal for int() with base 10: ''
+[t=0] Cargados 0 vuelos desde vuelos.csv
+[t=0] Cargadas 2 pistas desde pistas.csv
+[t=0] Sistema iniciado
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] Sistema iniciado
+[t=1] EMERGENCIA id_vuelo=AF505 prioridad=2 motivo=combustible<=5
+[t=1] ASIGNACION id_vuelo=AF505 pista=R1 tipo=ATERRIZAJE
+[t=1] ASIGNACION id_vuelo=IB202 pista=R2 tipo=ATERRIZAJE
+[t=4] COMPLETADO id_vuelo=AF505 pista=R1
+[t=4] COMPLETADO id_vuelo=IB202 pista=R2
+[t=4] ASIGNACION id_vuelo=IB101 pista=R1 tipo=ATERRIZAJE
+[t=4] ASIGNACION id_vuelo=UX303 pista=R2 tipo=DESPEGUE
+[t=7] COMPLETADO id_vuelo=IB101 pista=R1
+[t=7] COMPLETADO id_vuelo=UX303 pista=R2
+[t=7] ASIGNACION id_vuelo=VY404 pista=R1 tipo=DESPEGUE
+[t=10] COMPLETADO id_vuelo=VY404 pista=R1
+[t=54] Sistema finalizado
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] Sistema iniciado
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] Sistema iniciado
+[t=0] ALTA_MANUAL id_vuelo=LH923 tipo=ATERRIZAJE
+[t=0] ALTA_AUTOMATICA id_vuelo=LH827 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=EK897 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=BA948 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=EK921 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=TK261 tipo=ATERRIZAJE
+[t=0] PISTA_AGREGADA id=R3 categoria=estandar
+[t=0] ESTADO_GUARDADO
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] Sistema iniciado
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] Sistema iniciado
+[t=0] ALTA_AUTOMATICA id_vuelo=TK496 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=BA165 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=DL692 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=UX585 tipo=ATERRIZAJE
+[t=0] ALTA_AUTOMATICA id_vuelo=AA753 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB101 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=IB202 tipo=ATERRIZAJE
+[t=0] EN_COLA id_vuelo=UX303 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=VY404 tipo=DESPEGUE
+[t=0] EN_COLA id_vuelo=AF505 tipo=ATERRIZAJE
+[t=0] CARGA_INICIAL vuelos=5 pistas=2
+[t=0] Sistema iniciado
+[t=0] ALTA_AUTOMATICA id_vuelo=TK303 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=AA986 tipo=ATERRIZAJE
+[t=0] ALTA_AUTOMATICA id_vuelo=EK183 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=IB723 tipo=DESPEGUE
+[t=0] ALTA_AUTOMATICA id_vuelo=DL399 tipo=DESPEGUE
+[t=0] PISTA_MODIFICADA Pista R1 habilitada
+[t=1] EMERGENCIA id_vuelo=AF505 prioridad=2 motivo=combustible<=5
+[t=1] ASIGNACION id_vuelo=AF505 pista=R1 tipo=ATERRIZAJE
+[t=1] ASIGNACION id_vuelo=EK183 pista=R2 tipo=DESPEGUE
+[t=4] COMPLETADO id_vuelo=AF505 pista=R1
+[t=4] COMPLETADO id_vuelo=EK183 pista=R2
+[t=4] ASIGNACION id_vuelo=TK303 pista=R1 tipo=DESPEGUE
+[t=4] ASIGNACION id_vuelo=IB202 pista=R2 tipo=ATERRIZAJE
+[t=7] COMPLETADO id_vuelo=TK303 pista=R1
+[t=7] COMPLETADO id_vuelo=IB202 pista=R2
+[t=7] ASIGNACION id_vuelo=IB101 pista=R1 tipo=ATERRIZAJE
+[t=7] ASIGNACION id_vuelo=AA986 pista=R2 tipo=ATERRIZAJE
+[t=10] COMPLETADO id_vuelo=IB101 pista=R1
+[t=10] COMPLETADO id_vuelo=AA986 pista=R2
+[t=10] ASIGNACION id_vuelo=UX303 pista=R1 tipo=DESPEGUE
+[t=10] ASIGNACION id_vuelo=IB723 pista=R2 tipo=DESPEGUE
