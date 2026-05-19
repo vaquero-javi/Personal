@@ -1,1 +1,1 @@
-Repositorio creado para la subida de códigos de manera personal
+Repositorio personal que recopila proyectos, ejercicios y experimentos de programación. Incluye desarrollo de software, prácticas de aprendizaje y pruebas con distintas tecnologías.
