@@ -1,0 +1,324 @@
+/* --- Variables y Reset --- */
+:root {
+    --bg-color: #000000;         
+    --card-bg: #161616;          
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary-color: #fbbf24;    
+    --primary-hover: #f59e0b;    
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* --- Estilos para la Intro Inmersiva del Ordenador 3D --- */
+.intro-3d-container {
+    width: 100%;
+    height: 100vh;
+    background-color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    perspective: 1500px; /* Aumentamos la perspectiva para que el giro 3D sea más espectacular a gran tamaño */
+    z-index: 1500;
+}
+
+.laptop-trigger {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw; /* Fuerza a que el área interactiva ocupe todo el ancho de la pantalla */
+    height: 100vh; /* Fuerza a que ocupe todo el alto */
+    transform-style: preserve-3d;
+}
+
+#interactive-laptop {
+    width: 85vw; /* Ocupará el 85% del ancho total de la pantalla actual */
+    max-width: 1100px; /* Evita que en pantallas gigantescas se pixele la imagen */
+    height: 80vh; /* Se adapta proporcionalmente al alto de la pantalla */
+    object-fit: contain; /* Asegura que la imagen mantenga su proporción sin deformarse */
+    transform-style: preserve-3d;
+    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.95)); /* Resplandor más amplio proporcional al nuevo tamaño */
+}
+
+.scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulseHint 2s infinite;
+}
+
+@keyframes pulseHint {
+    0%, 100% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-5px); }
+}
+
+/* --- Elemento Arrastrable e Interactivo --- */
+.drag-widget {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--primary-color);
+    padding: 0.8rem 1.2rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: move;
+    z-index: 1400;
+    box-shadow: 0 10px 25px rgba(251, 191, 36, 0.15);
+    user-select: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.drag-widget i {
+    color: var(--primary-color);
+}
+
+/* --- Navegación (Oculta al inicio por JS) --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 3rem;
+    position: fixed;
+    width: 80%;
+    max-width: 1100px;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(22, 22, 22, 0.75); 
+    border: 1px solid #262626;
+    border-radius: 50px; 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.logo { font-size: 1.4rem; font-weight: 700; }
+.logo span { color: var(--primary-color); }
+.nav-links { display: flex; list-style: none; }
+.nav-links li { margin-left: 2rem; }
+.nav-links a { color: var(--text-color); text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: var(--transition); }
+.nav-links a:hover { color: var(--primary-color); }
+.burger { display: none; cursor: pointer; }
+.burger div { width: 25px; height: 3px; background-color: var(--text-color); margin: 5px; transition: var(--transition); }
+
+/* --- Secciones Generales --- */
+section { padding: 8rem 10% 4rem 10%; }
+.section-title { text-align: center; font-size: 2.2rem; margin-bottom: 3rem; position: relative; }
+.section-title::after { content: ''; display: block; width: 50px; height: 4px; background-color: var(--primary-color); margin: 10px auto 0 auto; border-radius: 2px; }
+
+/* --- Botones --- */
+.btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: 5px; text-decoration: none; font-weight: 600; transition: var(--transition); cursor: pointer; }
+.btn.primary { background-color: var(--primary-color); color: #000000; border: none; }
+.btn.primary:hover { background-color: var(--primary-hover); }
+.btn.secondary { background-color: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); }
+.btn.secondary:hover { background-color: var(--primary-color); color: #000000; }
+
+/* --- Hero / Inicio con Máscara Vectorial y Escena 3D --- */
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 10% 2rem 10%;
+    background: #000000;
+}
+
+.hero-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 4rem;
+}
+
+.hero-content { flex: 1; z-index: 2; }
+.hero-content h1 { font-size: 3.5rem; margin-bottom: 0.5rem; line-height: 1.2; }
+.hero-content .highlight { color: var(--primary-color); }
+.hero-content h2 { font-size: 1.8rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+.hero-content p { max-width: 600px; font-size: 1.1rem; margin-bottom: 2.5rem; color: var(--text-muted); }
+.hero-buttons { display: flex; gap: 1rem; }
+
+/* Envoltorio de la imagen del perfil */
+.hero-image-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 450px;
+}
+
+/* Contenedor con resplandor dorado trasero */
+.hero-image {
+    position: relative;
+    z-index: 5;
+    width: 400px;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.25));
+}
+
+/* Recorte perfecto de la foto usando clip-path apuntando al SVG */
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    clip-path: url(#blob-clip);
+    -webkit-clip-path: url(#blob-clip);
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Gráfico 3D - Cubo de Habilidades */
+.scene-3d {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;
+    height: 120px;
+    perspective: 600px;
+    z-index: 6;
+}
+
+.cube-3d {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: rgba(22, 22, 22, 0.9);
+    border: 2px solid var(--primary-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+}
+
+.front  { transform: rotateY(  0deg) translateZ(50px); }
+.back   { transform: rotateY(180deg) translateZ(50px); }
+.right  { transform: rotateY( 90deg) translateZ(50px); }
+.left   { transform: rotateY(-90deg) translateZ(50px); }
+.top    { transform: rotateX( 90deg) translateZ(50px); }
+.bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+/* --- Sobre Mí & Educación --- */
+.grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1100px !important; }
+.about-container { margin: 0 auto; background-color: var(--card-bg); padding: 2.5rem; border-radius: 10px; border: 1px solid #262626; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.about-text h3, .education-box h3 { color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.4rem; }
+.about-text p { margin-bottom: 1.5rem; font-size: 1.05rem; color: var(--text-muted); }
+.edu-item { margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.edu-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.edu-item h4 { font-size: 1.1rem; color: var(--text-color); }
+.edu-place { color: var(--text-muted); font-size: 0.95rem; }
+.edu-date { color: var(--primary-color); font-size: 0.9rem; font-weight: 600; }
+
+/* --- Habilidades --- */
+.skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; max-width: 1100px; margin: 0 auto 3rem auto; }
+.skill-card { background-color: var(--card-bg); padding: 2.2rem 1.8rem; border-radius: 8px; text-align: center; border: 1px solid #262626; display: flex; flex-direction: column; justify-content: center; }
+.skill-card h3 { margin-bottom: 1rem; color: var(--primary-color); font-size: 1.2rem; font-weight: 600; }
+.skill-card p { color: var(--text-muted); font-size: 0.98rem; }
+
+/* --- Sección Proyectos & Estados FLIP --- */
+.filter-buttons { display: flex; justify-content: center; gap: 1rem; margin-bottom: 3rem; }
+.filter-btn { background: var(--card-bg); border: 1px solid #262626; color: var(--text-muted); padding: 0.6rem 1.5rem; border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
+.filter-btn.active, .filter-btn:hover { background: var(--primary-color); color: #000000; border-color: var(--primary-color); }
+
+.projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; max-width: 1100px; margin: 0 auto; min-height: 380px; }
+.project-card { background-color: var(--card-bg); border: 1px solid #262626; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.project-content { padding: 2.2rem 1.8rem; display: flex; flex-direction: column; height: 100%; }
+.project-content h3 { color: var(--text-color); font-size: 1.3rem; margin-bottom: 1rem; }
+.project-content p { color: var(--text-muted); font-size: 0.98rem; margin-bottom: 1.5rem; flex-grow: 1; }
+.project-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+.project-tags span { background-color: rgba(255, 255, 255, 0.03); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; }
+.project-link { color: var(--primary-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; width: max-content; }
+
+/* --- Línea de Tiempo Dinámica (ScrollTrigger) --- */
+.timeline-wrapper { max-width: 800px; margin: 0 auto; position: relative; }
+.timeline-progress-bar { position: absolute; left: 2rem; top: 0; width: 3px; height: 0%; background: var(--primary-color); z-index: 2; box-shadow: 0 0 10px var(--primary-color); }
+.timeline { padding-left: 2rem; border-left: 2px solid #262626; position: relative; z-index: 1; }
+.timeline-item { position: relative; margin-bottom: 3rem; }
+.timeline-item::before { content: ''; position: absolute; left: -2.6rem; top: 0.5rem; width: 16px; height: 16px; border-radius: 50%; background-color: #262626; border: 4px solid var(--bg-color); z-index: 3; transition: background 0.4s; }
+.timeline-item.active-dot::before { background-color: var(--primary-color); }
+.timeline-content { background-color: var(--card-bg); padding: 2rem; border-radius: 10px; border: 1px solid #262626; }
+.timeline-date { color: var(--primary-color); font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem; }
+.timeline-content h3 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+.company { color: var(--text-muted); font-size: 1rem; margin-bottom: 1rem; font-weight: 500; }
+.experience-bullets { padding-left: 1.2rem; color: var(--text-muted); }
+.experience-bullets li { margin-bottom: 0.5rem; }
+
+/* --- Contacto --- */
+.contact-container { max-width: 600px; margin: 0 auto; text-align: center; }
+.contact-container p { color: var(--text-muted); margin-bottom: 2rem; }
+.contact-form { display: flex; flex-direction: column; gap: 1.2rem; }
+.contact-form input, .contact-form textarea { background-color: var(--card-bg); border: 1px solid #262626; padding: 1rem; border-radius: 5px; color: var(--text-color); font-family: inherit; font-size: 1rem; }
+.social-links { margin-top: 2rem; }
+.social-links a { color: var(--text-color); font-size: 1.8rem; margin: 0 1rem; }
+.location-text { margin-top: 1.5rem !important; color: var(--text-muted); font-size: 0.95rem; }
+.location-text i { color: var(--primary-color); margin-right: 0.5rem; }
+
+/* --- Footer --- */
+.footer { text-align: center; padding: 2rem; background-color: #000000; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+/* --- Responsivo --- */
+@media screen and (max-width: 992px) {
+    .hero-container { flex-direction: column-reverse; text-align: center; gap: 2rem; }
+    .hero-section { padding-top: 8rem; }
+    .hero-content p { margin: 0 auto 2rem auto; }
+    .hero-buttons { justify-content: center; }
+    .hero-image { width: 260px; height: 260px; }
+    .scene-3d { top: -20px; right: 20px; width: 80px; height: 80px; }
+    .face { width: 70px; height: 70px; font-size: 0.75rem; }
+    #interactive-laptop { max-width: 400px; }
+}
+
+@media screen and (max-width: 768px) {
+    .navbar { width: 90%; padding: 1rem 1.5rem; border-radius: 30px; top: 1rem; }
+    .grid-two { grid-template-columns: 1fr; gap: 2rem; }
+    .nav-links { position: absolute; right: 0px; height: 70vh; top: 4.5rem; background-color: var(--card-bg); display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 250px; border-radius: 20px; border: 1px solid #262626; transform: translateX(120%); transition: transform 0.4s ease; }
+    .nav-links li { margin: 1.5rem 0; margin-left: 0; }
+    .burger { display: block; }
+    .hero-content h1 { font-size: 2.3rem; }
+    .hero-content h2 { font-size: 1.3rem; }
+    #interactive-laptop { max-width: 300px; }
+}
+
+.nav-active { transform: translateX(0%); }
