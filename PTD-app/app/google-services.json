@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1053859873347",
-    "project_id": "ptd-app-ca363",
-    "storage_bucket": "ptd-app-ca363.firebasestorage.app"
+    "project_number": "944289543988",
+    "project_id": "ptdapp-b6097",
+    "storage_bucket": "ptdapp-b6097.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1053859873347:android:d674cb2b39b895b6a9caf6",
+        "mobilesdk_app_id": "1:944289543988:android:17adc554d7b80388be5761",
         "android_client_info": {
           "package_name": "com.example.ptdapp"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBPA0z07oV0gpQfvduhTo3H9j-kKeM47BM"
+          "current_key": "AIzaSyBCK_5RDGxA5M8J4HFUdCfF4cn4majeSe0"
         }
       ],
       "services": {

@@ -91,7 +91,7 @@ fun DropdownSelectorStyled(
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent,
 
-                    // 🔥 Añade estas dos líneas:
+
                     disabledContainerColor = LightBlue,
                     disabledTextColor = Color.Black
                 ),

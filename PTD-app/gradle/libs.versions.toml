@@ -11,6 +11,10 @@ composeBom = "2024.09.00"
 #FIREBASE
 googleServiceVersion="4.4.2"
 firebaseAuthVersion="23.2.0"
+credentials = "1.6.0"
+credentialsPlayServicesAuth = "1.6.0"
+googleid = "1.2.0"
+firebaseDatabase = "22.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +37,10 @@ firebaseAuth = {group="com.google.firebase", name = "firebase-auth", version.ref
 hilt-android = "com.google.dagger:hilt-android:2.48"
 hilt-compiler = "com.google.dagger:hilt-compiler:2.48"
 hilt-navigation-compose = "androidx.hilt:hilt-navigation-compose:1.1.0"
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
