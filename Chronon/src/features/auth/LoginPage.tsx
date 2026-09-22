@@ -53,9 +53,8 @@ export function LoginPage() {
       </svg>
 
       <div className="relative mx-auto flex min-h-dvh max-w-5xl flex-col justify-center px-6 py-12 sm:px-10">
-        <div className="mb-10 flex items-center gap-2.5">
-          <Logo size={32} />
-          <span className="text-[15px] font-semibold tracking-[0.18em]">CHRONON</span>
+        <div className="mb-8">
+          <Logo size={104} />
         </div>
 
         <div className="max-w-sm animate-rise">

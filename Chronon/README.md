@@ -72,6 +72,15 @@ Cuando tengas tu cuenta creada, desactiva los registros nuevos en Supabase → *
 
 Crea un evento para dentro de 3 minutos con el aviso "En el momento" o uno personalizado de 1 minuto antes. En ≤ 1 minuto desde la hora del aviso debería llegar la notificación y aparecer en la campana. Si no llega, mira **Edge Functions → send-alerts → Logs** en Supabase y, en SQL Editor, `select * from cron.job_run_details order by start_time desc limit 5;`.
 
+## Cambiar el logo
+
+El logo vive en `public/logo.png` como silueta transparente, así que la app lo tiñe del color que toque en cada tema. Para sustituirlo por otra imagen (tinta oscura sobre fondo claro):
+
+```bash
+node scripts/logo-mask.mjs ~/Downloads/mi-logo.jpg   # recorta y genera public/logo.png
+npm run icons                                        # regenera los iconos de la PWA
+```
+
 ## Estructura
 
 ```
@@ -85,6 +94,9 @@ src/
     settings/    notificaciones y cuenta
   lib/           cliente Supabase, fechas, push, tipos
   sw.ts          service worker (caché offline + notificaciones)
+scripts/
+  logo-mask.mjs  convierte una imagen en la silueta del logo
+  generate-icons.mjs  iconos de la PWA a partir del logo
 supabase/
   migrations/    tablas, triggers de avisos, seguridad (RLS) y cron
   functions/send-alerts/   envío de notificaciones push

@@ -51,14 +51,27 @@ export function Icon({ name, size = 18, ...props }: { name: IconName; size?: num
   )
 }
 
-/** Marca de CHRONON: esfera de reloj con el acento en el centro. */
-export function Logo({ size = 28 }: { size?: number }) {
+/** Marca de CHRONON: el logo de public/logo.png teñido con el color de texto actual. */
+const LOGO_RATIO = 620 / 672
+
+export function Logo({ size = 28, className = '' }: { size?: number; className?: string }) {
+  const mask = {
+    maskImage: 'url(/logo.png)',
+    WebkitMaskImage: 'url(/logo.png)',
+    maskSize: 'contain',
+    WebkitMaskSize: 'contain',
+    maskRepeat: 'no-repeat',
+    WebkitMaskRepeat: 'no-repeat',
+    maskPosition: 'center',
+    WebkitMaskPosition: 'center',
+  } as const
+
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="9" className="fill-ink-900" />
-      <circle cx="16" cy="16" r="9" fill="none" strokeWidth="2" className="stroke-ink-50" />
-      <path d="M16 10.5V16l4 2.5" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="stroke-ink-50" />
-      <circle cx="16" cy="16" r="2" className="fill-accent-500" />
-    </svg>
+    <span
+      role="img"
+      aria-label="Chronon"
+      className={`inline-block shrink-0 bg-current ${className}`}
+      style={{ width: Math.round(size * LOGO_RATIO), height: size, ...mask }}
+    />
   )
 }

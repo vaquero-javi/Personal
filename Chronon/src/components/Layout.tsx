@@ -22,7 +22,7 @@ export function Layout() {
 
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col px-4 py-5 md:flex">
         <div className="mb-8 flex items-center gap-2.5 px-2">
-          <Logo />
+          <Logo size={30} />
           <span className="text-[15px] font-semibold tracking-[0.18em]">CHRONON</span>
         </div>
         <nav className="space-y-0.5" aria-label="Principal">
@@ -56,7 +56,7 @@ export function Layout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-ink-50/80 px-4 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-xl md:px-8 md:pt-4 md:bg-transparent md:backdrop-blur-none">
           <div className="flex items-center gap-2 md:hidden">
-            <Logo size={26} />
+            <Logo size={24} />
             <span className="text-sm font-semibold tracking-[0.18em]">CHRONON</span>
           </div>
           <div className="ml-auto flex items-center gap-1">
