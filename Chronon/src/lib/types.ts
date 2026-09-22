@@ -42,6 +42,8 @@ export interface Note {
   section_id: string
   title: string
   content: unknown
+  /** Trazos a mano y tipo de papel; ver features/notes/drawing.ts. */
+  drawing: unknown
   content_text: string
   pinned: boolean
   updated_at: string

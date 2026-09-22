@@ -379,3 +379,73 @@ button:not(:disabled) {
   content: attr(data-placeholder);
   @apply pointer-events-none float-left h-0 text-ink-400;
 }
+
+/* ---------- Papel de los apuntes (estilo libreta) ---------- */
+.paper {
+  --paper-line: rgb(28 27 24 / 0.11);
+  --paper-margin: rgb(212 95 50 / 0.28);
+  --paper-cell: 34px;
+  --paper-gutter: 56px;
+  background-color: var(--color-surface);
+}
+.dark .paper {
+  --paper-line: rgb(255 255 255 / 0.1);
+  --paper-margin: rgb(225 122 80 / 0.24);
+}
+
+.paper-ruled {
+  background-image:
+    linear-gradient(
+      to right,
+      transparent var(--paper-gutter),
+      var(--paper-margin) var(--paper-gutter),
+      var(--paper-margin) calc(var(--paper-gutter) + 1px),
+      transparent calc(var(--paper-gutter) + 1px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--paper-cell) - 1px),
+      var(--paper-line) calc(var(--paper-cell) - 1px),
+      var(--paper-line) var(--paper-cell)
+    );
+}
+.paper-grid {
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0, transparent 25px, var(--paper-line) 25px, var(--paper-line) 26px),
+    repeating-linear-gradient(to right, transparent 0, transparent 25px, var(--paper-line) 25px, var(--paper-line) 26px);
+}
+.paper-dots {
+  background-image: radial-gradient(circle at 1px 1px, var(--paper-line) 1.3px, transparent 1.3px);
+  background-size: 26px 26px;
+}
+
+/* El texto escrito sigue el renglón del papel. */
+.paper .tiptap {
+  line-height: var(--paper-cell);
+}
+.paper .tiptap > p + p,
+.paper .tiptap > ul + p,
+.paper .tiptap > ol + p {
+  margin-top: 0;
+}
+
+/* Miniatura de libreta en la lista de notas. */
+.note-card {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 17px,
+    rgb(28 27 24 / 0.05) 17px,
+    rgb(28 27 24 / 0.05) 18px
+  );
+}
+.dark .note-card {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 17px,
+    rgb(255 255 255 / 0.05) 17px,
+    rgb(255 255 255 / 0.05) 18px
+  );
+}

@@ -109,7 +109,7 @@ function SectionItem({ section, active, onMoveUp, onMoveDown }: ItemProps) {
         to={`/notes/${section.id}`}
         className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-colors duration-200 ${active ? 'bg-surface font-medium text-ink-900 shadow-soft ring-1 ring-ink-200/70' : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900'}`}
       >
-        <span className="size-2.5 shrink-0 rounded-full" style={{ background: section.color }} />
+        <span className="h-5 w-3.5 shrink-0 rounded-[3px] rounded-l-sm shadow-soft" style={{ background: section.color }} aria-hidden />
         <span className="truncate">{section.name}</span>
       </NavLink>
       <IconButton

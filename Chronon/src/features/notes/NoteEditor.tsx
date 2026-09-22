@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -6,11 +6,28 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Empty, IconButton, Skeleton } from '../../components/ui'
-import { Icon } from '../../components/Icon'
+import { Icon, type IconName } from '../../components/Icon'
 import type { Note } from '../../lib/types'
+import { useIsDark } from '../../lib/theme'
 import { useDeleteNote, useNote, useSections, useUpdateNote } from './api'
+import { DrawingLayer } from './DrawingLayer'
+import {
+  HIGHLIGHTER_COLORS,
+  HIGHLIGHTER_SIZES,
+  PAGE_WIDTH,
+  PEN_COLORS,
+  PEN_SIZES,
+  displayColor,
+  parseDrawing,
+  type NoteDrawing,
+  type PaperStyle,
+  type Stroke,
+  type Tool,
+} from './drawing'
 
 const SAVE_DELAY = 700
+/** Alto mínimo de la hoja, en unidades de página. */
+const MIN_PAGE_HEIGHT = 1120
 
 export function NoteEditor({ noteId }: { noteId: string }) {
   const { data: note, isLoading, error } = useNote(noteId)
@@ -24,9 +41,27 @@ export function NoteEditor({ noteId }: { noteId: string }) {
   return <LoadedEditor note={note} />
 }
 
+/** Ancho real de la hoja en pantalla, para colocar el papel y los trazos a la misma escala. */
+function usePageScale(ref: React.RefObject<HTMLElement | null>) {
+  const [width, setWidth] = useState(PAGE_WIDTH)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width || PAGE_WIDTH))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [ref])
+  return width / PAGE_WIDTH
+}
+
 function LoadedEditor({ note }: { note: Note }) {
   const [title, setTitle] = useState(note.title)
   const [status, setStatus] = useState<'saved' | 'dirty' | 'saving' | 'error'>('saved')
+  const [drawing, setDrawing] = useState<NoteDrawing>(() => parseDrawing(note.drawing))
+  const [tool, setTool] = useState<Tool>('text')
+  const [pen, setPen] = useState({ color: PEN_COLORS[0], size: PEN_SIZES[1] })
+  const [highlighter, setHighlighter] = useState({ color: HIGHLIGHTER_COLORS[0], size: HIGHLIGHTER_SIZES[1] })
+  const [fingerDraws, setFingerDraws] = useState(false)
   const update = useUpdateNote()
   const del = useDeleteNote()
   const { data: sections = [] } = useSections()
@@ -35,6 +70,13 @@ function LoadedEditor({ note }: { note: Note }) {
   const pending = useRef(false)
   const titleRef = useRef(title)
   titleRef.current = title
+  const drawingRef = useRef(drawing)
+  drawingRef.current = drawing
+  const undoStack = useRef<Stroke[][]>([])
+  const redoStack = useRef<Stroke[][]>([])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
+  const scale = usePageScale(pageRef)
 
   const editor = useEditor({
     extensions: [
@@ -57,6 +99,7 @@ function LoadedEditor({ note }: { note: Note }) {
         title: titleRef.current.trim(),
         content: editor.getJSON(),
         content_text: editor.getText({ blockSeparator: ' ' }).slice(0, 5000),
+        drawing: drawingRef.current,
       })
       setStatus(pending.current ? 'dirty' : 'saved')
     } catch {
@@ -84,6 +127,34 @@ function LoadedEditor({ note }: { note: Note }) {
     [],
   )
 
+  function setStrokes(next: Stroke[], remember = true) {
+    if (remember) {
+      undoStack.current.push(drawingRef.current.strokes)
+      redoStack.current = []
+    }
+    setDrawing((d) => ({ ...d, strokes: next }))
+    scheduleSave()
+  }
+
+  function undo() {
+    const previous = undoStack.current.pop()
+    if (!previous) return
+    redoStack.current.push(drawingRef.current.strokes)
+    setStrokes(previous, false)
+  }
+
+  function redo() {
+    const next = redoStack.current.pop()
+    if (!next) return
+    undoStack.current.push(drawingRef.current.strokes)
+    setStrokes(next, false)
+  }
+
+  function setPaper(paper: PaperStyle) {
+    setDrawing((d) => ({ ...d, paper }))
+    scheduleSave()
+  }
+
   async function remove() {
     if (!confirm('¿Borrar esta nota?')) return
     pending.current = false
@@ -92,12 +163,18 @@ function LoadedEditor({ note }: { note: Note }) {
     navigate(`/notes/${note.section_id}`)
   }
 
-  const statusLabel = { saved: 'Guardado', dirty: 'Sin guardar…', saving: 'Guardando…', error: 'Error al guardar' }[status]
+  // La hoja crece si se escribe a mano cerca del final.
+  const pageHeight = useMemo(() => {
+    let lowest = 0
+    for (const stroke of drawing.strokes) for (const [, y] of stroke.points) if (y > lowest) lowest = y
+    return Math.max(MIN_PAGE_HEIGHT, Math.ceil((lowest + 400) / 400) * 400)
+  }, [drawing.strokes])
 
+  const statusLabel = { saved: 'Guardado', dirty: 'Sin guardar…', saving: 'Guardando…', error: 'Error al guardar' }[status]
   const statusDot = { saved: 'bg-emerald-500', dirty: 'bg-ink-300', saving: 'bg-accent-500 animate-shimmer', error: 'bg-red-500' }[status]
 
   return (
-    <article className="flex min-h-[70dvh] flex-col rounded-2xl bg-surface shadow-soft ring-1 ring-ink-200/70">
+    <article className="flex h-[78dvh] flex-col overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 ring-ink-200/70 md:h-[calc(100dvh-7.5rem)]">
       <div className="flex flex-wrap items-center gap-2 border-b border-ink-100 px-3 py-2 sm:px-4">
         <Link to={`/notes/${note.section_id}`} className="grid size-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 md:hidden" aria-label="Volver">
           <Icon name="back" />
@@ -133,25 +210,188 @@ function LoadedEditor({ note }: { note: Note }) {
           <IconButton icon="trash" label="Borrar nota" className="size-8 hover:bg-red-50! hover:text-red-600!" onClick={remove} />
         </div>
       </div>
-      <div className="flex flex-1 flex-col px-5 sm:px-8">
-        <input
-          className="mt-6 bg-transparent font-display text-4xl leading-tight tracking-tight text-ink-900 outline-none placeholder:text-ink-300"
-          placeholder="Sin título"
-          aria-label="Título"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value)
-            scheduleSave()
-          }}
-        />
-        {editor && <Toolbar editor={editor} />}
-        <EditorContent editor={editor} className="flex-1 cursor-text pb-10" onClick={() => editor?.commands.focus()} />
+
+      <Toolbar
+        editor={editor}
+        tool={tool}
+        onTool={setTool}
+        pen={pen}
+        onPen={setPen}
+        highlighter={highlighter}
+        onHighlighter={setHighlighter}
+        paper={drawing.paper}
+        onPaper={setPaper}
+        fingerDraws={fingerDraws}
+        onFingerDraws={setFingerDraws}
+        onUndo={undo}
+        onRedo={redo}
+        hasStrokes={drawing.strokes.length > 0}
+      />
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain bg-ink-100 p-3 sm:p-6">
+        <div
+          ref={pageRef}
+          className={`paper paper-${drawing.paper} relative mx-auto w-full max-w-[820px] overflow-hidden rounded-xl bg-surface shadow-soft`}
+          style={{ minHeight: pageHeight * scale, ['--page-scale' as string]: scale }}
+        >
+          <div className="px-6 pb-16 pt-8 sm:px-14">
+            <input
+              className="w-full bg-transparent font-display text-4xl leading-tight tracking-tight text-ink-900 outline-none placeholder:text-ink-300"
+              placeholder="Sin título"
+              aria-label="Título"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                scheduleSave()
+              }}
+            />
+            <EditorContent
+              editor={editor}
+              className="mt-4 cursor-text"
+              onClick={() => tool === 'text' && editor?.commands.focus()}
+            />
+          </div>
+          <DrawingLayer
+            strokes={drawing.strokes}
+            onChange={setStrokes}
+            tool={tool}
+            color={tool === 'highlighter' ? highlighter.color : pen.color}
+            size={tool === 'highlighter' ? highlighter.size : pen.size}
+            fingerDraws={fingerDraws}
+            scrollRef={scrollRef}
+          />
+        </div>
       </div>
     </article>
   )
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+const TOOLS: { value: Tool; icon: IconName; label: string }[] = [
+  { value: 'text', icon: 'text', label: 'Texto' },
+  { value: 'pen', icon: 'pen', label: 'Lápiz' },
+  { value: 'highlighter', icon: 'highlighter', label: 'Marcador' },
+  { value: 'eraser', icon: 'eraser', label: 'Goma' },
+]
+
+const PAPERS: { value: PaperStyle; label: string }[] = [
+  { value: 'ruled', label: 'Rayado' },
+  { value: 'grid', label: 'Cuadrícula' },
+  { value: 'dots', label: 'Puntos' },
+  { value: 'plain', label: 'Liso' },
+]
+
+interface ToolbarProps {
+  editor: Editor | null
+  tool: Tool
+  onTool: (t: Tool) => void
+  pen: { color: string; size: number }
+  onPen: (p: { color: string; size: number }) => void
+  highlighter: { color: string; size: number }
+  onHighlighter: (p: { color: string; size: number }) => void
+  paper: PaperStyle
+  onPaper: (p: PaperStyle) => void
+  fingerDraws: boolean
+  onFingerDraws: (v: boolean) => void
+  onUndo: () => void
+  onRedo: () => void
+  hasStrokes: boolean
+}
+
+function Toolbar(props: ToolbarProps) {
+  const { editor, tool, onTool, paper, onPaper, fingerDraws, onFingerDraws, onUndo, onRedo, hasStrokes } = props
+  const dark = useIsDark()
+  const drawingTool = tool === 'pen' || tool === 'highlighter'
+  const current = tool === 'highlighter' ? props.highlighter : props.pen
+  const setCurrent = tool === 'highlighter' ? props.onHighlighter : props.onPen
+  const colors = tool === 'highlighter' ? HIGHLIGHTER_COLORS : PEN_COLORS
+  const sizes = tool === 'highlighter' ? HIGHLIGHTER_SIZES : PEN_SIZES
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-ink-100 px-2 py-2 sm:px-3">
+      <div className="flex rounded-xl bg-ink-100 p-0.5">
+        {TOOLS.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            title={t.label}
+            aria-label={t.label}
+            aria-pressed={tool === t.value}
+            onClick={() => onTool(t.value)}
+            className={`grid size-8 place-items-center rounded-[10px] transition-[background-color,color,box-shadow] duration-200 ${tool === t.value ? 'bg-surface text-ink-900 shadow-soft' : 'text-ink-500 hover:text-ink-900'}`}
+          >
+            <Icon name={t.icon} size={17} />
+          </button>
+        ))}
+      </div>
+
+      {drawingTool && (
+        <>
+          <div className="flex items-center gap-1">
+            {colors.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Color ${c}`}
+                aria-pressed={current.color === c}
+                onClick={() => setCurrent({ ...current, color: c })}
+                className={`size-6 rounded-full transition-transform duration-200 hover:scale-110 ${current.color === c ? 'ring-2 ring-ink-900 ring-offset-2 ring-offset-surface' : ''}`}
+                style={{ background: displayColor(c, dark) }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-0.5">
+            {sizes.map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-label={`Grosor ${s}`}
+                aria-pressed={current.size === s}
+                onClick={() => setCurrent({ ...current, size: s })}
+                className={`grid size-8 place-items-center rounded-lg transition-colors duration-200 ${current.size === s ? 'bg-ink-100' : 'hover:bg-ink-50'}`}
+              >
+                <span className="rounded-full bg-ink-800" style={{ width: Math.min(18, s), height: Math.min(18, s) }} />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tool === 'text' && editor && <TextTools editor={editor} />}
+
+      <div className="ml-auto flex items-center gap-0.5">
+        {(drawingTool || tool === 'eraser') && (
+          <button
+            type="button"
+            onClick={() => onFingerDraws(!fingerDraws)}
+            aria-pressed={fingerDraws}
+            title={fingerDraws ? 'El dedo pinta' : 'El dedo desplaza la hoja'}
+            className={`hidden h-8 items-center gap-1.5 rounded-lg px-2 text-[12px] transition-colors duration-200 sm:flex ${fingerDraws ? 'bg-ink-900 text-ink-50' : 'text-ink-500 ring-1 ring-inset ring-ink-200'}`}
+          >
+            <Icon name="hand" size={14} />
+            {fingerDraws ? 'Dedo pinta' : 'Dedo desplaza'}
+          </button>
+        )}
+        <IconButton icon="undo" label="Deshacer" className="size-8" onClick={onUndo} disabled={!hasStrokes && tool !== 'text'} />
+        <IconButton icon="redo" label="Rehacer" className="size-8" onClick={onRedo} />
+        <div className="relative">
+          <select
+            className="h-8 appearance-none rounded-lg bg-transparent pl-2.5 pr-7 text-xs text-ink-600 ring-1 ring-inset ring-ink-200 transition-colors hover:text-ink-900"
+            value={paper}
+            onChange={(e) => onPaper(e.target.value as PaperStyle)}
+            aria-label="Tipo de papel"
+          >
+            {PAPERS.map((p) => (
+              <option key={p.value} value={p.value}>{p.label}</option>
+            ))}
+          </select>
+          <Icon name="chevronDown" size={14} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-400" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TextTools({ editor }: { editor: Editor }) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -183,7 +423,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   ]
 
   return (
-    <div className="sticky top-14 z-10 -mx-2 my-3 flex flex-wrap gap-0.5 rounded-xl bg-surface/90 p-1 ring-1 ring-ink-100 backdrop-blur md:top-16">
+    <div className="flex flex-wrap gap-0.5">
       {buttons.map((b) => (
         <button
           key={b.key}

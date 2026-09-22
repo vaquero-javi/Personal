@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 export type ThemePref = 'light' | 'dark' | 'system'
 
 const KEY = 'chronon-theme'
@@ -30,3 +32,14 @@ export function setThemePref(pref: ThemePref) {
 
 // Si el usuario eligió "Sistema", seguir los cambios del sistema en vivo.
 media.addEventListener('change', () => applyTheme())
+
+/** Saber si el tema oscuro está activo, para lo que no se puede resolver con CSS (el lienzo). */
+export function useIsDark() {
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
+  useEffect(() => {
+    const observer = new MutationObserver(() => setDark(document.documentElement.classList.contains('dark')))
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+  return dark
+}

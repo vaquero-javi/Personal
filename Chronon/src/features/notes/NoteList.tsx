@@ -44,8 +44,9 @@ export function NoteList({ section, activeId }: { section: NoteSection; activeId
             <li key={n.id}>
               <NavLink
                 to={`/notes/${section.id}/${n.id}`}
-                className={`block rounded-xl px-3.5 py-3 transition-[background-color,box-shadow] duration-200 ${n.id === activeId ? 'bg-surface shadow-soft ring-1 ring-ink-200/70' : 'hover:bg-ink-100'}`}
+                className={`note-card relative block overflow-hidden rounded-r-xl rounded-l-md bg-surface py-3 pl-5 pr-3.5 shadow-soft transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 ${n.id === activeId ? 'ring-1 ring-ink-300' : 'ring-1 ring-ink-200/60'}`}
               >
+                <span className="absolute inset-y-0 left-0 w-[5px]" style={{ background: section.color }} aria-hidden />
                 <div className="flex items-center gap-1.5">
                   {n.pinned && <Icon name="pin" size={13} className="shrink-0 text-accent-500" />}
                   <span className="truncate text-sm font-medium text-ink-900">{n.title || 'Sin título'}</span>
