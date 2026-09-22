@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Button, Field, inputClass } from '../../components/ui'
 import { Logo } from '../../components/Icon'
@@ -11,6 +11,18 @@ export function LoginPage() {
   const [info, setInfo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [googleBusy, setGoogleBusy] = useState(false)
+
+  // Al volver de Google, Supabase puede devolver el fallo en la propia URL:
+  // sin esto la app se limitaría a repintar el login sin explicar nada.
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1))
+    const query = new URLSearchParams(window.location.search)
+    const code = hash.get('error') ?? query.get('error')
+    const description = hash.get('error_description') ?? query.get('error_description')
+    if (!code && !description) return
+    setError(description ?? code)
+    window.history.replaceState({}, '', window.location.pathname)
+  }, [])
 
   async function signInWithGoogle() {
     setGoogleBusy(true)
@@ -75,7 +87,14 @@ export function LoginPage() {
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-500">Calendario, avisos y apuntes en un solo sitio.</p>
 
-          <Button type="button" variant="secondary" className="mt-8 w-full" onClick={signInWithGoogle} disabled={googleBusy}>
+          {error && (
+            <p className="mt-6 rounded-xl bg-red-50 px-3 py-2.5 text-sm leading-relaxed text-red-700" role="alert">
+              {error}
+            </p>
+          )}
+          {info && <p className="mt-6 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">{info}</p>}
+
+          <Button type="button" variant="secondary" className={`w-full ${error || info ? 'mt-4' : 'mt-8'}`} onClick={signInWithGoogle} disabled={googleBusy}>
             <GoogleLogo />
             {googleBusy ? 'Abriendo Google…' : 'Continuar con Google'}
           </Button>
@@ -99,8 +118,6 @@ export function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </Field>
-            {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{error}</p>}
-            {info && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{info}</p>}
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? 'Un momento…' : mode === 'login' ? 'Entrar' : 'Crear cuenta'}
             </Button>
