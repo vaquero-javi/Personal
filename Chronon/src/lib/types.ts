@@ -35,6 +35,8 @@ export interface NoteSection {
   name: string
   color: string
   position: number
+  /** Carpeta madre; null si está en la raíz. */
+  parent_id: string | null
 }
 
 export interface Note {

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, unwrap } from '../../lib/supabase'
 import { COLORS } from '../../components/ui'
 import type { Note, NoteSection } from '../../lib/types'
+import type { NoteDrawing } from './drawing'
 
 export function useSections() {
   return useQuery({
@@ -14,13 +15,14 @@ export function useSections() {
 export function useCreateSection() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async ({ name, parentId = null }: { name: string; parentId?: string | null }) => {
       const sections = qc.getQueryData<NoteSection[]>(['sections']) ?? []
-      const position = sections.reduce((max, s) => Math.max(max, s.position), -1) + 1
+      const siblings = sections.filter((s) => s.parent_id === parentId)
+      const position = siblings.reduce((max, s) => Math.max(max, s.position), -1) + 1
       return unwrap(
         await supabase
           .from('note_sections')
-          .insert({ name, position, color: COLORS[sections.length % COLORS.length] })
+          .insert({ name, position, parent_id: parentId, color: COLORS[sections.length % COLORS.length] })
           .select()
           .single(),
       ) as NoteSection
@@ -84,8 +86,8 @@ export function useNote(id: string | undefined) {
 export function useCreateNote() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (sectionId: string) =>
-      unwrap(await supabase.from('notes').insert({ section_id: sectionId }).select().single()) as Note,
+    mutationFn: async ({ sectionId, drawing }: { sectionId: string; drawing: NoteDrawing }) =>
+      unwrap(await supabase.from('notes').insert({ section_id: sectionId, drawing }).select().single()) as Note,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notes', 'list'] }),
   })
 }

@@ -6,6 +6,8 @@ export const PAGE_WIDTH = 820
 export type PenTool = 'pen' | 'highlighter'
 export type Tool = 'text' | PenTool | 'eraser'
 export type PaperStyle = 'ruled' | 'grid' | 'dots' | 'plain'
+/** Cómo se va a escribir la nota: a mano con el lápiz o con el teclado. */
+export type NoteMode = 'hand' | 'text'
 
 /** [x, y, presión 0–1] */
 export type Point = [number, number, number]
@@ -20,10 +22,11 @@ export interface Stroke {
 export interface NoteDrawing {
   version: 1
   paper: PaperStyle
+  mode: NoteMode
   strokes: Stroke[]
 }
 
-export const EMPTY_DRAWING: NoteDrawing = { version: 1, paper: 'ruled', strokes: [] }
+export const EMPTY_DRAWING: NoteDrawing = { version: 1, paper: 'ruled', mode: 'text', strokes: [] }
 
 /** Lee el jsonb de la nota con cuidado: puede venir vacío o de una versión anterior. */
 export function parseDrawing(value: unknown): NoteDrawing {
@@ -33,6 +36,7 @@ export function parseDrawing(value: unknown): NoteDrawing {
   return {
     version: 1,
     paper: paper.includes(raw.paper as PaperStyle) ? (raw.paper as PaperStyle) : 'ruled',
+    mode: raw.mode === 'hand' ? 'hand' : 'text',
     strokes: Array.isArray(raw.strokes) ? raw.strokes.filter((s) => Array.isArray(s?.points) && s.points.length > 0) : [],
   }
 }

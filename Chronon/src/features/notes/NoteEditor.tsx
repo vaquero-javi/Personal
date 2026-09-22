@@ -58,7 +58,8 @@ function LoadedEditor({ note }: { note: Note }) {
   const [title, setTitle] = useState(note.title)
   const [status, setStatus] = useState<'saved' | 'dirty' | 'saving' | 'error'>('saved')
   const [drawing, setDrawing] = useState<NoteDrawing>(() => parseDrawing(note.drawing))
-  const [tool, setTool] = useState<Tool>('text')
+  // La nota recuerda si se creó para escribir a mano o a teclado, y abre con esa herramienta.
+  const [tool, setTool] = useState<Tool>(() => (parseDrawing(note.drawing).mode === 'hand' ? 'pen' : 'text'))
   const [pen, setPen] = useState({ color: PEN_COLORS[0], size: PEN_SIZES[1] })
   const [highlighter, setHighlighter] = useState({ color: HIGHLIGHTER_COLORS[0], size: HIGHLIGHTER_SIZES[1] })
   const [fingerDraws, setFingerDraws] = useState(false)
@@ -174,7 +175,7 @@ function LoadedEditor({ note }: { note: Note }) {
   const statusDot = { saved: 'bg-emerald-500', dirty: 'bg-ink-300', saving: 'bg-accent-500 animate-shimmer', error: 'bg-red-500' }[status]
 
   return (
-    <article className="flex h-[78dvh] flex-col overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 ring-ink-200/70 md:h-[calc(100dvh-7.5rem)]">
+    <article className="flex h-[80dvh] flex-col overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 ring-ink-200/70 md:h-[calc(100dvh-6.5rem)]">
       <div className="flex flex-wrap items-center gap-2 border-b border-ink-100 px-3 py-2 sm:px-4">
         <Link to={`/notes/${note.section_id}`} className="grid size-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 md:hidden" aria-label="Volver">
           <Icon name="back" />
@@ -228,10 +229,10 @@ function LoadedEditor({ note }: { note: Note }) {
         hasStrokes={drawing.strokes.length > 0}
       />
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain bg-ink-100 p-3 sm:p-6">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain bg-ink-100 p-2 sm:p-5">
         <div
           ref={pageRef}
-          className={`paper paper-${drawing.paper} relative mx-auto w-full max-w-[820px] overflow-hidden rounded-xl bg-surface shadow-soft`}
+          className={`paper paper-${drawing.paper} relative mx-auto w-full max-w-[1180px] overflow-hidden rounded-xl bg-surface shadow-soft`}
           style={{ minHeight: pageHeight * scale, ['--page-scale' as string]: scale }}
         >
           <div className="px-6 pb-16 pt-8 sm:px-14">
@@ -349,7 +350,7 @@ function Toolbar(props: ToolbarProps) {
                 onClick={() => setCurrent({ ...current, size: s })}
                 className={`grid size-8 place-items-center rounded-lg transition-colors duration-200 ${current.size === s ? 'bg-ink-100' : 'hover:bg-ink-50'}`}
               >
-                <span className="rounded-full bg-ink-800" style={{ width: Math.min(18, s), height: Math.min(18, s) }} />
+                <span className="rounded-full bg-ink-800" style={{ width: 4 + s / 1.6, height: 4 + s / 1.6 }} />
               </button>
             ))}
           </div>

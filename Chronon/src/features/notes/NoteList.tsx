@@ -6,27 +6,32 @@ import { Button, Empty, Skeleton, inputClass } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import type { NoteSection } from '../../lib/types'
 import { useCreateNote, useNotes } from './api'
+import { NewNoteDialog } from './NewNoteDialog'
+import type { NoteDrawing } from './drawing'
 
 export function NoteList({ section, activeId }: { section: NoteSection; activeId?: string }) {
   const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
   const { data: notes = [], isLoading } = useNotes(section.id, search)
   const create = useCreateNote()
   const navigate = useNavigate()
 
-  async function newNote() {
-    const note = await create.mutateAsync(section.id)
+  async function newNote(drawing: NoteDrawing) {
+    const note = await create.mutateAsync({ sectionId: section.id, drawing })
+    setCreating(false)
     navigate(`/notes/${section.id}/${note.id}`)
   }
 
   return (
     <div className="space-y-3">
+      {creating && <NewNoteDialog onClose={() => setCreating(false)} onCreate={newNote} busy={create.isPending} />}
       <div className="flex items-center gap-2">
         <Link to="/notes" className="-ml-2 grid size-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 md:hidden" aria-label="Volver">
           <Icon name="back" />
         </Link>
         <span className="size-2.5 shrink-0 rounded-full" style={{ background: section.color }} />
         <h2 className="flex-1 truncate font-display text-2xl leading-none md:text-xl">{section.name}</h2>
-        <Button size="sm" onClick={newNote} disabled={create.isPending}>
+        <Button size="sm" onClick={() => setCreating(true)} disabled={create.isPending}>
           <Icon name="plus" size={14} strokeWidth={2} /> Nota
         </Button>
       </div>

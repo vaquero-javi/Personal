@@ -17,7 +17,7 @@ Necesitas [Node.js](https://nodejs.org) 20 o superior.
 ### 1. Supabase
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` y `supabase/migrations/0003_notes_drawing.sql`.
+2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql` y `supabase/migrations/0004_note_folders.sql`.
 3. Genera las claves VAPID para push:
    ```bash
    npx web-push generate-vapid-keys
@@ -72,6 +72,10 @@ Cuando tengas tu cuenta creada, desactiva los registros nuevos en Supabase → *
 
 Crea un evento para dentro de 3 minutos con el aviso "En el momento" o uno personalizado de 1 minuto antes. En ≤ 1 minuto desde la hora del aviso debería llegar la notificación y aparecer en la campana. Si no llega, mira **Edge Functions → send-alerts → Logs** en Supabase y, en SQL Editor, `select * from cron.job_run_details order by start_time desc limit 5;`.
 
+## Apuntes: carpetas y hoja
+
+Las notas se organizan en **carpetas**, que pueden contener subcarpetas (migración `0004_note_folders.sql`). Al crear una nota se elige cómo vas a escribirla (a mano con el lápiz o con el teclado) y qué hoja quieres (líneas, cuadros o blanca); la nota abre ya con la herramienta que toca. Con una nota abierta la hoja ocupa todo el ancho, y el botón **Carpetas** vuelve a mostrar las listas.
+
 ## Apuntes a mano
 
 Cada nota es una hoja de libreta: se elige el papel (rayado, cuadrícula, puntos o liso) y se puede escribir con el teclado o a mano con el lápiz.
@@ -100,7 +104,7 @@ src/
     auth/        login y sesión
     calendar/    calendario, editor de eventos, selector de avisos
     alerts/      campana y lista de avisos (descartar / posponer)
-    notes/       secciones, lista de notas y editor (papel, texto y escritura a mano)
+    notes/       carpetas, lista de notas y editor (papel, texto y escritura a mano)
     dashboard/   pantalla de inicio (hoy, próximos 7 días, atrasados)
     settings/    notificaciones y cuenta
   lib/           cliente Supabase, fechas, push, tipos
