@@ -1,0 +1,91 @@
+# CHRONON
+
+App personal: calendario mensual con eventos y recordatorios, avisos configurables (X minutos/horas/días antes) que llegan como notificación push al móvil y al ordenador, y apuntes organizados en secciones.
+
+**Stack:** React + TypeScript + Vite (PWA) · Tailwind · FullCalendar · TipTap · Supabase (Auth, Postgres, Edge Functions, pg_cron) · Vercel.
+
+## Cómo funcionan los avisos
+
+1. Cada evento puede tener varios avisos (`event_alerts`). La base de datos calcula `fire_at = inicio − antelación` y lo recalcula si mueves el evento. En eventos de todo el día se cuenta desde las 9:00.
+2. `pg_cron` llama cada minuto a la Edge Function `send-alerts`, que envía un Web Push a todos tus dispositivos con notificaciones activadas.
+3. Además, la campana 🔔 de la app muestra los avisos que ya han llegado hasta que los descartes o pospongas, aunque el push no llegara.
+
+## Puesta en marcha
+
+Necesitas [Node.js](https://nodejs.org) 20 o superior.
+
+### 1. Supabase
+
+1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
+2. En **SQL Editor**, ejecuta `supabase/migrations/0001_init.sql` y después `supabase/migrations/0002_cron.sql`.
+3. Genera las claves VAPID para push:
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+4. Inventa un secreto largo para el cron (p. ej. `openssl rand -hex 32`) y guárdalo en Vault junto con la URL del proyecto (SQL Editor):
+   ```sql
+   select vault.create_secret('https://TU-PROYECTO.supabase.co', 'project_url');
+   select vault.create_secret('TU-CRON-SECRET', 'cron_secret');
+   ```
+5. Despliega la Edge Function y sus secretos:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref TU-PROYECTO
+   npx supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:tu@email.com CRON_SECRET=TU-CRON-SECRET
+   npx supabase functions deploy send-alerts --no-verify-jwt
+   ```
+   Opcional: `APP_TIMEZONE` (por defecto `Europe/Madrid`) para el texto de las notificaciones.
+
+### Iniciar sesión con Google (opcional)
+
+1. En [Google Cloud Console](https://console.cloud.google.com) → **APIs y servicios → Pantalla de consentimiento de OAuth**, configúrala (tipo *Externo*, con tu email como usuario de prueba si no la publicas).
+2. En **Credenciales → Crear credenciales → ID de cliente de OAuth** → *Aplicación web*:
+   - **Orígenes de JavaScript autorizados:** `http://localhost:5173` y la URL de Vercel.
+   - **URIs de redireccionamiento autorizados:** `https://TU-PROYECTO.supabase.co/auth/v1/callback`
+3. En Supabase → **Authentication → Sign In / Providers → Google**, actívalo y pega el *Client ID* y el *Client Secret*.
+4. En Supabase → **Authentication → URL Configuration → Redirect URLs**, añade `http://localhost:5173` y la URL de Vercel.
+
+Si ya tienes cuenta con email y usas el mismo correo de Google, Supabase vincula las dos identidades a la misma cuenta.
+
+### 2. App
+
+```bash
+cp .env.example .env.local   # rellena URL, anon key y la clave VAPID pública
+npm install
+npm run dev
+```
+
+Abre http://localhost:5173, crea tu cuenta y, en **Ajustes**, activa las notificaciones.
+
+Cuando tengas tu cuenta creada, desactiva los registros nuevos en Supabase → **Authentication → Sign In / Providers → Allow new users to sign up**, para que nadie más pueda crear cuenta.
+
+### 3. Publicarla (para usarla desde el móvil)
+
+1. Sube el proyecto a GitHub e impórtalo en [vercel.com](https://vercel.com).
+2. Añade las tres variables `VITE_*` de `.env.local` en Vercel → Settings → Environment Variables.
+3. En Supabase → Authentication → URL Configuration, pon la URL de Vercel como **Site URL**.
+4. En el móvil, abre la URL:
+   - **iPhone:** Compartir → *Añadir a pantalla de inicio*, abre la app desde el icono y activa las notificaciones en Ajustes (iOS 16.4+).
+   - **Android:** menú → *Instalar app* (o simplemente activa las notificaciones en Ajustes).
+
+## Probar los avisos
+
+Crea un evento para dentro de 3 minutos con el aviso "En el momento" o uno personalizado de 1 minuto antes. En ≤ 1 minuto desde la hora del aviso debería llegar la notificación y aparecer en la campana. Si no llega, mira **Edge Functions → send-alerts → Logs** en Supabase y, en SQL Editor, `select * from cron.job_run_details order by start_time desc limit 5;`.
+
+## Estructura
+
+```
+src/
+  features/
+    auth/        login y sesión
+    calendar/    calendario, editor de eventos, selector de avisos
+    alerts/      campana y lista de avisos (descartar / posponer)
+    notes/       secciones, lista de notas y editor
+    dashboard/   pantalla de inicio (hoy, próximos 7 días, atrasados)
+    settings/    notificaciones y cuenta
+  lib/           cliente Supabase, fechas, push, tipos
+  sw.ts          service worker (caché offline + notificaciones)
+supabase/
+  migrations/    tablas, triggers de avisos, seguridad (RLS) y cron
+  functions/send-alerts/   envío de notificaciones push
+```

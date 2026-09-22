@@ -1,0 +1,381 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------- Sistema de diseño ----------
+   ink    → neutros cálidos (papel y tinta). En oscuro la escala se invierte.
+   accent → un único acento, "ember": marca el ahora, lo activo y el foco.
+   Los componentes usan solo estas escalas y funcionan en ambos modos sin clases dark:. */
+@theme {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', monospace;
+  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+
+  --color-surface: #fdfcfa;
+  --color-ink-50: #f6f5f1;
+  --color-ink-100: #eeece6;
+  --color-ink-200: #e2dfd7;
+  --color-ink-300: #cdc9bf;
+  --color-ink-400: #a29d92;
+  --color-ink-500: #7b766c;
+  --color-ink-600: #5d5951;
+  --color-ink-700: #44413b;
+  --color-ink-800: #2c2a26;
+  --color-ink-900: #1c1b18;
+  --color-ink-950: #121110;
+
+  --color-accent-50: #fcf1eb;
+  --color-accent-100: #f9e0d3;
+  --color-accent-200: #f3c2aa;
+  --color-accent-300: #ea9b77;
+  --color-accent-400: #e17a50;
+  --color-accent-500: #d45f32;
+  --color-accent-600: #b94a20;
+  --color-accent-700: #963c1b;
+  --color-accent-800: #733019;
+
+  --shadow-soft: 0 1px 2px rgb(44 36 24 / 0.04), 0 4px 16px -6px rgb(44 36 24 / 0.08);
+  --shadow-float: 0 2px 6px rgb(44 36 24 / 0.06), 0 24px 48px -16px rgb(44 36 24 / 0.22);
+
+  --animate-rise: rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 200ms ease-out both;
+  --animate-sheet: sheet 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes sheet {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+}
+
+.dark {
+  color-scheme: dark;
+  --color-surface: #1a1917;
+  --color-ink-50: #121110;
+  --color-ink-100: #23211e;
+  --color-ink-200: #2f2d29;
+  --color-ink-300: #46433d;
+  --color-ink-400: #6f6b63;
+  --color-ink-500: #918c82;
+  --color-ink-600: #b1aca2;
+  --color-ink-700: #cbc7be;
+  --color-ink-800: #e3e0d9;
+  --color-ink-900: #f3f1ec;
+  --color-ink-950: #faf9f6;
+
+  --color-accent-50: rgb(212 95 50 / 0.12);
+  --color-accent-100: rgb(212 95 50 / 0.2);
+  --color-accent-200: rgb(225 122 80 / 0.34);
+  --color-accent-300: rgb(225 122 80 / 0.5);
+  --color-accent-600: #ec8058;
+  --color-accent-700: #f29b78;
+  --color-accent-800: #f6b89d;
+
+  --color-amber-50: rgb(217 160 50 / 0.13);
+  --color-amber-100: rgb(217 160 50 / 0.22);
+  --color-amber-800: #f0c878;
+  --color-amber-900: #f5d898;
+  --color-emerald-50: rgb(70 160 115 / 0.14);
+  --color-emerald-700: #7dcfa4;
+  --color-red-50: rgb(220 80 70 / 0.14);
+  --color-red-600: #f0857a;
+  --color-red-700: #f5a197;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 0 0 1px rgb(255 255 255 / 0.03);
+  --shadow-float: 0 2px 6px rgb(0 0 0 / 0.3), 0 24px 48px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.05);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-ink-50 text-ink-900 antialiased font-sans;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+/* Grano muy sutil para quitar la sensación de pantalla plana. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark body::before {
+  opacity: 0.06;
+}
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------- FullCalendar ---------- */
+.fc {
+  --fc-border-color: var(--color-ink-200);
+  --fc-today-bg-color: transparent;
+  --fc-page-bg-color: var(--color-surface);
+  --fc-neutral-bg-color: var(--color-ink-100);
+  --fc-list-event-hover-bg-color: var(--color-ink-100);
+  --fc-now-indicator-color: var(--color-accent-500);
+  --fc-button-bg-color: transparent;
+  --fc-button-text-color: var(--color-ink-700);
+  --fc-button-border-color: transparent;
+  --fc-button-hover-bg-color: var(--color-ink-100);
+  --fc-button-hover-border-color: transparent;
+  --fc-button-active-bg-color: var(--color-surface);
+  --fc-button-active-border-color: transparent;
+  font-size: 0.8125rem;
+}
+.fc .fc-popover {
+  @apply rounded-xl overflow-hidden border-ink-200 bg-surface;
+  box-shadow: var(--shadow-float);
+}
+.fc .fc-popover-header {
+  @apply bg-ink-50 px-3 py-2 text-xs font-medium;
+}
+
+/* Toolbar */
+.fc .fc-header-toolbar {
+  @apply mb-4! gap-2;
+}
+.fc .fc-toolbar-title {
+  @apply font-display text-3xl font-normal tracking-tight first-letter:uppercase;
+}
+.fc .fc-button {
+  @apply rounded-lg px-3 py-1.5 text-[13px] font-medium shadow-none capitalize transition-colors;
+}
+.fc .fc-button:focus {
+  box-shadow: none !important;
+}
+.fc .fc-button:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 1px;
+}
+.fc .fc-button-primary:disabled {
+  @apply opacity-40;
+}
+.fc .fc-button-group {
+  @apply rounded-[10px] bg-ink-100 p-0.5;
+}
+.fc .fc-button-group > .fc-button {
+  @apply rounded-lg!;
+}
+.fc .fc-button-group > .fc-button-active {
+  color: var(--color-ink-900);
+  box-shadow: var(--shadow-soft) !important;
+}
+.fc .fc-prev-button,
+.fc .fc-next-button {
+  @apply px-2;
+}
+.fc .fc-today-button {
+  @apply ml-1! bg-ink-100;
+}
+
+/* Rejilla */
+.fc .fc-scrollgrid {
+  @apply rounded-xl overflow-hidden;
+}
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--color-ink-200);
+}
+.fc .fc-col-header-cell {
+  @apply bg-ink-50 border-x-transparent;
+}
+.fc .fc-col-header-cell-cushion {
+  @apply py-2 text-[11px] font-medium uppercase tracking-[0.08em] text-ink-500 no-underline;
+}
+.fc .fc-daygrid-day-number {
+  @apply m-1 grid size-7 place-items-center rounded-full p-0! font-mono text-xs text-ink-600 no-underline;
+  font-variant-numeric: tabular-nums;
+}
+.fc .fc-day-other .fc-daygrid-day-number {
+  @apply text-ink-400;
+}
+.fc .fc-day-today .fc-daygrid-day-number {
+  @apply bg-accent-500 font-semibold text-white;
+}
+.fc .fc-day-today.fc-col-header-cell .fc-col-header-cell-cushion {
+  @apply text-accent-600;
+}
+.fc .fc-daygrid-day,
+.fc .fc-timegrid-slot {
+  cursor: pointer;
+}
+.fc .fc-daygrid-day:hover {
+  background: var(--color-ink-50);
+}
+.fc .fc-timegrid-slot-label-cushion,
+.fc .fc-timegrid-axis-cushion {
+  @apply font-mono text-[11px] text-ink-400;
+}
+.fc .fc-timegrid-now-indicator-arrow {
+  border-width: 0;
+  @apply size-2 -mt-1 rounded-full bg-accent-500;
+}
+
+/* Eventos */
+.fc .fc-event {
+  cursor: pointer;
+  @apply rounded-md border-0 transition-[filter];
+}
+.fc .fc-event:hover {
+  filter: brightness(1.06);
+}
+.fc .fc-daygrid-event {
+  @apply mx-1 mb-0.5 px-1.5 py-px text-[12px];
+}
+.fc .fc-daygrid-dot-event .fc-event-title {
+  @apply font-medium;
+}
+.fc .fc-daygrid-dot-event .fc-event-time {
+  @apply font-mono text-[11px] font-normal text-ink-500;
+}
+.fc .fc-daygrid-dot-event:hover {
+  background: var(--color-ink-100);
+  filter: none;
+}
+.fc .fc-daygrid-more-link {
+  @apply ml-1 text-[11px] font-medium text-ink-500;
+}
+.fc .fc-timegrid-event {
+  @apply rounded-lg px-1 shadow-none;
+}
+.fc .fc-timegrid-event .fc-event-time {
+  @apply font-mono text-[11px];
+}
+.fc .fc-completed {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+@media (max-width: 640px) {
+  .fc .fc-header-toolbar {
+    @apply flex-wrap;
+  }
+  .fc .fc-toolbar-chunk:nth-child(2) {
+    order: -1;
+    width: 100%;
+  }
+  .fc .fc-toolbar-title {
+    @apply text-2xl;
+  }
+  .fc .fc-button {
+    @apply px-2 py-1 text-xs;
+  }
+  .fc .fc-daygrid-event {
+    @apply mx-0.5 px-1 text-[10.5px];
+  }
+  .fc .fc-daygrid-day-number {
+    @apply m-0.5 size-6 text-[11px];
+  }
+}
+
+/* ---------- Editor de apuntes (TipTap) ---------- */
+.tiptap {
+  @apply min-h-64 max-w-[68ch] outline-none text-[15.5px] leading-[1.7] text-ink-800;
+}
+.tiptap > * + * {
+  @apply mt-3;
+}
+.tiptap h1 {
+  @apply font-display text-[2rem] leading-tight font-normal tracking-tight mt-8 text-ink-900;
+}
+.tiptap h2 {
+  @apply text-lg font-semibold tracking-tight mt-6 text-ink-900;
+}
+.tiptap h3 {
+  @apply text-base font-semibold mt-4 text-ink-900;
+}
+.tiptap ul:not([data-type='taskList']) {
+  @apply list-disc pl-6 marker:text-ink-400;
+}
+.tiptap ol {
+  @apply list-decimal pl-6 marker:font-mono marker:text-sm marker:text-ink-400;
+}
+.tiptap blockquote {
+  @apply border-l-2 border-accent-400 pl-4 font-display text-xl italic leading-snug text-ink-600;
+}
+.tiptap pre {
+  @apply rounded-xl bg-ink-900 p-4 font-mono text-[13px] leading-relaxed text-ink-100;
+}
+.dark .tiptap pre {
+  @apply bg-ink-100 text-ink-800;
+}
+.tiptap code {
+  @apply rounded-md bg-ink-100 px-1.5 py-0.5 font-mono text-[0.85em];
+}
+.tiptap pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+.tiptap a {
+  @apply text-accent-600 underline decoration-accent-300 underline-offset-2;
+}
+.tiptap hr {
+  @apply my-6 border-ink-200;
+}
+.tiptap ul[data-type='taskList'] {
+  @apply list-none pl-0.5;
+}
+.tiptap ul[data-type='taskList'] li {
+  @apply flex items-start gap-2.5;
+}
+.tiptap ul[data-type='taskList'] li > label {
+  @apply mt-[5px] select-none;
+}
+.tiptap ul[data-type='taskList'] li > label input {
+  @apply size-4 accent-accent-500;
+}
+.tiptap ul[data-type='taskList'] li > div {
+  @apply flex-1;
+}
+.tiptap ul[data-type='taskList'] li[data-checked='true'] > div {
+  @apply text-ink-400 line-through decoration-ink-300;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply pointer-events-none float-left h-0 text-ink-400;
+}

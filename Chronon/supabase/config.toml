@@ -1,0 +1,5 @@
+project_id = "chronon"
+
+# La función la invoca pg_cron con un secreto propio (x-cron-secret), no con un JWT de usuario.
+[functions.send-alerts]
+verify_jwt = false
