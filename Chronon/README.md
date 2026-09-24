@@ -95,7 +95,7 @@ Dentro de una carpeta, **Nuevo → Subir PDF** importa un PDF como documento: ca
 
 En cualquier documento, el botón **Estudiar con IA** abre un panel al estilo NotebookLM con cuatro pestañas: **Chat** (preguntas sobre los apuntes), **Resumen**, **Examen** (tipo test y abiertas, con corrección) y **Tarjetas** (se les da la vuelta y se barajan). La IA lee el texto escrito a teclado, las hojas escritas a mano (se le mandan como imágenes) y el PDF, si lo hay.
 
-Lo hace la Edge Function `study-ai` con Gemini (`gemini-3.8-flash`) de Google. Los resúmenes, exámenes y tarjetas se guardan en la tabla `study_items` (migración `0006_study_items.sql`); el chat no se guarda. Para activarla:
+Lo hace la Edge Function `study-ai` con Gemini de Google, en el nivel gratuito: usa `gemini-3.8-flash` y, si está saturado o se ha gastado su cupo, pasa solo a `gemini-3.6-flash`, `gemini-3.5-flash` o `gemini-3.7-flash`. Los resúmenes, exámenes y tarjetas se guardan en la tabla `study_items` (migración `0006_study_items.sql`); el chat no se guarda. Para activarla:
 
 ```bash
 npx supabase secrets set GEMINI_API_KEY=...   # clave de https://aistudio.google.com/apikey

@@ -6,7 +6,11 @@ import { ApiError, FinishReason, GoogleGenAI, ThinkingLevel, type Content, type 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64'
 
-const MODEL = 'gemini-3.8-flash'
+// Por orden de preferencia. Los Flash nuevos se saturan a menudo en el nivel gratuito (error 503) y cada
+// modelo tiene su propio cupo gratuito (error 429): si uno falla antes de empezar a responder, se prueba el siguiente.
+const MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash']
+/** Errores que se arreglan cambiando de modelo: cupo agotado, saturación o caída puntual. */
+const RETRYABLE = new Set([429, 500, 503, 504])
 const ai = new GoogleGenAI({ apiKey: Deno.env.get('GEMINI_API_KEY') })
 
 const CORS = {
@@ -159,40 +163,57 @@ Deno.serve(async (req) => {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: Record<string, unknown>) => controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
+      let sent = false
+      let lastError: unknown
       try {
-        const response = await ai.models.generateContentStream({
-          model: MODEL,
-          contents,
-          config: {
-            systemInstruction: SYSTEM,
-            maxOutputTokens: 32000,
-            // El límite de tiempo de las Edge Functions obliga a no pensar de más.
-            thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
-            ...(schema ? { responseMimeType: 'application/json', responseJsonSchema: schema } : {}),
-          },
-        })
-        let finish: FinishReason | undefined
-        let blocked = false
-        for await (const chunk of response) {
-          if (chunk.promptFeedback?.blockReason) blocked = true
-          const text = chunk.text
-          if (text) send({ t: 'text', v: text })
-          finish = chunk.candidates?.[0]?.finishReason ?? finish
+        for (const model of MODELS) {
+          try {
+            const response = await ai.models.generateContentStream({
+              model,
+              contents,
+              config: {
+                systemInstruction: SYSTEM,
+                maxOutputTokens: 32000,
+                // El límite de tiempo de las Edge Functions obliga a no pensar de más.
+                thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
+                ...(schema ? { responseMimeType: 'application/json', responseJsonSchema: schema } : {}),
+              },
+            })
+            let finish: FinishReason | undefined
+            let blocked = false
+            for await (const chunk of response) {
+              if (chunk.promptFeedback?.blockReason) blocked = true
+              const text = chunk.text
+              if (text) {
+                sent = true
+                send({ t: 'text', v: text })
+              }
+              finish = chunk.candidates?.[0]?.finishReason ?? finish
+            }
+            if (blocked || (finish && finish !== FinishReason.STOP && finish !== FinishReason.MAX_TOKENS))
+              send({ t: 'error', v: 'La IA no ha querido responder a esto.' })
+            else if (finish === FinishReason.MAX_TOKENS) send({ t: 'error', v: 'La respuesta era demasiado larga y se ha cortado. Prueba a pedir menos.' })
+            else send({ t: 'done' })
+            return
+          } catch (err) {
+            lastError = err
+            // Con parte de la respuesta ya enviada no se puede empezar otra vez con otro modelo.
+            if (sent || !(err instanceof ApiError) || !RETRYABLE.has(err.status)) break
+            console.warn(`${model} no disponible (${err.status}); probando el siguiente`)
+          }
         }
-        if (blocked || (finish && finish !== FinishReason.STOP && finish !== FinishReason.MAX_TOKENS))
-          send({ t: 'error', v: 'La IA no ha querido responder a esto.' })
-        else if (finish === FinishReason.MAX_TOKENS) send({ t: 'error', v: 'La respuesta era demasiado larga y se ha cortado. Prueba a pedir menos.' })
-        else send({ t: 'done' })
-      } catch (err) {
-        console.error(err)
+        console.error(lastError)
+        const status = lastError instanceof ApiError ? lastError.status : undefined
         const message =
-          err instanceof ApiError
-            ? err.status === 429
-              ? 'Has llegado al límite de uso de Gemini; espera un momento.'
-              : err.status === 400
-                ? `La IA no ha aceptado el documento: ${err.message}`
-                : `Error de la IA (${err.status}).`
-            : 'Error inesperado.'
+          status === 429
+            ? 'Has llegado al límite de uso gratuito de Gemini; espera un rato y vuelve a probar.'
+            : status === 503 || status === 500 || status === 504
+              ? 'Gemini está saturado ahora mismo; vuelve a probar en unos minutos.'
+              : status === 400
+                ? `La IA no ha aceptado el documento: ${(lastError as Error).message}`
+                : status
+                  ? `Error de la IA (${status}).`
+                  : 'Error inesperado.'
         send({ t: 'error', v: message })
       } finally {
         controller.close()
