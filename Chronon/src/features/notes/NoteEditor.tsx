@@ -12,12 +12,15 @@ import { useIsDark } from '../../lib/theme'
 import { useDeleteNote, useNote, usePdf, useSections, useUpdateNote } from './api'
 import type { PDFDocumentProxy } from './pdf'
 import { DrawingLayer } from './DrawingLayer'
+import { StudyPanel } from './StudyPanel'
+import { photographSheets, type StudySource } from './study'
 import {
   HIGHLIGHTER_COLORS,
   HIGHLIGHTER_SIZES,
   PAGE_WIDTH,
   PEN_COLORS,
   PEN_SIZES,
+  SHEET_HEIGHT,
   displayColor,
   parseDrawing,
   type NoteDrawing,
@@ -27,8 +30,6 @@ import {
 } from './drawing'
 
 const SAVE_DELAY = 700
-/** Alto de cada hoja, en unidades de página: proporción A4 en vertical. */
-const SHEET_HEIGHT = Math.round(PAGE_WIDTH * Math.SQRT2)
 
 export function NoteEditor({ noteId }: { noteId: string }) {
   const { data: note, isLoading, error } = useNote(noteId)
@@ -249,6 +250,22 @@ function LoadedEditor({ note }: { note: Note }) {
     })
   }
 
+  const [studying, setStudying] = useState(false)
+  // Las fotos de las hojas se reutilizan mientras no cambien los trazos: así la IA recibe lo mismo
+  // byte a byte en cada pregunta y aprovecha la caché.
+  const shots = useRef<{ key: unknown; sheets: StudySource['sheets'] } | null>(null)
+  async function getSource(): Promise<StudySource> {
+    const current = drawingRef.current
+    const key = [current.strokes, current.pdf, pdfDoc]
+    const same = shots.current && (shots.current.key as unknown[]).every((part, i) => part === key[i])
+    if (!same) shots.current = { key, sheets: await photographSheets(current, pdfDoc, pdfPages) }
+    return {
+      noteId: note.id,
+      text: editor?.getText({ blockSeparator: '\n' }) ?? '',
+      sheets: shots.current!.sheets,
+    }
+  }
+
   const statusLabel = { saved: 'Guardado', dirty: 'Sin guardar…', saving: 'Guardando…', error: 'Error al guardar' }[status]
   const statusDot = { saved: 'bg-emerald-500', dirty: 'bg-ink-300', saving: 'bg-accent-500 animate-shimmer', error: 'bg-red-500' }[status]
 
@@ -287,6 +304,16 @@ function LoadedEditor({ note }: { note: Note }) {
             </select>
             <Icon name="chevronDown" size={14} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-400" />
           </div>
+          <button
+            type="button"
+            onClick={() => setStudying((v) => !v)}
+            aria-pressed={studying}
+            className={`mr-1 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors ${studying ? 'bg-accent-500 text-white' : 'bg-accent-50 text-accent-600 hover:bg-accent-100'}`}
+          >
+            <Icon name="sparkles" size={15} />
+            <span className="hidden sm:inline">Estudiar con IA</span>
+            <span className="sm:hidden">IA</span>
+          </button>
           <IconButton
             icon="pin"
             label={note.pinned ? 'Desfijar' : 'Fijar arriba'}
@@ -314,60 +341,63 @@ function LoadedEditor({ note }: { note: Note }) {
         onRedo={redo}
       />
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-2 py-4 sm:px-6 sm:py-8">
-        <div
-          ref={pageRef}
-          className={`paper paper-${drawing.paper} relative mx-auto w-full overflow-hidden rounded-sm bg-surface shadow-float`}
-          style={{ maxWidth: PAGE_WIDTH, minHeight: sheets * SHEET_HEIGHT * scale, ['--page-scale' as string]: scale }}
-        >
-          {Array.from({ length: sheets }, (_, i) => (
-            <div
-              key={i}
-              className={`pointer-events-none absolute inset-x-0 z-10 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}
-              style={{ top: i * SHEET_HEIGHT * scale }}
-            >
-              <SheetControls
-                number={i + 1}
-                total={sheets}
-                onAddAfter={() => insertSheet(i)}
-                onRemove={sheets > 1 ? () => removeSheet(i) : undefined}
+      <div className="flex min-h-0 flex-1">
+        <div ref={scrollRef} className="min-w-0 flex-1 overflow-y-auto overscroll-contain px-2 py-4 sm:px-6 sm:py-8">
+          <div
+            ref={pageRef}
+            className={`paper paper-${drawing.paper} relative mx-auto w-full overflow-hidden rounded-sm bg-surface shadow-float`}
+            style={{ maxWidth: PAGE_WIDTH, minHeight: sheets * SHEET_HEIGHT * scale, ['--page-scale' as string]: scale }}
+          >
+            {Array.from({ length: sheets }, (_, i) => (
+              <div
+                key={i}
+                className={`pointer-events-none absolute inset-x-0 z-10 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}
+                style={{ top: i * SHEET_HEIGHT * scale }}
+              >
+                <SheetControls
+                  number={i + 1}
+                  total={sheets}
+                  onAddAfter={() => insertSheet(i)}
+                  onRemove={sheets > 1 ? () => removeSheet(i) : undefined}
+                />
+              </div>
+            ))}
+            {pdfPages?.map(
+              (page, i) =>
+                page !== null && (
+                  <PdfSheet key={`${i}-${page}`} doc={pdfDoc} page={page} top={i * SHEET_HEIGHT * scale} width={PAGE_WIDTH * scale} height={SHEET_HEIGHT * scale} />
+                ),
+            )}
+            {pdfError && (
+              <p className="absolute inset-x-0 top-24 z-10 text-center text-sm text-red-600">No se ha podido abrir el PDF: {pdfError.message}</p>
+            )}
+            <div className="relative px-6 pb-16 pt-8 sm:px-14">
+              <EditorContent
+                editor={editor}
+                className="cursor-text"
+                onClick={() => tool === 'text' && editor?.commands.focus()}
               />
             </div>
-          ))}
-          {pdfPages?.map(
-            (page, i) =>
-              page !== null && (
-                <PdfSheet key={`${i}-${page}`} doc={pdfDoc} page={page} top={i * SHEET_HEIGHT * scale} width={PAGE_WIDTH * scale} height={SHEET_HEIGHT * scale} />
-              ),
-          )}
-          {pdfError && (
-            <p className="absolute inset-x-0 top-24 z-10 text-center text-sm text-red-600">No se ha podido abrir el PDF: {pdfError.message}</p>
-          )}
-          <div className="relative px-6 pb-16 pt-8 sm:px-14">
-            <EditorContent
-              editor={editor}
-              className="cursor-text"
-              onClick={() => tool === 'text' && editor?.commands.focus()}
+            <DrawingLayer
+              strokes={drawing.strokes}
+              onChange={setStrokes}
+              tool={tool}
+              color={tool === 'highlighter' ? highlighter.color : pen.color}
+              size={tool === 'highlighter' ? highlighter.size : pen.size}
+              fingerDraws={fingerDraws}
+              scrollRef={scrollRef}
             />
           </div>
-          <DrawingLayer
-            strokes={drawing.strokes}
-            onChange={setStrokes}
-            tool={tool}
-            color={tool === 'highlighter' ? highlighter.color : pen.color}
-            size={tool === 'highlighter' ? highlighter.size : pen.size}
-            fingerDraws={fingerDraws}
-            scrollRef={scrollRef}
-          />
+          <button
+            type="button"
+            onClick={() => insertSheet(sheets - 1)}
+            className="mx-auto mt-4 flex h-10 items-center gap-2 rounded-full bg-surface px-4 text-[13px] font-medium text-ink-700 shadow-soft ring-1 ring-ink-200/70 transition-colors hover:bg-ink-50 hover:text-ink-900"
+          >
+            <Icon name="plus" size={15} strokeWidth={2} />
+            Añadir hoja
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => insertSheet(sheets - 1)}
-          className="mx-auto mt-4 flex h-10 items-center gap-2 rounded-full bg-surface px-4 text-[13px] font-medium text-ink-700 shadow-soft ring-1 ring-ink-200/70 transition-colors hover:bg-ink-50 hover:text-ink-900"
-        >
-          <Icon name="plus" size={15} strokeWidth={2} />
-          Añadir hoja
-        </button>
+        {studying && <StudyPanel noteId={note.id} getSource={getSource} onClose={() => setStudying(false)} />}
       </div>
     </Screen>
   )

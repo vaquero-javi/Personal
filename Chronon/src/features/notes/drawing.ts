@@ -2,6 +2,8 @@
 
 /** Ancho de referencia de la página. Los trazos se guardan en estas unidades y se escalan al pintar. */
 export const PAGE_WIDTH = 820
+/** Alto de cada hoja, en unidades de página: proporción A4 en vertical. */
+export const SHEET_HEIGHT = Math.round(PAGE_WIDTH * Math.SQRT2)
 
 export type PenTool = 'pen' | 'highlighter'
 export type Tool = 'text' | PenTool | 'eraser'

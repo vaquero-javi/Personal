@@ -17,7 +17,7 @@ Necesitas [Node.js](https://nodejs.org) 20 o superior.
 ### 1. Supabase
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql`, `supabase/migrations/0004_note_folders.sql` y `supabase/migrations/0005_note_pdfs.sql`.
+2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql`, `supabase/migrations/0004_note_folders.sql` y `supabase/migrations/0005_note_pdfs.sql` y `supabase/migrations/0006_study_items.sql`.
 3. Genera las claves VAPID para push:
    ```bash
    npx web-push generate-vapid-keys
@@ -90,6 +90,17 @@ Los trazos se guardan en la columna `drawing` de `notes` (migración `0003_notes
 ## PDFs
 
 Dentro de una carpeta, **Nuevo → Subir PDF** importa un PDF como documento: cada página del PDF es una hoja sobre la que se puede escribir a mano, subrayar o añadir texto, y se pueden meter hojas en blanco entre medias o quitar páginas. El archivo se guarda en el bucket privado `documents` de Supabase Storage (migración `0005_note_pdfs.sql`, máximo 50 MB) y se borra al borrar el documento o su carpeta.
+
+## Estudiar con IA
+
+En cualquier documento, el botón **Estudiar con IA** abre un panel al estilo NotebookLM con cuatro pestañas: **Chat** (preguntas sobre los apuntes), **Resumen**, **Examen** (tipo test y abiertas, con corrección) y **Tarjetas** (se les da la vuelta y se barajan). La IA lee el texto escrito a teclado, las hojas escritas a mano (se le mandan como imágenes) y el PDF, si lo hay.
+
+Lo hace la Edge Function `study-ai` con Gemini (`gemini-3.8-flash`) de Google. Los resúmenes, exámenes y tarjetas se guardan en la tabla `study_items` (migración `0006_study_items.sql`); el chat no se guarda. Para activarla:
+
+```bash
+npx supabase secrets set GEMINI_API_KEY=...   # clave de https://aistudio.google.com/apikey
+npx supabase functions deploy study-ai
+```
 
 ## Cambiar el logo
 
