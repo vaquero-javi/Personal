@@ -18,7 +18,7 @@ if (!source) {
 
 let file = source
 if (!source.toLowerCase().endsWith('.png')) {
-  file = join(mkdtempSync(join(tmpdir(), 'chronon-logo-')), 'source.png')
+  file = join(mkdtempSync(join(tmpdir(), 'chronos-logo-')), 'source.png')
   execFileSync('sips', ['-s', 'format', 'png', source, '--out', file], { stdio: 'ignore' })
 }
 

@@ -8,12 +8,16 @@
     <meta name="theme-color" content="#f6f5f1" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="description" content="Calendario, recordatorios y apuntes" />
-    <title>CHRONON</title>
+    <meta name="description" content="Calendario, recordatorios y documentos" />
+    <title>CHRONOS</title>
     <script>
       // Aplica el tema antes de pintar para evitar un destello blanco.
       try {
-        var t = localStorage.getItem('chronon-theme')
+        // La app se llamaba Chronon: conservar el tema guardado con la clave antigua.
+        var old = localStorage.getItem('chronon-theme')
+        if (old !== null && localStorage.getItem('chronos-theme') === null) localStorage.setItem('chronos-theme', old)
+        localStorage.removeItem('chronon-theme')
+        var t = localStorage.getItem('chronos-theme')
         if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches))
           document.documentElement.classList.add('dark')
       } catch (e) {}

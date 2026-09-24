@@ -1,5 +1,5 @@
 -- =========================================================
--- CHRONON: eventos, recordatorios, avisos y apuntes
+-- CHRONOS: eventos, recordatorios, avisos y apuntes
 -- =========================================================
 
 -- ---------- Eventos y recordatorios ----------

@@ -23,10 +23,12 @@ export interface NoteDrawing {
   version: 1
   paper: PaperStyle
   mode: NoteMode
+  /** Hojas que tiene la nota; como mínimo, las que ocupan sus trazos. */
+  pages: number
   strokes: Stroke[]
 }
 
-export const EMPTY_DRAWING: NoteDrawing = { version: 1, paper: 'ruled', mode: 'text', strokes: [] }
+export const EMPTY_DRAWING: NoteDrawing = { version: 1, paper: 'ruled', mode: 'text', pages: 1, strokes: [] }
 
 /** Lee el jsonb de la nota con cuidado: puede venir vacío o de una versión anterior. */
 export function parseDrawing(value: unknown): NoteDrawing {
@@ -37,6 +39,7 @@ export function parseDrawing(value: unknown): NoteDrawing {
     version: 1,
     paper: paper.includes(raw.paper as PaperStyle) ? (raw.paper as PaperStyle) : 'ruled',
     mode: raw.mode === 'hand' ? 'hand' : 'text',
+    pages: Number.isInteger(raw.pages) && raw.pages! > 0 ? raw.pages! : 1,
     strokes: Array.isArray(raw.strokes) ? raw.strokes.filter((s) => Array.isArray(s?.points) && s.points.length > 0) : [],
   }
 }

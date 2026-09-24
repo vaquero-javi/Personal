@@ -1,4 +1,4 @@
-# CHRONON
+# CHRONOS
 
 App personal: calendario mensual con eventos y recordatorios, avisos configurables (X minutos/horas/días antes) que llegan como notificación push al móvil y al ordenador, y apuntes organizados en secciones.
 

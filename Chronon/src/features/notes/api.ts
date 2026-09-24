@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, unwrap } from '../../lib/supabase'
 import { COLORS } from '../../components/ui'
 import type { Note, NoteSection } from '../../lib/types'
-import type { NoteDrawing } from './drawing'
+import type { NoteDrawing, PaperStyle } from './drawing'
 
 export function useSections() {
   return useQuery({
@@ -15,14 +15,14 @@ export function useSections() {
 export function useCreateSection() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ name, parentId = null }: { name: string; parentId?: string | null }) => {
+    mutationFn: async ({ name, parentId = null, color }: { name: string; parentId?: string | null; color?: string }) => {
       const sections = qc.getQueryData<NoteSection[]>(['sections']) ?? []
       const siblings = sections.filter((s) => s.parent_id === parentId)
       const position = siblings.reduce((max, s) => Math.max(max, s.position), -1) + 1
       return unwrap(
         await supabase
           .from('note_sections')
-          .insert({ name, position, parent_id: parentId, color: COLORS[sections.length % COLORS.length] })
+          .insert({ name, position, parent_id: parentId, color: color ?? COLORS[sections.length % COLORS.length] })
           .select()
           .single(),
       ) as NoteSection
@@ -52,7 +52,7 @@ export function useDeleteSection() {
   })
 }
 
-export type NoteSummary = Omit<Note, 'content'>
+export type NoteSummary = Omit<Note, 'content' | 'drawing'> & { paper: PaperStyle | null }
 
 export function useNotes(sectionId: string | undefined, search: string) {
   const term = search.trim().replace(/[,()%*]/g, ' ')
@@ -62,7 +62,7 @@ export function useNotes(sectionId: string | undefined, search: string) {
     queryFn: async () => {
       let query = supabase
         .from('notes')
-        .select('id, section_id, title, content_text, pinned, updated_at')
+        .select('id, section_id, title, content_text, pinned, created_at, updated_at, paper:drawing->>paper')
         .eq('section_id', sectionId!)
         .order('pinned', { ascending: false })
         .order('updated_at', { ascending: false })

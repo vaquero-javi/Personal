@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 export type ThemePref = 'light' | 'dark' | 'system'
 
-const KEY = 'chronon-theme'
+const KEY = 'chronos-theme'
 const media = window.matchMedia('(prefers-color-scheme: dark)')
 
 export function getThemePref(): ThemePref {

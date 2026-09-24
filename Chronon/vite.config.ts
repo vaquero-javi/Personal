@@ -20,9 +20,9 @@ export default defineConfig({
         type: 'module',
       },
       manifest: {
-        name: 'CHRONON',
-        short_name: 'CHRONON',
-        description: 'Calendario, recordatorios y apuntes',
+        name: 'CHRONOS',
+        short_name: 'CHRONOS',
+        description: 'Calendario, recordatorios y documentos',
         lang: 'es',
         start_url: '/',
         display: 'standalone',

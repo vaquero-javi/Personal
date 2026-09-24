@@ -37,6 +37,7 @@ export interface NoteSection {
   position: number
   /** Carpeta madre; null si está en la raíz. */
   parent_id: string | null
+  created_at: string
 }
 
 export interface Note {
@@ -48,5 +49,6 @@ export interface Note {
   drawing: unknown
   content_text: string
   pinned: boolean
+  created_at: string
   updated_at: string
 }

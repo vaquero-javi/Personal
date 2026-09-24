@@ -58,7 +58,7 @@ export function Icon({ name, size = 18, ...props }: { name: IconName; size?: num
   )
 }
 
-/** Marca de CHRONON: el logo de public/logo.png teñido con el color de texto actual. */
+/** Marca de CHRONOS: el logo de public/logo.png teñido con el color de texto actual. */
 const LOGO_RATIO = 620 / 672
 
 export function Logo({ size = 28, className = '' }: { size?: number; className?: string }) {
@@ -76,7 +76,7 @@ export function Logo({ size = 28, className = '' }: { size?: number; className?:
   return (
     <span
       role="img"
-      aria-label="Chronon"
+      aria-label="Chronos"
       className={`inline-block shrink-0 bg-current ${className}`}
       style={{ width: Math.round(size * LOGO_RATIO), height: size, ...mask }}
     />

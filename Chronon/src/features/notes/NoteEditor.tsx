@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
 import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
@@ -26,19 +26,43 @@ import {
 } from './drawing'
 
 const SAVE_DELAY = 700
-/** Alto mínimo de la hoja, en unidades de página. */
-const MIN_PAGE_HEIGHT = 1120
+/** Alto de cada hoja, en unidades de página: proporción A4 en vertical. */
+const SHEET_HEIGHT = Math.round(PAGE_WIDTH * Math.SQRT2)
 
 export function NoteEditor({ noteId }: { noteId: string }) {
   const { data: note, isLoading, error } = useNote(noteId)
-  if (isLoading)
-    return (
-      <div className="rounded-2xl bg-surface p-6 shadow-soft ring-1 ring-ink-200/70">
-        <Skeleton rows={5} />
+  const { sectionId } = useParams()
+  if (note) return <LoadedEditor note={note} />
+  return (
+    <Screen>
+      <div className="flex items-center gap-2 border-b border-ink-200/70 bg-surface px-3 py-2">
+        <CloseLink to={`/notes/${sectionId ?? ''}`} />
       </div>
-    )
-  if (error || !note) return <Empty icon="notes">Esta nota ya no existe.</Empty>
-  return <LoadedEditor note={note} />
+      <div className="mx-auto mt-10 w-full max-w-md rounded-2xl bg-surface p-6 shadow-soft">
+        {isLoading ? <Skeleton rows={5} /> : error || !note ? <Empty icon="notes">Esta nota ya no existe.</Empty> : null}
+      </div>
+    </Screen>
+  )
+}
+
+/** La nota abierta tapa toda la app, como un cuaderno a pantalla completa. */
+function Screen({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = overflow
+    }
+  }, [])
+  return <div className="fixed inset-0 z-40 flex flex-col bg-ink-100">{children}</div>
+}
+
+function CloseLink({ to }: { to: string }) {
+  return (
+    <Link to={to} className="grid size-9 shrink-0 place-items-center rounded-xl text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900" aria-label="Cerrar nota" title="Volver a la carpeta">
+      <Icon name="back" size={20} />
+    </Link>
+  )
 }
 
 /** Ancho real de la hoja en pantalla, para colocar el papel y los trazos a la misma escala. */
@@ -164,36 +188,80 @@ function LoadedEditor({ note }: { note: Note }) {
     navigate(`/notes/${note.section_id}`)
   }
 
-  // La hoja crece si se escribe a mano cerca del final.
-  const pageHeight = useMemo(() => {
+  // Las hojas las pone quien escribe; aun así, nunca menos de las que ocupan los trazos.
+  const sheets = useMemo(() => {
     let lowest = 0
     for (const stroke of drawing.strokes) for (const [, y] of stroke.points) if (y > lowest) lowest = y
-    return Math.max(MIN_PAGE_HEIGHT, Math.ceil((lowest + 400) / 400) * 400)
-  }, [drawing.strokes])
+    return Math.max(drawing.pages, Math.ceil(lowest / SHEET_HEIGHT), 1)
+  }, [drawing.pages, drawing.strokes])
+
+  /** Hoja en la que empieza un trazo. */
+  const sheetOf = (stroke: Stroke) => Math.floor(stroke.points[0][1] / SHEET_HEIGHT)
+  const shift = (stroke: Stroke, dy: number): Stroke => ({ ...stroke, points: stroke.points.map(([x, y, p]) => [x, y + dy, p]) })
+
+  function changeSheets(pages: number, strokes: Stroke[]) {
+    undoStack.current.push(drawingRef.current.strokes)
+    redoStack.current = []
+    setDrawing((d) => ({ ...d, pages, strokes }))
+    scheduleSave()
+  }
+
+  /** Mete una hoja en blanco después de la hoja `index` (0 = la primera); lo de debajo baja una hoja. */
+  function insertSheet(index: number) {
+    changeSheets(
+      sheets + 1,
+      drawing.strokes.map((s) => (sheetOf(s) > index ? shift(s, SHEET_HEIGHT) : s)),
+    )
+    requestAnimationFrame(() =>
+      scrollRef.current?.scrollTo({ top: (index + 1) * SHEET_HEIGHT * scale, behavior: 'smooth' }),
+    )
+  }
+
+  /** Quita la hoja `index` con lo que tenga dibujado; lo de debajo sube una hoja. */
+  function removeSheet(index: number) {
+    if (sheets <= 1) return
+    const onSheet = drawing.strokes.filter((s) => sheetOf(s) === index)
+    if (onSheet.length > 0 && !confirm(`¿Quitar la hoja ${index + 1} y lo que hay escrito en ella?`)) return
+    changeSheets(
+      sheets - 1,
+      drawing.strokes.flatMap((s) => {
+        const at = sheetOf(s)
+        return at === index ? [] : at > index ? [shift(s, -SHEET_HEIGHT)] : [s]
+      }),
+    )
+  }
 
   const statusLabel = { saved: 'Guardado', dirty: 'Sin guardar…', saving: 'Guardando…', error: 'Error al guardar' }[status]
   const statusDot = { saved: 'bg-emerald-500', dirty: 'bg-ink-300', saving: 'bg-accent-500 animate-shimmer', error: 'bg-red-500' }[status]
 
   return (
-    <article className="flex h-[80dvh] flex-col overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 ring-ink-200/70 md:h-[calc(100dvh-6.5rem)]">
-      <div className="flex flex-wrap items-center gap-2 border-b border-ink-100 px-3 py-2 sm:px-4">
-        <Link to={`/notes/${note.section_id}`} className="grid size-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 md:hidden" aria-label="Volver">
-          <Icon name="back" />
-        </Link>
-        <span className={`flex items-center gap-1.5 text-xs ${status === 'error' ? 'text-red-600' : 'text-ink-400'}`} aria-live="polite">
+    <Screen>
+      <header className="flex items-center gap-2 border-b border-ink-200/70 bg-surface px-2 py-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] sm:px-3">
+        <CloseLink to={`/notes/${note.section_id}`} />
+        <input
+          className="min-w-0 flex-1 truncate rounded-lg bg-transparent px-2 py-1 text-[15px] font-semibold text-ink-900 outline-none placeholder:text-ink-400 hover:bg-ink-50 focus:bg-ink-50"
+          placeholder="Sin título"
+          aria-label="Título"
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value)
+            scheduleSave()
+          }}
+        />
+        <span className={`hidden items-center gap-1.5 text-xs sm:flex ${status === 'error' ? 'text-red-600' : 'text-ink-400'}`} aria-live="polite">
           <span className={`size-1.5 rounded-full ${statusDot}`} />
           {statusLabel}
         </span>
-        <div className="ml-auto flex items-center gap-0.5">
-          <div className="relative">
+        <div className="flex items-center gap-0.5">
+          <div className="relative hidden sm:block">
             <select
-              className="h-8 appearance-none rounded-lg bg-transparent pl-2.5 pr-7 text-xs text-ink-600 ring-1 ring-inset ring-ink-200 transition-colors hover:text-ink-900"
+              className="h-8 max-w-40 appearance-none truncate rounded-lg bg-transparent pl-2.5 pr-7 text-xs text-ink-600 ring-1 ring-inset ring-ink-200 transition-colors hover:text-ink-900"
               value={note.section_id}
               onChange={async (e) => {
                 await update.mutateAsync({ id: note.id, section_id: e.target.value })
                 navigate(`/notes/${e.target.value}/${note.id}`, { replace: true })
               }}
-              aria-label="Mover a sección"
+              aria-label="Mover a carpeta"
             >
               {sections.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
@@ -210,7 +278,7 @@ function LoadedEditor({ note }: { note: Note }) {
           />
           <IconButton icon="trash" label="Borrar nota" className="size-8 hover:bg-red-50! hover:text-red-600!" onClick={remove} />
         </div>
-      </div>
+      </header>
 
       <Toolbar
         editor={editor}
@@ -229,26 +297,30 @@ function LoadedEditor({ note }: { note: Note }) {
         hasStrokes={drawing.strokes.length > 0}
       />
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain bg-ink-100 p-2 sm:p-5">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-2 py-4 sm:px-6 sm:py-8">
         <div
           ref={pageRef}
-          className={`paper paper-${drawing.paper} relative mx-auto w-full max-w-[1180px] overflow-hidden rounded-xl bg-surface shadow-soft`}
-          style={{ minHeight: pageHeight * scale, ['--page-scale' as string]: scale }}
+          className={`paper paper-${drawing.paper} relative mx-auto w-full overflow-hidden rounded-sm bg-surface shadow-float`}
+          style={{ maxWidth: PAGE_WIDTH, minHeight: sheets * SHEET_HEIGHT * scale, ['--page-scale' as string]: scale }}
         >
+          {Array.from({ length: sheets }, (_, i) => (
+            <div
+              key={i}
+              className={`pointer-events-none absolute inset-x-0 z-10 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}
+              style={{ top: i * SHEET_HEIGHT * scale }}
+            >
+              <SheetControls
+                number={i + 1}
+                total={sheets}
+                onAddAfter={() => insertSheet(i)}
+                onRemove={sheets > 1 ? () => removeSheet(i) : undefined}
+              />
+            </div>
+          ))}
           <div className="px-6 pb-16 pt-8 sm:px-14">
-            <input
-              className="w-full bg-transparent font-display text-4xl leading-tight tracking-tight text-ink-900 outline-none placeholder:text-ink-300"
-              placeholder="Sin título"
-              aria-label="Título"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value)
-                scheduleSave()
-              }}
-            />
             <EditorContent
               editor={editor}
-              className="mt-4 cursor-text"
+              className="cursor-text"
               onClick={() => tool === 'text' && editor?.commands.focus()}
             />
           </div>
@@ -262,8 +334,47 @@ function LoadedEditor({ note }: { note: Note }) {
             scrollRef={scrollRef}
           />
         </div>
+        <button
+          type="button"
+          onClick={() => insertSheet(sheets - 1)}
+          className="mx-auto mt-4 flex h-10 items-center gap-2 rounded-full bg-surface px-4 text-[13px] font-medium text-ink-700 shadow-soft ring-1 ring-ink-200/70 transition-colors hover:bg-ink-50 hover:text-ink-900"
+        >
+          <Icon name="plus" size={15} strokeWidth={2} />
+          Añadir hoja
+        </button>
       </div>
-    </article>
+    </Screen>
+  )
+}
+
+/** Número de hoja con sus acciones, en la esquina de arriba de cada hoja. */
+function SheetControls({ number, total, onAddAfter, onRemove }: { number: number; total: number; onAddAfter: () => void; onRemove?: () => void }) {
+  return (
+    <div className="pointer-events-auto absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-surface/85 py-0.5 pl-2.5 pr-0.5 text-ink-400 shadow-soft ring-1 ring-ink-200/70 backdrop-blur">
+      <span className="font-mono text-[10px]">
+        {number}/{total}
+      </span>
+      <button
+        type="button"
+        onClick={onAddAfter}
+        title="Añadir una hoja después de esta"
+        aria-label={`Añadir una hoja después de la ${number}`}
+        className="grid size-6 place-items-center rounded-full transition-colors hover:bg-ink-100 hover:text-ink-900"
+      >
+        <Icon name="plus" size={13} strokeWidth={2} />
+      </button>
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Quitar esta hoja"
+          aria-label={`Quitar la hoja ${number}`}
+          className="grid size-6 place-items-center rounded-full transition-colors hover:bg-red-50 hover:text-red-600"
+        >
+          <Icon name="trash" size={13} />
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -308,7 +419,7 @@ function Toolbar(props: ToolbarProps) {
   const sizes = tool === 'highlighter' ? HIGHLIGHTER_SIZES : PEN_SIZES
 
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-ink-100 px-2 py-2 sm:px-3">
+    <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 border-b border-ink-200/70 bg-surface px-2 py-1.5 sm:px-3">
       <div className="flex rounded-xl bg-ink-100 p-0.5">
         {TOOLS.map((t) => (
           <button
@@ -359,7 +470,7 @@ function Toolbar(props: ToolbarProps) {
 
       {tool === 'text' && editor && <TextTools editor={editor} />}
 
-      <div className="ml-auto flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 border-l border-ink-200 pl-2">
         {(drawingTool || tool === 'eraser') && (
           <button
             type="button"
