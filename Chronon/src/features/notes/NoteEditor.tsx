@@ -9,7 +9,8 @@ import { Empty, IconButton, Skeleton } from '../../components/ui'
 import { Icon, type IconName } from '../../components/Icon'
 import type { Note } from '../../lib/types'
 import { useIsDark } from '../../lib/theme'
-import { useDeleteNote, useNote, useSections, useUpdateNote } from './api'
+import { useDeleteNote, useNote, usePdf, useSections, useUpdateNote } from './api'
+import type { PDFDocumentProxy } from './pdf'
 import { DrawingLayer } from './DrawingLayer'
 import {
   HIGHLIGHTER_COLORS,
@@ -97,8 +98,9 @@ function LoadedEditor({ note }: { note: Note }) {
   titleRef.current = title
   const drawingRef = useRef(drawing)
   drawingRef.current = drawing
-  const undoStack = useRef<Stroke[][]>([])
-  const redoStack = useRef<Stroke[][]>([])
+  // Deshacer recuerda también las hojas, porque quitar una mueve trazos y páginas del PDF.
+  const undoStack = useRef<Snapshot[]>([])
+  const redoStack = useRef<Snapshot[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const scale = usePageScale(pageRef)
@@ -152,27 +154,34 @@ function LoadedEditor({ note }: { note: Note }) {
     [],
   )
 
-  function setStrokes(next: Stroke[], remember = true) {
+  const snapshot = (): Snapshot => {
+    const { strokes, pages, pdf } = drawingRef.current
+    return { strokes, pages, pdf }
+  }
+
+  function apply(next: Partial<Snapshot>, remember = true) {
     if (remember) {
-      undoStack.current.push(drawingRef.current.strokes)
+      undoStack.current.push(snapshot())
       redoStack.current = []
     }
-    setDrawing((d) => ({ ...d, strokes: next }))
+    setDrawing((d) => ({ ...d, ...next }))
     scheduleSave()
   }
+
+  const setStrokes = (strokes: Stroke[]) => apply({ strokes })
 
   function undo() {
     const previous = undoStack.current.pop()
     if (!previous) return
-    redoStack.current.push(drawingRef.current.strokes)
-    setStrokes(previous, false)
+    redoStack.current.push(snapshot())
+    apply(previous, false)
   }
 
   function redo() {
     const next = redoStack.current.pop()
     if (!next) return
-    undoStack.current.push(drawingRef.current.strokes)
-    setStrokes(next, false)
+    undoStack.current.push(snapshot())
+    apply(next, false)
   }
 
   function setPaper(paper: PaperStyle) {
@@ -199,19 +208,25 @@ function LoadedEditor({ note }: { note: Note }) {
   const sheetOf = (stroke: Stroke) => Math.floor(stroke.points[0][1] / SHEET_HEIGHT)
   const shift = (stroke: Stroke, dy: number): Stroke => ({ ...stroke, points: stroke.points.map(([x, y, p]) => [x, y + dy, p]) })
 
-  function changeSheets(pages: number, strokes: Stroke[]) {
-    undoStack.current.push(drawingRef.current.strokes)
-    redoStack.current = []
-    setDrawing((d) => ({ ...d, pages, strokes }))
-    scheduleSave()
+  /** Página del PDF que va de fondo en cada hoja (null si es una hoja en blanco). */
+  const pdfPages = drawing.pdf ? Array.from({ length: sheets }, (_, i) => drawing.pdf!.sheets[i] ?? null) : null
+  const { data: pdfDoc, error: pdfError } = usePdf(drawing.pdf?.path)
+
+  /** El PDF con sus páginas recolocadas tras añadir o quitar hojas. */
+  function movePdf(edit: (pages: (number | null)[]) => void) {
+    if (!drawing.pdf || !pdfPages) return undefined
+    const next = [...pdfPages]
+    edit(next)
+    return { ...drawing.pdf, sheets: next }
   }
 
   /** Mete una hoja en blanco después de la hoja `index` (0 = la primera); lo de debajo baja una hoja. */
   function insertSheet(index: number) {
-    changeSheets(
-      sheets + 1,
-      drawing.strokes.map((s) => (sheetOf(s) > index ? shift(s, SHEET_HEIGHT) : s)),
-    )
+    apply({
+      pages: sheets + 1,
+      strokes: drawing.strokes.map((s) => (sheetOf(s) > index ? shift(s, SHEET_HEIGHT) : s)),
+      pdf: movePdf((pages) => pages.splice(index + 1, 0, null)),
+    })
     requestAnimationFrame(() =>
       scrollRef.current?.scrollTo({ top: (index + 1) * SHEET_HEIGHT * scale, behavior: 'smooth' }),
     )
@@ -221,14 +236,17 @@ function LoadedEditor({ note }: { note: Note }) {
   function removeSheet(index: number) {
     if (sheets <= 1) return
     const onSheet = drawing.strokes.filter((s) => sheetOf(s) === index)
-    if (onSheet.length > 0 && !confirm(`¿Quitar la hoja ${index + 1} y lo que hay escrito en ella?`)) return
-    changeSheets(
-      sheets - 1,
-      drawing.strokes.flatMap((s) => {
+    const pdfPage = pdfPages?.[index]
+    const what = pdfPage ? ` (página ${pdfPage} del PDF)` : ''
+    if ((onSheet.length > 0 || pdfPage) && !confirm(`¿Quitar la hoja ${index + 1}${what} y lo que hay escrito en ella? Se puede deshacer.`)) return
+    apply({
+      pages: sheets - 1,
+      strokes: drawing.strokes.flatMap((s) => {
         const at = sheetOf(s)
         return at === index ? [] : at > index ? [shift(s, -SHEET_HEIGHT)] : [s]
       }),
-    )
+      pdf: movePdf((pages) => pages.splice(index, 1)),
+    })
   }
 
   const statusLabel = { saved: 'Guardado', dirty: 'Sin guardar…', saving: 'Guardando…', error: 'Error al guardar' }[status]
@@ -294,7 +312,6 @@ function LoadedEditor({ note }: { note: Note }) {
         onFingerDraws={setFingerDraws}
         onUndo={undo}
         onRedo={redo}
-        hasStrokes={drawing.strokes.length > 0}
       />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-2 py-4 sm:px-6 sm:py-8">
@@ -317,7 +334,16 @@ function LoadedEditor({ note }: { note: Note }) {
               />
             </div>
           ))}
-          <div className="px-6 pb-16 pt-8 sm:px-14">
+          {pdfPages?.map(
+            (page, i) =>
+              page !== null && (
+                <PdfSheet key={`${i}-${page}`} doc={pdfDoc} page={page} top={i * SHEET_HEIGHT * scale} width={PAGE_WIDTH * scale} height={SHEET_HEIGHT * scale} />
+              ),
+          )}
+          {pdfError && (
+            <p className="absolute inset-x-0 top-24 z-10 text-center text-sm text-red-600">No se ha podido abrir el PDF: {pdfError.message}</p>
+          )}
+          <div className="relative px-6 pb-16 pt-8 sm:px-14">
             <EditorContent
               editor={editor}
               className="cursor-text"
@@ -344,6 +370,57 @@ function LoadedEditor({ note }: { note: Note }) {
         </button>
       </div>
     </Screen>
+  )
+}
+
+type Snapshot = Pick<NoteDrawing, 'strokes' | 'pages' | 'pdf'>
+
+/**
+ * Una página del PDF pintada de fondo en su hoja, encajada sin deformarla.
+ * Solo se pinta cuando la hoja está cerca de verse, para que los PDFs largos abran rápido.
+ */
+function PdfSheet({ doc, page, top, width, height }: { doc?: PDFDocumentProxy; page: number; top: number; width: number; height: number }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const [near, setNear] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && setNear(true), { rootMargin: '1200px 0px' })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const canvas = ref.current
+    if (!doc || !near || !canvas || width === 0 || page > doc.numPages) return
+    let cancelled = false
+    let task: ReturnType<Awaited<ReturnType<PDFDocumentProxy['getPage']>>['render']> | undefined
+    doc.getPage(page).then((pdfPage) => {
+      if (cancelled) return
+      const base = pdfPage.getViewport({ scale: 1 })
+      const fit = Math.min(width / base.width, height / base.height)
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const viewport = pdfPage.getViewport({ scale: fit * dpr })
+      canvas.width = Math.floor(viewport.width)
+      canvas.height = Math.floor(viewport.height)
+      canvas.style.width = `${viewport.width / dpr}px`
+      canvas.style.height = `${viewport.height / dpr}px`
+      task = pdfPage.render({ canvas, viewport })
+      task.promise.catch(() => {})
+    })
+    return () => {
+      cancelled = true
+      task?.cancel()
+    }
+  }, [doc, near, page, width, height])
+
+  return (
+    // En modo oscuro la página se invierte, como en GoodNotes, para que la tinta clara se lea encima.
+    <div className="pointer-events-none absolute inset-x-0 flex justify-center bg-white dark:invert dark:hue-rotate-180" style={{ top, height }} aria-hidden>
+      <canvas ref={ref} />
+      {!doc && <span className="absolute inset-0 m-auto size-fit animate-shimmer text-xs text-ink-400">Cargando página {page}…</span>}
+    </div>
   )
 }
 
@@ -406,11 +483,10 @@ interface ToolbarProps {
   onFingerDraws: (v: boolean) => void
   onUndo: () => void
   onRedo: () => void
-  hasStrokes: boolean
 }
 
 function Toolbar(props: ToolbarProps) {
-  const { editor, tool, onTool, paper, onPaper, fingerDraws, onFingerDraws, onUndo, onRedo, hasStrokes } = props
+  const { editor, tool, onTool, paper, onPaper, fingerDraws, onFingerDraws, onUndo, onRedo } = props
   const dark = useIsDark()
   const drawingTool = tool === 'pen' || tool === 'highlighter'
   const current = tool === 'highlighter' ? props.highlighter : props.pen
@@ -483,7 +559,7 @@ function Toolbar(props: ToolbarProps) {
             {fingerDraws ? 'Dedo pinta' : 'Dedo desplaza'}
           </button>
         )}
-        <IconButton icon="undo" label="Deshacer" className="size-8" onClick={onUndo} disabled={!hasStrokes && tool !== 'text'} />
+        <IconButton icon="undo" label="Deshacer" className="size-8" onClick={onUndo} />
         <IconButton icon="redo" label="Rehacer" className="size-8" onClick={onRedo} />
         <div className="relative">
           <select

@@ -17,7 +17,7 @@ Necesitas [Node.js](https://nodejs.org) 20 o superior.
 ### 1. Supabase
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql` y `supabase/migrations/0004_note_folders.sql`.
+2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql`, `supabase/migrations/0004_note_folders.sql` y `supabase/migrations/0005_note_pdfs.sql`.
 3. Genera las claves VAPID para push:
    ```bash
    npx web-push generate-vapid-keys
@@ -86,6 +86,10 @@ Cada nota es una hoja de libreta: se elige el papel (rayado, cuadrícula, puntos
 - **Dedo**: por defecto desplaza la hoja y solo pinta el lápiz. Se cambia con el botón *Dedo desplaza* de la barra.
 
 Los trazos se guardan en la columna `drawing` de `notes` (migración `0003_notes_drawing.sql`), en coordenadas de página, así una nota escrita en el iPad se ve igual en el ordenador.
+
+## PDFs
+
+Dentro de una carpeta, **Nuevo → Subir PDF** importa un PDF como documento: cada página del PDF es una hoja sobre la que se puede escribir a mano, subrayar o añadir texto, y se pueden meter hojas en blanco entre medias o quitar páginas. El archivo se guarda en el bucket privado `documents` de Supabase Storage (migración `0005_note_pdfs.sql`, máximo 50 MB) y se borra al borrar el documento o su carpeta.
 
 ## Cambiar el logo
 

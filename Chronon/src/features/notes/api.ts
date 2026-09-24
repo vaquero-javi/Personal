@@ -2,7 +2,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, unwrap } from '../../lib/supabase'
 import { COLORS } from '../../components/ui'
 import type { Note, NoteSection } from '../../lib/types'
-import type { NoteDrawing, PaperStyle } from './drawing'
+import { EMPTY_DRAWING, type NoteDrawing, type PaperStyle } from './drawing'
+import { loadPdf } from './pdf'
+
+const BUCKET = 'documents'
+
+/** Borra de Storage los PDFs de las notas indicadas (las filas ya se borran solas en cascada). */
+async function removePdfs(filter: { noteId?: string; sectionIds?: string[] }) {
+  let query = supabase.from('notes').select('path:drawing->pdf->>path').not('drawing->pdf', 'is', null)
+  if (filter.noteId) query = query.eq('id', filter.noteId)
+  if (filter.sectionIds) query = query.in('section_id', filter.sectionIds)
+  const rows = unwrap(await query) as { path: string | null }[]
+  const paths = rows.flatMap((r) => (r.path ? [r.path] : []))
+  return async () => {
+    if (paths.length) await supabase.storage.from(BUCKET).remove(paths)
+  }
+}
 
 export function useSections() {
   return useQuery({
@@ -44,7 +59,18 @@ export function useUpdateSections() {
 export function useDeleteSection() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => unwrap(await supabase.from('note_sections').delete().eq('id', id)),
+    mutationFn: async (id: string) => {
+      // La carpeta se lleva sus subcarpetas y notas; sus PDFs hay que quitarlos de Storage a mano.
+      const sections = qc.getQueryData<NoteSection[]>(['sections']) ?? []
+      const ids = new Set([id])
+      for (let grew = true; grew; ) {
+        grew = false
+        for (const s of sections) if (s.parent_id && ids.has(s.parent_id) && !ids.has(s.id)) (ids.add(s.id), (grew = true))
+      }
+      const cleanUp = await removePdfs({ sectionIds: [...ids] })
+      unwrap(await supabase.from('note_sections').delete().eq('id', id))
+      await cleanUp()
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sections'] })
       qc.invalidateQueries({ queryKey: ['notes'] })
@@ -52,7 +78,7 @@ export function useDeleteSection() {
   })
 }
 
-export type NoteSummary = Omit<Note, 'content' | 'drawing'> & { paper: PaperStyle | null }
+export type NoteSummary = Omit<Note, 'content' | 'drawing'> & { paper: PaperStyle | null; pdf: string | null }
 
 export function useNotes(sectionId: string | undefined, search: string) {
   const term = search.trim().replace(/[,()%*]/g, ' ')
@@ -62,7 +88,7 @@ export function useNotes(sectionId: string | undefined, search: string) {
     queryFn: async () => {
       let query = supabase
         .from('notes')
-        .select('id, section_id, title, content_text, pinned, created_at, updated_at, paper:drawing->>paper')
+        .select('id, section_id, title, content_text, pinned, created_at, updated_at, paper:drawing->>paper, pdf:drawing->pdf->>path')
         .eq('section_id', sectionId!)
         .order('pinned', { ascending: false })
         .order('updated_at', { ascending: false })
@@ -107,7 +133,62 @@ export function useUpdateNote() {
 export function useDeleteNote() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => unwrap(await supabase.from('notes').delete().eq('id', id)),
+    mutationFn: async (id: string) => {
+      const cleanUp = await removePdfs({ noteId: id })
+      unwrap(await supabase.from('notes').delete().eq('id', id))
+      await cleanUp()
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['notes', 'list'] }),
+  })
+}
+
+/** Sube un PDF y crea con él un documento: una hoja por página, lista para escribir encima. */
+export function useImportPdf() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ sectionId, file }: { sectionId: string; file: File }) => {
+      const data = await file.arrayBuffer()
+      // Se lee antes de subirlo: si no es un PDF válido, no se sube nada.
+      const pdf = await loadPdf(data.slice(0))
+      const pages = pdf.numPages
+      await pdf.loadingTask.destroy()
+
+      const { data: auth } = await supabase.auth.getUser()
+      if (!auth.user) throw new Error('Sesión caducada')
+      const path = `${auth.user.id}/${crypto.randomUUID()}.pdf`
+      const { error } = await supabase.storage.from(BUCKET).upload(path, data, { contentType: 'application/pdf' })
+      if (error) throw new Error(error.message)
+
+      const drawing: NoteDrawing = {
+        ...EMPTY_DRAWING,
+        mode: 'hand',
+        paper: 'plain',
+        pages,
+        pdf: { path, sheets: Array.from({ length: pages }, (_, i) => i + 1) },
+      }
+      const title = file.name.replace(/\.pdf$/i, '')
+      try {
+        return unwrap(await supabase.from('notes').insert({ section_id: sectionId, title, drawing }).select().single()) as Note
+      } catch (err) {
+        await supabase.storage.from(BUCKET).remove([path])
+        throw err
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes', 'list'] }),
+  })
+}
+
+/** Descarga y abre el PDF de un documento; se guarda en memoria mientras se usa. */
+export function usePdf(path: string | undefined) {
+  return useQuery({
+    queryKey: ['pdf', path],
+    enabled: !!path,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from(BUCKET).download(path!)
+      if (error) throw new Error(error.message)
+      return loadPdf(await data.arrayBuffer())
+    },
   })
 }

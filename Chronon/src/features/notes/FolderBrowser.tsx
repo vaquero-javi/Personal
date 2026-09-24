@@ -6,7 +6,7 @@ import { Modal } from '../../components/Modal'
 import { Button, COLORS, ColorPicker, Field, IconButton, Skeleton, inputClass } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import type { NoteSection } from '../../lib/types'
-import { useCreateNote, useCreateSection, useDeleteSection, useNotes, useSections, useUpdateSections, type NoteSummary } from './api'
+import { useCreateNote, useCreateSection, useDeleteSection, useImportPdf, useNotes, useSections, useUpdateSections, type NoteSummary } from './api'
 import { NewNoteDialog } from './NewNoteDialog'
 import type { NoteDrawing } from './drawing'
 
@@ -25,6 +25,8 @@ export function FolderBrowser({ sectionId }: { sectionId?: string }) {
   const [editing, setEditing] = useState<NoteSection | null>(null)
   const { data: notes = [], isLoading: loadingNotes } = useNotes(section?.id, search)
   const createNote = useCreateNote()
+  const importPdf = useImportPdf()
+  const fileRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
   const term = search.trim().toLowerCase()
@@ -36,6 +38,21 @@ export function FolderBrowser({ sectionId }: { sectionId?: string }) {
     const note = await createNote.mutateAsync({ sectionId: section.id, drawing })
     setDialog(null)
     navigate(`/notes/${section.id}/${note.id}`)
+  }
+
+  async function onPdf(file: File | undefined) {
+    if (!section || !file) return
+    try {
+      const note = await importPdf.mutateAsync({ sectionId: section.id, file })
+      navigate(`/notes/${section.id}/${note.id}`)
+    } catch (err) {
+      alert(`No se ha podido importar «${file.name}»: ${err instanceof Error ? err.message : err}`)
+    }
+  }
+
+  function pick(kind: 'folder' | 'note' | 'pdf') {
+    if (kind === 'pdf') fileRef.current?.click()
+    else setDialog(kind)
   }
 
   if (sectionId && !isLoading && !section) {
@@ -90,7 +107,22 @@ export function FolderBrowser({ sectionId }: { sectionId?: string }) {
               onChange={(e) => setSearch(e.target.value)}
             />
           )}
-          <NewMenu canCreateNote={!!section} onPick={setDialog} />
+          {importPdf.isPending && (
+            <span className="flex items-center gap-1.5 text-[13px] text-ink-500" role="status">
+              <span className="size-1.5 animate-shimmer rounded-full bg-accent-500" /> Importando PDF…
+            </span>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={(e) => {
+              onPdf(e.target.files?.[0])
+              e.target.value = ''
+            }}
+          />
+          <NewMenu canCreateNote={!!section} busy={importPdf.isPending} onPick={pick} />
         </div>
       </div>
 
@@ -144,7 +176,7 @@ function Breadcrumbs({ sections, section }: { sections: NoteSection[]; section?:
   )
 }
 
-function NewMenu({ canCreateNote, onPick }: { canCreateNote: boolean; onPick: (kind: 'folder' | 'note') => void }) {
+function NewMenu({ canCreateNote, busy, onPick }: { canCreateNote: boolean; busy: boolean; onPick: (kind: 'folder' | 'note' | 'pdf') => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -160,7 +192,7 @@ function NewMenu({ canCreateNote, onPick }: { canCreateNote: boolean; onPick: (k
     }
   }, [open])
 
-  const pick = (kind: 'folder' | 'note') => {
+  const pick = (kind: 'folder' | 'note' | 'pdf') => {
     setOpen(false)
     onPick(kind)
   }
@@ -175,6 +207,11 @@ function NewMenu({ canCreateNote, onPick }: { canCreateNote: boolean; onPick: (k
           {canCreateNote && (
             <button role="menuitem" type="button" onClick={() => pick('note')} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-ink-800 hover:bg-ink-100">
               <Icon name="notes" size={18} className="text-ink-500" /> Nota
+            </button>
+          )}
+          {canCreateNote && (
+            <button role="menuitem" type="button" disabled={busy} onClick={() => pick('pdf')} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-ink-800 hover:bg-ink-100 disabled:opacity-40">
+              <Icon name="upload" size={18} className="text-ink-500" /> Subir PDF
             </button>
           )}
           <button role="menuitem" type="button" onClick={() => pick('folder')} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-ink-800 hover:bg-ink-100">
@@ -238,6 +275,9 @@ function NoteTile({ note }: { note: NoteSummary }) {
       >
         <p className="line-clamp-[9] break-words px-2.5 pt-2 text-[6px] leading-[9px] text-ink-600">{note.content_text}</p>
         {note.pinned && <Icon name="pin" size={13} className="absolute right-1.5 top-1.5 text-accent-500" />}
+        {note.pdf && (
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-red-600 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white">PDF</span>
+        )}
       </div>
       <p className="mt-2 line-clamp-2 text-sm font-semibold leading-tight text-ink-900">{note.title || 'Sin título'}</p>
       <p className="mt-0.5 text-[11px] text-ink-400">{stamp(note.updated_at)}</p>

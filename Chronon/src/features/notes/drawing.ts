@@ -19,6 +19,14 @@ export interface Stroke {
   points: Point[]
 }
 
+/** PDF importado: cada hoja de la nota muestra una página suya de fondo. */
+export interface NotePdf {
+  /** Ruta del archivo en el bucket `documents` de Storage. */
+  path: string
+  /** Página del PDF (1 = la primera) que va en cada hoja; null en las hojas en blanco añadidas después. */
+  sheets: (number | null)[]
+}
+
 export interface NoteDrawing {
   version: 1
   paper: PaperStyle
@@ -26,6 +34,7 @@ export interface NoteDrawing {
   /** Hojas que tiene la nota; como mínimo, las que ocupan sus trazos. */
   pages: number
   strokes: Stroke[]
+  pdf?: NotePdf
 }
 
 export const EMPTY_DRAWING: NoteDrawing = { version: 1, paper: 'ruled', mode: 'text', pages: 1, strokes: [] }
@@ -41,6 +50,7 @@ export function parseDrawing(value: unknown): NoteDrawing {
     mode: raw.mode === 'hand' ? 'hand' : 'text',
     pages: Number.isInteger(raw.pages) && raw.pages! > 0 ? raw.pages! : 1,
     strokes: Array.isArray(raw.strokes) ? raw.strokes.filter((s) => Array.isArray(s?.points) && s.points.length > 0) : [],
+    ...(typeof raw.pdf?.path === 'string' && Array.isArray(raw.pdf.sheets) ? { pdf: raw.pdf } : {}),
   }
 }
 
