@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T00:00:00Z",
+  "title": "Design System: ¡Feliz cumpleaños!",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Plum Ink",
+        "canonical": "oklch(17.1% 0.027 336.3)",
+        "tonalRamp": [
+          "#12070f",
+          "#2c1f29",
+          "#493a45",
+          "#685863",
+          "#887783",
+          "#aa98a5",
+          "#d0becb",
+          "#fbe8f5"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Velvet Plum",
+        "canonical": "oklch(22.8% 0.052 335.1)",
+        "tonalRamp": [
+          "#170314",
+          "#331a2e",
+          "#51354b",
+          "#705369",
+          "#91728a",
+          "#b493ab",
+          "#dab8d2",
+          "#ffe6f8"
+        ]
+      },
+      "pink": {
+        "role": "primary",
+        "displayName": "Wristband Pink",
+        "canonical": "oklch(67.3% 0.233 1.9)",
+        "tonalRamp": [
+          "#210009",
+          "#490020",
+          "#79003a",
+          "#ac0055",
+          "#e00f73",
+          "#fe5995",
+          "#fea7bf",
+          "#fee8ed"
+        ]
+      },
+      "pink-deep": {
+        "role": "primary",
+        "displayName": "Bruised Magenta",
+        "canonical": "oklch(46.7% 0.179 3.6)",
+        "tonalRamp": [
+          "#210008",
+          "#4a001e",
+          "#790037",
+          "#a81753",
+          "#ce4272",
+          "#f56692",
+          "#fea7bd",
+          "#fee8ec"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Fairy-Light Gold",
+        "canonical": "oklch(85.4% 0.157 84.1)",
+        "tonalRamp": [
+          "#140900",
+          "#312100",
+          "#533b00",
+          "#785800",
+          "#9f7600",
+          "#c89502",
+          "#f4ba2d",
+          "#ffecc8"
+        ]
+      },
+      "gold-deep": {
+        "role": "secondary",
+        "displayName": "Leopard Amber",
+        "canonical": "oklch(62.6% 0.132 71.0)",
+        "tonalRamp": [
+          "#170700",
+          "#361e00",
+          "#5a3700",
+          "#825200",
+          "#ab6e04",
+          "#d18f31",
+          "#fab55c",
+          "#feebd5"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(97.3% 0.018 64.9)",
+        "tonalRamp": [
+          "#100a04",
+          "#2a221b",
+          "#473e36",
+          "#655c53",
+          "#857b72",
+          "#a79c93",
+          "#cdc2b8",
+          "#f7ece2"
+        ]
+      },
+      "paper-dim": {
+        "role": "neutral",
+        "displayName": "Dusty Rose Paper",
+        "canonical": "oklch(90.7% 0.029 347.1)",
+        "tonalRamp": [
+          "#14060d",
+          "#2f1e27",
+          "#4c3a43",
+          "#6b5761",
+          "#8b7781",
+          "#ad97a2",
+          "#d3bdc8",
+          "#fee7f2"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Marquee (Jersey 10)",
+        "purpose": "Screen titles, uppercase, always extruded."
+      },
+      "headline": {
+        "displayName": "START label (Jersey 10)",
+        "purpose": "The primary button label."
+      },
+      "body": {
+        "displayName": "Dialogue (Pixelify Sans)",
+        "purpose": "Every sentence she reads."
+      },
+      "label": {
+        "displayName": "Machine (Press Start 2P)",
+        "purpose": "HUD readouts and small secondary controls; never sentences."
+      }
+    },
+    "shadows": [
+      {
+        "name": "marquee-extrusion",
+        "value": "0 4px 0 #ff3d8b, 0 8px 0 #a3104f, 0 12px 0 #170b14",
+        "purpose": "text-shadow under display titles over photos."
+      },
+      {
+        "name": "hud-drop",
+        "value": "0 4px 0 #170b14",
+        "purpose": "text-shadow / drop-shadow keeping HUD legible over photos."
+      },
+      {
+        "name": "dialogue-frame",
+        "value": "inset 0 0 0 4px #170b14, inset 0 0 0 8px #f0d9e4",
+        "purpose": "Inner layers of the dialogue box frame, inside a 4px pink border."
+      },
+      {
+        "name": "cabinet-lip",
+        "value": "border-bottom: 8px solid #b9780c",
+        "purpose": "START button edge; collapses to 4px with translateY(4px) on press."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "CRT power-on only (900ms)."
+      },
+      {
+        "name": "blink",
+        "value": "0.6s-0.8s steps(1) infinite",
+        "purpose": "Caret, skip marker."
+      },
+      {
+        "name": "nudge",
+        "value": "0.8s steps(2) infinite, 4px",
+        "purpose": "START cursor arrow."
+      },
+      {
+        "name": "drop",
+        "value": "520ms steps(5)",
+        "purpose": "Title lines dropping in."
+      },
+      {
+        "name": "pop-in",
+        "value": "420ms steps(4)",
+        "purpose": "START button appearing."
+      },
+      {
+        "name": "open-box",
+        "value": "300ms steps(4)",
+        "purpose": "Dialogue box opening vertically."
+      },
+      {
+        "name": "press",
+        "value": "90ms steps(2)",
+        "purpose": "Button press travel."
+      },
+      {
+        "name": "pixel-wipe",
+        "value": "140ms steps(1) per block, delays in 45ms steps over 8 slots",
+        "purpose": "Screen transitions."
+      },
+      {
+        "name": "typewriter",
+        "value": "32ms per char; 260ms after . and !; 120ms after ,",
+        "purpose": "Dialogue typing cadence."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "max-width: 599px"
+      },
+      {
+        "name": "short-landscape",
+        "value": "max-height: 560px and landscape"
+      },
+      {
+        "name": "desktop",
+        "value": "min-width: 900px and landscape"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "START Button",
+      "kind": "button",
+      "refersTo": "button-play",
+      "description": "The single primary action of a screen: gold cabinet button with a pixel cursor and a pressable lip.",
+      "html": "<button class=\"ds-play\"><svg class=\"ds-play__cursor\" viewBox=\"0 0 4 7\" width=\"16\" height=\"28\" shape-rendering=\"crispEdges\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"0\" y=\"0\" width=\"1\" height=\"7\"/><rect x=\"1\" y=\"1\" width=\"1\" height=\"5\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"3\"/><rect x=\"3\" y=\"3\" width=\"1\" height=\"1\"/></svg><span>JUGAR</span></button>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-play{clip-path:polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px),0 4px,4px 4px);display:inline-flex;align-items:center;gap:14px;padding:6px 28px 10px 22px;border:0;border-bottom:8px solid var(--gold-deep);background:var(--gold);color:var(--ink);font-family:var(--f-display);font-size:3.2rem;line-height:1;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:transform 90ms steps(2),background-color 120ms;} .ds-play__cursor{color:var(--pink-deep);animation:ds-nudge .8s steps(2) infinite;} .ds-play:focus-visible{outline:none;background:var(--pink);color:var(--paper);border-bottom-color:var(--pink-deep);} .ds-play:focus-visible .ds-play__cursor{color:var(--gold);} .ds-play:active{transform:translateY(4px);border-bottom-width:4px;} @keyframes ds-nudge{50%{transform:translateX(4px);}}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-back",
+      "description": "Secondary navigation in the machine voice: 4px paper-dim frame with stepped corners.",
+      "html": "<button class=\"ds-back\">VOLVER AL INICIO</button>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-back{clip-path:polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px),0 4px,4px 4px);padding:12px 18px;background:var(--ink);border:4px solid var(--paper-dim);color:var(--paper);font-family:var(--f-hud);font-size:10px;line-height:1.4;text-transform:uppercase;cursor:pointer;} .ds-back:hover{border-color:var(--gold);color:var(--gold);} .ds-back:focus-visible{outline:none;background:var(--gold);border-color:var(--gold);color:var(--ink);}"
+    },
+    {
+      "name": "Skip Control",
+      "kind": "button",
+      "description": "Tertiary control shown while dialogue is typing; completes the text.",
+      "html": "<button class=\"ds-skip\">PULSA PARA LEER TODO <svg class=\"ds-skip__marker\" viewBox=\"0 0 5 3\" width=\"20\" height=\"12\" shape-rendering=\"crispEdges\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"0\" y=\"0\" width=\"5\" height=\"1\"/><rect x=\"1\" y=\"1\" width=\"3\" height=\"1\"/><rect x=\"2\" y=\"2\" width=\"1\" height=\"1\"/></svg></button>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-skip{display:inline-flex;align-items:center;gap:10px;padding:10px 4px;background:var(--ink);border:0;font-family:var(--f-hud);font-size:11px;line-height:1.3;text-transform:uppercase;color:var(--paper-dim);cursor:pointer;} .ds-skip__marker{color:var(--gold);animation:ds-blink .8s steps(1) infinite;} .ds-skip:focus-visible{outline:4px solid var(--gold);outline-offset:4px;} @keyframes ds-blink{50%{opacity:0;}}"
+    },
+    {
+      "name": "Dialogue Box",
+      "kind": "card",
+      "refersTo": "dialog-box",
+      "description": "RPG text box with the layered stepped frame; carries typed narrative text.",
+      "html": "<div class=\"ds-dialog\"><p>Esta vez no hay regalos sin esfuerzo... ¡he preparado un juego para ti!<span class=\"ds-caret\"></span></p></div>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-dialog{clip-path:polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px),0 4px,4px 4px);max-width:64ch;padding:24px 24px 20px;background:var(--ink);border:4px solid var(--pink);box-shadow:inset 0 0 0 4px var(--ink),inset 0 0 0 8px var(--paper-dim);color:var(--paper);font-family:var(--f-text);font-size:1.2rem;line-height:1.45;} .ds-dialog p{margin:0;} .ds-caret{display:inline-block;width:.5em;height:1em;margin:0 0 -.14em 2px;background:var(--gold);animation:ds-blink .6s steps(1) infinite;} @keyframes ds-blink{50%{opacity:0;}}"
+    },
+    {
+      "name": "HUD Strip",
+      "kind": "nav",
+      "refersTo": "hud",
+      "description": "Top-of-screen game readout: player, level, pixel-heart lives.",
+      "html": "<header class=\"ds-hud\"><span><b>JUGADORA</b> 1</span><span><b>NIVEL</b> 00</span><span class=\"ds-hud__lives\"><svg viewBox=\"0 0 7 6\" width=\"28\" height=\"24\" shape-rendering=\"crispEdges\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"1\" y=\"0\" width=\"2\" height=\"1\"/><rect x=\"4\" y=\"0\" width=\"2\" height=\"1\"/><rect x=\"0\" y=\"1\" width=\"7\" height=\"2\"/><rect x=\"1\" y=\"3\" width=\"5\" height=\"1\"/><rect x=\"2\" y=\"4\" width=\"3\" height=\"1\"/><rect x=\"3\" y=\"5\" width=\"1\" height=\"1\"/></svg><svg viewBox=\"0 0 7 6\" width=\"28\" height=\"24\" shape-rendering=\"crispEdges\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"1\" y=\"0\" width=\"2\" height=\"1\"/><rect x=\"4\" y=\"0\" width=\"2\" height=\"1\"/><rect x=\"0\" y=\"1\" width=\"7\" height=\"2\"/><rect x=\"1\" y=\"3\" width=\"5\" height=\"1\"/><rect x=\"2\" y=\"4\" width=\"3\" height=\"1\"/><rect x=\"3\" y=\"5\" width=\"1\" height=\"1\"/></svg><svg viewBox=\"0 0 7 6\" width=\"28\" height=\"24\" shape-rendering=\"crispEdges\" fill=\"currentColor\" aria-hidden=\"true\"><rect x=\"1\" y=\"0\" width=\"2\" height=\"1\"/><rect x=\"4\" y=\"0\" width=\"2\" height=\"1\"/><rect x=\"0\" y=\"1\" width=\"7\" height=\"2\"/><rect x=\"1\" y=\"3\" width=\"5\" height=\"1\"/><rect x=\"2\" y=\"4\" width=\"3\" height=\"1\"/><rect x=\"3\" y=\"5\" width=\"1\" height=\"1\"/></svg></span></header>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-hud{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px;background:var(--ink-2);font-family:var(--f-hud);font-size:12px;line-height:1;text-transform:uppercase;color:var(--paper);text-shadow:0 4px 0 var(--ink);} .ds-hud b{font-weight:400;color:var(--gold);margin-right:.6em;} .ds-hud__lives{display:flex;gap:6px;color:var(--pink);filter:drop-shadow(0 4px 0 var(--ink));}"
+    },
+    {
+      "name": "Marquee Title",
+      "kind": "custom",
+      "description": "Display title with the three-layer pixel extrusion and an optional gold accent line.",
+      "html": "<h1 class=\"ds-title\"><span>¡FELIZ CUMPLEAÑOS,</span><span class=\"ds-title__accent\">MI VIDA!</span></h1>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-title{margin:0;padding:16px;background:var(--ink-2);font-family:var(--f-display);font-weight:400;font-size:4rem;line-height:.82;letter-spacing:.01em;text-transform:uppercase;color:var(--paper);text-shadow:0 4px 0 var(--pink),0 8px 0 var(--pink-deep),0 12px 0 var(--ink);} .ds-title span{display:block;} .ds-title__accent{color:var(--gold);font-size:1.32em;}"
+    },
+    {
+      "name": "Scanline Stage",
+      "kind": "custom",
+      "description": "CRT overlay of 1px scanlines and vignette over the ink-to-plum ground.",
+      "html": "<div class=\"ds-stage\"><div class=\"ds-crt\"></div></div>",
+      "css": ":host{--ink:#170b14;--ink-2:#2b1226;--pink:#ff3d8b;--pink-deep:#a3104f;--gold:#ffc53d;--gold-deep:#b9780c;--paper:#fff4ea;--paper-dim:#f0d9e4;--px:4px;--f-display:'Jersey 10','Pixelify Sans',monospace;--f-text:'Pixelify Sans',monospace;--f-hud:'Press Start 2P',monospace;} .ds-stage{position:relative;height:160px;background:radial-gradient(80% 60% at 50% 40%,var(--ink-2),var(--ink));} .ds-crt{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgb(0 0 0 / .22) 0 1px,transparent 1px 3px),radial-gradient(120% 90% at 50% 45%,transparent 55%,rgb(10 3 8 / .75) 100%);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Attract-Mode Cabinet",
+    "overview": "**Creative North Star: \"The Attract-Mode Cabinet\"**\n\nEvery screen is a screen of an arcade machine that stars her. Her photographs are the cabinet's attract-mode plate, seen through fine scanlines and a dark CRT vignette; on top sit the things a game owns: a HUD strip, an extruded title, an RPG dialogue box, a big physical-feeling START button. The world is built from one unit, the 4px pixel, and everything (borders, corner steps, text extrusion, button travel, icon cells) is a multiple of it.\n\nThe palette is pulled from the night-party photo: wristband hot pink, leopard and fairy-light gold, deep plum-black ink, warm paper white. The type is pixel faces only, three of them with strict jobs. Depth is solid and stepped (stacked hard layers of colour), never blurred. Motion is stepped too: things blink, drop, pop and wipe in discrete frames.\n\nThe world refuses the birthday-card default: no confetti, balloons, script fonts, or a soft centred message over a faded photo. It also refuses glows, glass and gradient text.",
+    "keyCharacteristics": [
+      "One 4px pixel unit governs borders, corner steps, extrusion layers, button travel and focus rings.",
+      "Photo full-bleed under scanlines and a vignette; ink scrims only where text must read.",
+      "Three pixel faces with fixed roles: display marquee, readable dialogue text, HUD/control micro-type.",
+      "Solid stepped depth: hard 4px colour layers, no blur.",
+      "Stepped motion (`steps()`), with a single smooth exception for the CRT power-on."
+    ],
+    "rules": [
+      {
+        "name": "The Paired Shadow Rule",
+        "body": "Each accent has exactly one deep partner (pink/pink-deep, gold/gold-deep), and depth under an accent is always drawn with its partner, then ink. Never darken an accent with opacity or black.",
+        "section": "colors"
+      },
+      {
+        "name": "The Gold Means Act Rule",
+        "body": "Gold marks what she can act on or where attention sits: the START face, the caret, the skip marker, every focus ring. Pink frames and decorates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Voices Rule",
+        "body": "Jersey 10 shouts (titles, START), Pixelify Sans speaks (anything she reads as a sentence), Press Start 2P is the machine (HUD, small controls). Never set a sentence in Press Start 2P, and never use a non-pixel face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Pixel Grid Rule",
+        "body": "Structural dimensions (borders, steps, offsets, press travel, icon cells) are multiples of `px` (4px). Pixel icons render at integer cell sizes (4px or 8px per cell).",
+        "section": "layout"
+      },
+      {
+        "name": "The No-Blur Rule",
+        "body": "Every shadow has zero blur and a 4px-multiple vertical offset. No glows, no soft drop shadows, no glass.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** size every border, step, offset and press travel in multiples of 4px.",
+      "**Do** extrude display titles with the pink, pink-deep, ink stack, and draw depth under an accent with its own deep partner.",
+      "**Do** animate UI with `steps()` timing (blink 0.6 to 0.8s, drop steps(5), pop-in steps(4), wipe 45ms steps). Reserve the smooth `ease-out` curve for the CRT power-on.",
+      "**Do** keep her face visible in every crop of a photo screen, with ink scrims only behind the title and dialogue.",
+      "**Do** honour reduced motion: skip the boot, show the full text and START at once, and cut instead of wiping.",
+      "**Do** draw new icons as pixel grids in `currentColor`."
+    ],
+    "donts": [
+      "**Don't** use border-radius; frames get stepped pixel corners instead.",
+      "**Don't** use blurred shadows, glows, glassmorphism or gradient-filled text. (Gradients are allowed only for the scanline, vignette and photo-scrim atmosphere.)",
+      "**Don't** use non-pixel typefaces, script fonts, or Press Start 2P for running sentences.",
+      "**Don't** reach for birthday-card props: confetti, balloons, cake clip-art, or a soft centred message over a faded photo.",
+      "**Don't** introduce colours outside the eight tokens; tints come from the token pairs, not new hues."
+    ]
+  }
+}
