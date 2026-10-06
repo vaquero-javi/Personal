@@ -80,7 +80,10 @@ function Chat({ getSource }: { getSource: () => Promise<StudySource> }) {
   const abort = useRef<AbortController>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => endRef.current?.scrollIntoView({ block: 'end' }), [messages])
+  // Con llaves: Chrome ya devuelve una promesa en scrollIntoView y React la tomaría por la limpieza.
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [messages])
   useEffect(() => () => abort.current?.abort(), [])
 
   async function send(question: string) {
