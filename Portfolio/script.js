@@ -1,170 +1,96 @@
-gsap.registerPlugin(ScrollTrigger, Flip);
-
-const EASE = "expo.out";
-const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const root = document.documentElement;
 
 // --- 1. TEMA CLARO / OSCURO ---
-const initThemeToggle = () => {
+const initTheme = () => {
     const toggle = document.querySelector('.theme-toggle');
     if (!toggle) return;
 
-    const currentTheme = () => {
-        const explicit = document.documentElement.dataset.theme;
-        if (explicit) return explicit;
-        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    };
+    const current = () => root.dataset.theme
+        || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
     toggle.addEventListener('click', () => {
-        const next = currentTheme() === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
+        const next = current() === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
         try { localStorage.setItem('theme', next); } catch (e) {}
     });
 };
 
-// --- 2. NAVEGACIÓN: sombra al hacer scroll, enlace activo y menú móvil ---
-const initNavbar = () => {
-    const navbar = document.querySelector('.navbar');
-    const burger = document.querySelector('.burger');
-    const nav = document.querySelector('.nav-links');
-    const links = document.querySelectorAll('.nav-links a');
+// --- 2. CABECERA: borde al hacer scroll, enlace activo y menú móvil ---
+const initHeader = () => {
+    const header = document.querySelector('.site-header');
+    const sentinel = document.querySelector('.scroll-sentinel');
+    const nav = document.getElementById('site-nav');
+    const toggle = document.querySelector('.menu-toggle');
+    const links = [...nav.querySelectorAll('a')];
 
-    ScrollTrigger.create({
-        start: 40,
-        end: "max",
-        toggleClass: { targets: navbar, className: "is-scrolled" }
-    });
+    // Borde inferior en cuanto la página deja de estar arriba del todo
+    new IntersectionObserver(([entry]) => {
+        header.classList.toggle('is-scrolled', !entry.isIntersecting);
+    }).observe(sentinel);
 
-    // Marca el enlace de la sección visible
-    links.forEach(link => {
-        const section = document.querySelector(link.getAttribute('href'));
-        if (!section) return;
-        ScrollTrigger.create({
-            trigger: section,
-            start: "top 45%",
-            end: "bottom 45%",
-            onToggle: self => link.classList.toggle('is-active', self.isActive)
+    // Enlace activo según la sección que ocupa el centro de la pantalla
+    const byId = new Map(links.map(link => [link.getAttribute('href').slice(1), link]));
+    const sectionObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const active = byId.get(entry.target.id);
+            links.forEach(link => link.classList.toggle('is-active', link === active));
         });
-    });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('main section[id]').forEach(section => sectionObserver.observe(section));
 
-    if (!burger) return;
-
-    const setOpen = (open) => {
-        nav.classList.toggle('nav-active', open);
-        burger.setAttribute('aria-expanded', String(open));
-        burger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+    const setOpen = open => {
+        nav.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
     };
-
-    burger.addEventListener('click', () => setOpen(!nav.classList.contains('nav-active')));
+    toggle.addEventListener('click', () => setOpen(!nav.classList.contains('is-open')));
     links.forEach(link => link.addEventListener('click', () => setOpen(false)));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
 };
 
-// --- 3. ANIMACIONES DE ENTRADA Y SCROLL (solo sin movimiento reducido) ---
+// --- 3. ANIMACIONES: entrada del hero, apariciones y texto de "Sobre mí" ---
 const initMotion = () => {
-    const mm = gsap.matchMedia();
-
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Entrada del hero: jerarquía de lectura (etiqueta, título, texto, botones)
-        gsap.timeline({ defaults: { ease: EASE } })
-            .from(".hero-reveal", { y: 32, opacity: 0, duration: 1.1, stagger: 0.09 })
-            .from(".hero-reveal-img", { y: 40, opacity: 0, scale: 0.97, duration: 1.3 }, 0.15);
-
-        // Bloques que aparecen al entrar en pantalla
-        ScrollTrigger.batch(".reveal", {
-            start: "top 85%",
-            once: true,
-            onEnter: els => gsap.from(els, { y: 36, opacity: 0, duration: 1, stagger: 0.1, ease: EASE })
-        });
-
-        // Bento de habilidades en cascada
-        gsap.from(".reveal-tile", {
-            scrollTrigger: { trigger: ".bento", start: "top 80%", once: true },
-            y: 40,
-            opacity: 0,
-            duration: 1,
-            stagger: 0.08,
-            ease: EASE
-        });
-
-        // La línea de experiencia avanza con el scroll
-        gsap.fromTo(".timeline-progress-bar", { scaleY: 0 }, {
-            scaleY: 1,
-            ease: "none",
-            scrollTrigger: {
-                trigger: ".timeline-wrapper",
-                start: "top 60%",
-                end: "bottom 60%",
-                scrub: true
-            }
-        });
-
-        document.querySelectorAll('.timeline-item').forEach(item => {
-            gsap.from(item.querySelectorAll('.timeline-date, .timeline-content'), {
-                scrollTrigger: {
-                    trigger: item,
-                    start: "top 70%",
-                    onEnter: () => item.classList.add('active-dot'),
-                    onLeaveBack: () => item.classList.remove('active-dot')
-                },
-                y: 24,
-                opacity: 0,
-                duration: 0.9,
-                stagger: 0.08,
-                ease: EASE
-            });
-        });
+    // Divide la declaración en palabras para encenderlas al hacer scroll
+    document.querySelectorAll('[data-words]').forEach(el => {
+        el.innerHTML = el.textContent.trim().split(/\s+/)
+            .map(word => `<span class="w">${word}</span>`).join(' ');
     });
 
-    mm.add("(prefers-reduced-motion: reduce)", () => {
-        document.querySelectorAll('.timeline-item').forEach(item => item.classList.add('active-dot'));
-    });
+    // Arranca la entrada del hero cuando las fuentes están listas, para no animar con la fuente de reserva
+    const ready = () => requestAnimationFrame(() => root.classList.add('is-ready'));
+    if (document.fonts?.ready) {
+        Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 800))]).then(ready);
+    } else {
+        ready();
+    }
+
+    const targets = document.querySelectorAll('[data-reveal]');
+    if (!('IntersectionObserver' in window)) {
+        targets.forEach(el => el.classList.add('is-in'));
+        return;
+    }
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+        });
+    }, { rootMargin: '0px 0px -12% 0px' });
+    targets.forEach(el => io.observe(el));
 };
 
-// --- 4. FILTRO DE PROYECTOS CON TRANSICIÓN FLIP ---
-const initFlipFiltering = () => {
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const projectItems = document.querySelectorAll('.filter-item');
-
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => {
-                b.classList.toggle('active', b === btn);
-                b.setAttribute('aria-pressed', String(b === btn));
-            });
-
-            const filterValue = btn.dataset.filter;
-            const state = Flip.getState(projectItems);
-
-            projectItems.forEach(item => {
-                const visible = filterValue === 'all' || item.dataset.tech === filterValue;
-                item.style.display = visible ? '' : 'none';
-            });
-
-            Flip.from(state, {
-                duration: prefersReducedMotion() ? 0 : 0.7,
-                ease: "power3.inOut",
-                absolute: true,
-                onEnter: els => gsap.fromTo(els, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5 }),
-                onLeave: els => gsap.to(els, { opacity: 0, scale: 0.96, duration: 0.3 }),
-                onComplete: () => ScrollTrigger.refresh()
-            });
-        });
-    });
-};
-
-// --- 5. FORMULARIO (Formspree) CON VALIDACIÓN Y ESTADOS EN LÍNEA ---
-const initFormspreeHandler = () => {
+// --- 4. FORMULARIO (Formspree) CON VALIDACIÓN Y ESTADOS EN LÍNEA ---
+const initContactForm = () => {
     const form = document.getElementById('contact-form');
-    const submitBtn = document.getElementById('form-btn');
-    const status = form ? form.querySelector('.form-status') : null;
     if (!form) return;
-
+    const submitBtn = document.getElementById('form-btn');
+    const status = form.querySelector('.form-status');
     const btnLabel = submitBtn.innerHTML;
 
     const setFieldError = (input, message) => {
-        const field = input.closest('.field');
         const error = document.getElementById(`${input.id}-error`);
-        field.classList.toggle('has-error', Boolean(message));
+        input.closest('.field').classList.toggle('has-error', Boolean(message));
         input.setAttribute('aria-invalid', message ? 'true' : 'false');
         if (message) input.setAttribute('aria-describedby', error.id);
         else input.removeAttribute('aria-describedby');
@@ -173,31 +99,31 @@ const initFormspreeHandler = () => {
 
     const validate = () => {
         let firstInvalid = null;
-        form.querySelectorAll('input[required], textarea[required]').forEach(input => {
+        form.querySelectorAll('[required]').forEach(input => {
             let message = '';
             if (!input.value.trim()) message = 'Este campo es obligatorio.';
             else if (input.type === 'email' && !input.validity.valid) message = 'Introduce un correo válido.';
             setFieldError(input, message);
             if (message && !firstInvalid) firstInvalid = input;
         });
-        if (firstInvalid) firstInvalid.focus();
+        firstInvalid?.focus();
         return !firstInvalid;
     };
 
-    form.querySelectorAll('input, textarea').forEach(input => {
+    form.querySelectorAll('[required]').forEach(input => {
         input.addEventListener('input', () => {
-            if (input.closest('.field')?.classList.contains('has-error')) setFieldError(input, '');
+            if (input.closest('.field').classList.contains('has-error')) setFieldError(input, '');
         });
     });
 
-    const setStatus = (text, type) => {
+    const setStatus = (text, type = '') => {
         status.textContent = text;
         status.className = `form-status${type ? ` is-${type}` : ''}`;
     };
 
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', async event => {
         event.preventDefault();
-        setStatus('', '');
+        setStatus('');
         if (!validate()) return;
 
         submitBtn.disabled = true;
@@ -209,7 +135,6 @@ const initFormspreeHandler = () => {
                 body: new FormData(form),
                 headers: { 'Accept': 'application/json' }
             });
-
             if (response.ok) {
                 form.reset();
                 setStatus('¡Gracias! Tu mensaje se ha enviado correctamente.', 'success');
@@ -226,9 +151,8 @@ const initFormspreeHandler = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    initThemeToggle();
-    initNavbar();
+    initTheme();
+    initHeader();
     initMotion();
-    initFlipFiltering();
-    initFormspreeHandler();
+    initContactForm();
 });
