@@ -2,269 +2,317 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Javier Vaquero | Portfolio</title>
-    <meta name="description" content="Javier Vaquero Vila, desarrollador de software multiplataforma. Proyectos, experiencia y contacto.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Javier Vaquero | Desarrollador Full Stack</title>
+    <meta name="description" content="Javier Vaquero Vila, desarrollador Full Stack en Madrid. Proyectos, experiencia y contacto.">
+    <meta name="theme-color" content="#0b0c0e">
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="preload" href="assets/fonts/BricolageGrotesque-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="assets/fonts/InstrumentSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <script>
-        // Tema guardado y marca de JS antes de pintar, para evitar parpadeos
-        (function () {
-            var root = document.documentElement;
-            root.classList.add('js');
-            try {
-                var saved = localStorage.getItem('theme');
-                if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
-            } catch (e) {}
-        })();
-    </script>
+    <link rel="preload" href="assets/fonts/Archivo-Variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+    <script>document.documentElement.classList.add('js');</script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <a class="skip-link" href="#main">Saltar al contenido</a>
 
-    <header class="site-header">
-        <div class="wrap header-inner">
-            <a href="#home" class="brand">Javier Vaquero</a>
+    <div class="progress" aria-hidden="true"><span class="progress-bar"></span></div>
 
-            <nav class="site-nav" id="site-nav" aria-label="Principal">
-                <ul>
-                    <li><a href="#about">Sobre mí</a></li>
-                    <li><a href="#skills">Habilidades</a></li>
-                    <li><a href="#projects">Proyectos</a></li>
-                    <li><a href="#experience">Experiencia</a></li>
-                    <li><a href="#contact">Contacto</a></li>
-                </ul>
-            </nav>
+    <header class="topbar">
+        <a href="#inicio" class="logo" aria-label="Javier Vaquero, ir al inicio">
+            <span class="logo-mark">JV</span>
+            <span class="logo-name">Javier Vaquero</span>
+        </a>
 
-            <div class="header-actions">
-                <button class="icon-btn theme-toggle" type="button" aria-label="Cambiar entre modo claro y oscuro">
-                    <i class="ti ti-sun icon-sun" aria-hidden="true"></i>
-                    <i class="ti ti-moon icon-moon" aria-hidden="true"></i>
-                </button>
-                <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Abrir menú">
-                    <i class="ti ti-menu-2 icon-open" aria-hidden="true"></i>
-                    <i class="ti ti-x icon-close" aria-hidden="true"></i>
-                </button>
-            </div>
+        <nav class="topnav" aria-label="Principal">
+            <a href="#sobre-mi">Sobre mí</a>
+            <a href="#habilidades">Habilidades</a>
+            <a href="#proyectos">Proyectos</a>
+            <a href="#experiencia">Experiencia</a>
+            <a href="#contacto">Contacto</a>
+        </nav>
+
+        <div class="topbar-actions">
+            <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="pill pill--ghost topbar-cv">CV <i class="ti ti-download" aria-hidden="true"></i></a>
+            <button class="menu-btn" type="button" aria-controls="menu" aria-expanded="false">
+                <span class="menu-btn-label">Menú</span>
+                <span class="menu-btn-lines" aria-hidden="true"><span></span><span></span></span>
+            </button>
         </div>
     </header>
-    <div class="scroll-sentinel" aria-hidden="true"></div>
+
+    <div class="menu" id="menu" hidden>
+        <nav class="menu-nav" aria-label="Menú">
+            <a href="#sobre-mi"><span class="menu-num">01</span>Sobre mí</a>
+            <a href="#habilidades"><span class="menu-num">02</span>Habilidades</a>
+            <a href="#proyectos"><span class="menu-num">03</span>Proyectos</a>
+            <a href="#experiencia"><span class="menu-num">04</span>Experiencia</a>
+            <a href="#contacto"><span class="menu-num">05</span>Contacto</a>
+        </nav>
+        <div class="menu-foot">
+            <a href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
+            <a href="https://github.com/vaquero-javi" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+    </div>
 
     <main id="main">
-        <section id="home" class="hero">
-            <div class="wrap hero-grid">
-                <h1 class="hero-title">
-                    <span class="line"><span class="line-inner">Javier</span></span>
-                    <span class="line"><span class="line-inner">Vaquero <span class="title-accent">Vila</span></span></span>
-                </h1>
+        <!-- 00 · INICIO -->
+        <section id="inicio" class="hero">
+            <div class="hero-meta mono">
+                <span>Portfolio 2026</span>
+                <span class="status"><span class="status-dot" aria-hidden="true"></span>Disponible para nuevas oportunidades</span>
+                <span>Madrid <time class="clock" data-clock>--:--</time></span>
+            </div>
 
-                <figure class="hero-portrait">
+            <h1 class="hero-name" aria-label="Javier Vaquero Vila">
+                <span class="hero-line hero-line--a" aria-hidden="true"><span class="split">Javier</span></span>
+                <span class="hero-line hero-line--b" aria-hidden="true"><span class="split">Vaquero</span></span>
+            </h1>
+
+            <div class="hero-row">
+                <figure class="hero-photo">
                     <img src="assets/fotoJavi.png" alt="Retrato de Javier Vaquero Vila" width="1254" height="1254" fetchpriority="high">
                 </figure>
-
-                <div class="hero-bottom">
+                <div class="hero-copy">
+                    <p class="eyebrow mono">Desarrollador Full Stack</p>
                     <p class="hero-lead">Desarrollador Full Stack con experiencia práctica en entorno corporativo bancario creando componentes escalables y construyendo aplicaciones end-to-end.</p>
                     <div class="hero-actions">
-                        <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="btn btn-solid">Descargar CV <i class="ti ti-download" aria-hidden="true"></i></a>
+                        <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="pill pill--solid">Descargar CV <i class="ti ti-download" aria-hidden="true"></i></a>
                     </div>
                 </div>
+                <a href="#sobre-mi" class="scroll-cue mono" aria-label="Bajar a Sobre mí">
+                    <span class="scroll-cue-track" aria-hidden="true"><span></span></span>
+                    Scroll
+                </a>
             </div>
         </section>
 
-        <div class="stack-marquee" aria-label="Tecnologías: Java, Kotlin, Python, JavaScript, TypeScript, Angular, Lit, Node.js, Android Studio, JavaFX, MySQL, Firebase, Git">
-            <div class="marquee-track" aria-hidden="true">
-                <ul class="marquee-group">
+        <!-- Cinta de tecnologías: su velocidad responde al scroll -->
+        <div class="ticker" aria-label="Tecnologías: Java, Kotlin, Python, JavaScript, TypeScript, Angular, Lit, Node.js, Android Studio, JavaFX, MySQL, Firebase, Git">
+            <div class="ticker-track" aria-hidden="true">
+                <ul class="ticker-group">
                     <li>Java</li><li>Kotlin</li><li>Python</li><li>JavaScript</li><li>TypeScript</li><li>Angular</li><li>Lit</li><li>Node.js</li><li>Android Studio</li><li>JavaFX</li><li>MySQL</li><li>Firebase</li><li>Git</li>
                 </ul>
-                <ul class="marquee-group">
+                <ul class="ticker-group">
                     <li>Java</li><li>Kotlin</li><li>Python</li><li>JavaScript</li><li>TypeScript</li><li>Angular</li><li>Lit</li><li>Node.js</li><li>Android Studio</li><li>JavaFX</li><li>MySQL</li><li>Firebase</li><li>Git</li>
                 </ul>
             </div>
         </div>
 
-        <section id="about" class="about">
+        <!-- 01 · SOBRE MÍ -->
+        <section id="sobre-mi" class="about">
             <div class="wrap">
-                <div class="row">
-                    <h2 class="side-label" data-reveal>Sobre mí</h2>
-                    <div class="row-main">
-                        <p class="statement" data-words>Soy un programador polivalente enfocado en el desarrollo multiplataforma. Combino pensamiento estructurado y resolución de problemas con un trasfondo en marketing que me ayuda a entender a usuarios y negocio.</p>
-                        <p class="statement-sub" data-reveal>Me adapto rápido a nuevos stacks tecnológicos y colaboro bien en equipos multidisciplinares para entregar código limpio y mantenible.</p>
-                    </div>
-                </div>
+                <header class="sec-head">
+                    <span class="sec-num mono">01</span>
+                    <h2 class="sec-title">Sobre mí</h2>
+                </header>
 
-                <div class="row education">
-                    <h3 class="side-label" data-reveal>Formación</h3>
-                    <ol class="row-main edu-list">
-                        <li class="edu-item" data-reveal>
-                            <span class="edu-years">2026-Actualidad</span>
-                            <span class="edu-title">Grado en Ingeniería Informática</span>
-                            <span class="edu-place">Universitat Oberta de Catalunya (UOC)</span>
-                        </li>
-                        <li class="edu-item" data-reveal>
-                            <span class="edu-years">2024-2026</span>
-                            <span class="edu-title">G.S. Desarrollo de Aplicaciones Multiplataforma</span>
-                            <span class="edu-place">CES Juan Pablo II, Alcorcón</span>
-                        </li>
-                        <li class="edu-item" data-reveal>
-                            <span class="edu-years">2022-2024</span>
-                            <span class="edu-title">G.S. Marketing y Publicidad</span>
-                            <span class="edu-place">MEDAC, Fuenlabrada</span>
-                        </li>
-                        <li class="edu-item" data-reveal>
-                            <span class="edu-years">2020-2022</span>
-                            <span class="edu-title">Bachillerato Científico-Tecnológico</span>
-                            <span class="edu-place">IES África, Fuenlabrada</span>
-                        </li>
-                    </ol>
+                <p class="manifesto" data-scrub-words>Soy un programador polivalente enfocado en el desarrollo multiplataforma. Combino pensamiento estructurado y resolución de problemas con un trasfondo en marketing que me ayuda a entender a usuarios y negocio.</p>
+
+                <div class="about-grid">
+                    <p class="about-sub" data-rise>Me adapto rápido a nuevos stacks tecnológicos y colaboro bien en equipos multidisciplinares para entregar código limpio y mantenible.</p>
+
+                    <div class="edu">
+                        <h3 class="label mono" data-rise>Formación</h3>
+                        <ol class="edu-list">
+                            <li class="edu-item" data-rise>
+                                <span class="edu-years mono">2026 / Actualidad</span>
+                                <span class="edu-title">Grado en Ingeniería Informática</span>
+                                <span class="edu-place">Universitat Oberta de Catalunya (UOC)</span>
+                            </li>
+                            <li class="edu-item" data-rise>
+                                <span class="edu-years mono">2024 / 2026</span>
+                                <span class="edu-title">G.S. Desarrollo de Aplicaciones Multiplataforma</span>
+                                <span class="edu-place">CES Juan Pablo II, Alcorcón</span>
+                            </li>
+                            <li class="edu-item" data-rise>
+                                <span class="edu-years mono">2022 / 2024</span>
+                                <span class="edu-title">G.S. Marketing y Publicidad</span>
+                                <span class="edu-place">MEDAC, Fuenlabrada</span>
+                            </li>
+                            <li class="edu-item" data-rise>
+                                <span class="edu-years mono">2020 / 2022</span>
+                                <span class="edu-title">Bachillerato Científico-Tecnológico</span>
+                                <span class="edu-place">IES África, Fuenlabrada</span>
+                            </li>
+                        </ol>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="skills" class="skills">
-            <div class="wrap skills-grid">
-                <div class="skills-aside">
-                    <h2 class="section-title" data-reveal>Habilidades</h2>
-                    <p class="skills-intro" data-reveal>Las herramientas con las que trabajo a diario y cómo trabajo con un equipo.</p>
-                    <ul class="soft-skills" data-reveal>
-                        <li>Adaptabilidad tecnológica</li>
-                        <li>Resolución de problemas</li>
-                        <li>Pensamiento estructurado</li>
-                        <li>Trabajo colaborativo</li>
-                    </ul>
-                </div>
-
-                <div class="skill-blocks">
-                    <article class="skill-block skill-block--accent" data-reveal>
-                        <h3>Lenguajes</h3>
-                        <p>Java, Kotlin, Python, JavaScript, TypeScript</p>
-                    </article>
-                    <article class="skill-block skill-block--grid" data-reveal>
-                        <h3>Web y frontend</h3>
-                        <p>Angular, Lit, HTML5, CSS</p>
-                    </article>
-                    <article class="skill-block skill-block--glow" data-reveal>
-                        <h3>Móvil y escritorio</h3>
-                        <p>Android Studio, JavaFX</p>
-                    </article>
-                    <article class="skill-block" data-reveal>
-                        <h3>Datos y herramientas</h3>
-                        <p>Node.js, REST API, MySQL, Firebase, Git, GitHub</p>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <section id="projects" class="projects">
-            <div class="wrap">
-                <h2 class="section-title" data-reveal>Proyectos destacados</h2>
-
-                <article class="project" data-reveal>
-                    <div class="project-art project-art--video">
-                        <video src="assets/chronos-trailer.mp4" poster="assets/chronos-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Tráiler de Chronos"></video>
+        <!-- 02 · HABILIDADES: en escritorio se recorre en horizontal -->
+        <section id="habilidades" class="skills">
+            <div class="skills-pin">
+                <div class="skills-track">
+                    <div class="skills-intro">
+                        <header class="sec-head">
+                            <span class="sec-num mono">02</span>
+                            <h2 class="sec-title">Habilidades</h2>
+                        </header>
+                        <p class="skills-lead">Las herramientas con las que trabajo a diario y cómo trabajo con un equipo.</p>
+                        <p class="skills-hint mono" aria-hidden="true">Sigue bajando <i class="ti ti-arrow-right"></i></p>
                     </div>
-                    <div class="project-body">
-                        <h3>Chronos</h3>
-                        <p>App web instalable (PWA) con calendario, avisos que llegan como notificación push al móvil y al ordenador, y apuntes a mano o con teclado sobre hojas y PDFs. Incluye un modo de estudio con IA que genera resúmenes, exámenes y tarjetas a partir de los apuntes.</p>
-                        <ul class="tags">
-                            <li>React</li>
-                            <li>TypeScript</li>
-                            <li>Supabase</li>
-                            <li>PWA</li>
+
+                    <article class="skill-card skill-card--accent">
+                        <span class="skill-index mono">2.1</span>
+                        <h3 class="skill-cat">Lenguajes</h3>
+                        <ul class="skill-items"><li>Java</li><li>Kotlin</li><li>Python</li><li>JavaScript</li><li>TypeScript</li></ul>
+                    </article>
+                    <article class="skill-card">
+                        <span class="skill-index mono">2.2</span>
+                        <h3 class="skill-cat">Web y frontend</h3>
+                        <ul class="skill-items"><li>Angular</li><li>Lit</li><li>HTML5</li><li>CSS</li></ul>
+                    </article>
+                    <article class="skill-card">
+                        <span class="skill-index mono">2.3</span>
+                        <h3 class="skill-cat">Móvil y escritorio</h3>
+                        <ul class="skill-items"><li>Android Studio</li><li>JavaFX</li></ul>
+                    </article>
+                    <article class="skill-card">
+                        <span class="skill-index mono">2.4</span>
+                        <h3 class="skill-cat">Datos y herramientas</h3>
+                        <ul class="skill-items"><li>Node.js</li><li>REST API</li><li>MySQL</li><li>Firebase</li><li>Git</li><li>GitHub</li></ul>
+                    </article>
+                    <article class="skill-card skill-card--soft">
+                        <span class="skill-index mono">2.5</span>
+                        <h3 class="skill-cat">Cómo trabajo</h3>
+                        <ul class="soft-list">
+                            <li>Adaptabilidad tecnológica</li>
+                            <li>Resolución de problemas</li>
+                            <li>Pensamiento estructurado</li>
+                            <li>Trabajo colaborativo</li>
                         </ul>
-                        <a href="https://github.com/vaquero-javi/Personal/tree/main/Chronon" target="_blank" rel="noopener" class="text-link">
-                            <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
-                        </a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03 · PROYECTOS: tarjetas que se apilan -->
+        <section id="proyectos" class="projects">
+            <div class="wrap">
+                <header class="sec-head">
+                    <span class="sec-num mono">03</span>
+                    <h2 class="sec-title">Proyectos destacados</h2>
+                </header>
+            </div>
+
+            <div class="stack">
+                <article class="stack-card">
+                    <div class="stack-inner">
+                        <div class="stack-media">
+                            <video src="assets/chronos-trailer.mp4" poster="assets/chronos-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Tráiler de Chronos"></video>
+                        </div>
+                        <div class="stack-info">
+                            <span class="stack-count mono">01 / 02</span>
+                            <h3 class="stack-title">Chronos</h3>
+                            <p>App web instalable (PWA) con calendario, avisos que llegan como notificación push al móvil y al ordenador, y apuntes a mano o con teclado sobre hojas y PDFs. Incluye un modo de estudio con IA que genera resúmenes, exámenes y tarjetas a partir de los apuntes.</p>
+                            <ul class="tags mono"><li>React</li><li>TypeScript</li><li>Supabase</li><li>PWA</li></ul>
+                            <a href="https://github.com/vaquero-javi/Personal/tree/main/Chronon" target="_blank" rel="noopener" class="pill pill--ghost">
+                                <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
                     </div>
                 </article>
 
-                <article class="project project--flip" data-reveal>
-                    <div class="project-art project-art--video">
-                        <video src="assets/ptd-trailer.mp4" poster="assets/ptd-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Tráiler de PTD App"></video>
-                    </div>
-                    <div class="project-body">
-                        <h3>PTD App</h3>
-                        <p>App Android para dividir gastos en grupo: cada uno apunta lo que paga y entre quiénes se reparte, y la app calcula cuánto debe cada persona. Incluye inicio de sesión con Google, monedero con recarga mediante Google Pay, liquidación del grupo y notificaciones, con los datos sincronizados en tiempo real en Firebase.</p>
-                        <ul class="tags">
-                            <li>Kotlin</li>
-                            <li>Jetpack Compose</li>
-                            <li>Firebase</li>
-                            <li>Google Pay</li>
-                        </ul>
-                        <a href="https://github.com/vaquero-javi/Personal/tree/main/PTD-app" target="_blank" rel="noopener" class="text-link">
-                            <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
-                        </a>
+                <article class="stack-card">
+                    <div class="stack-inner">
+                        <div class="stack-media">
+                            <video src="assets/ptd-trailer.mp4" poster="assets/ptd-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Tráiler de PTD App"></video>
+                        </div>
+                        <div class="stack-info">
+                            <span class="stack-count mono">02 / 02</span>
+                            <h3 class="stack-title">PTD App</h3>
+                            <p>App Android para dividir gastos en grupo: cada uno apunta lo que paga y entre quiénes se reparte, y la app calcula cuánto debe cada persona. Incluye inicio de sesión con Google, monedero con recarga mediante Google Pay, liquidación del grupo y notificaciones, con los datos sincronizados en tiempo real en Firebase.</p>
+                            <ul class="tags mono"><li>Kotlin</li><li>Jetpack Compose</li><li>Firebase</li><li>Google Pay</li></ul>
+                            <a href="https://github.com/vaquero-javi/Personal/tree/main/PTD-app" target="_blank" rel="noopener" class="pill pill--ghost">
+                                <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
                     </div>
                 </article>
             </div>
         </section>
 
-        <section id="experience" class="experience">
+        <!-- 04 · EXPERIENCIA: la línea se dibuja con el scroll -->
+        <section id="experiencia" class="experience">
             <div class="wrap">
-                <h2 class="section-title" data-reveal>Experiencia</h2>
+                <header class="sec-head">
+                    <span class="sec-num mono">04</span>
+                    <h2 class="sec-title">Experiencia</h2>
+                </header>
 
-                <ol class="jobs">
-                    <li class="job job--current" data-reveal>
-                        <p class="job-dates"><span>Mar 2026</span><span class="sep"> - </span><span>May 2026</span></p>
-                        <div class="job-role">
-                            <h3>Prácticas Full Stack Developer</h3>
-                            <p>Accenture (cliente: BBVA), Madrid</p>
+                <ol class="timeline">
+                    <li class="timeline-line" aria-hidden="true"><span></span></li>
+
+                    <li class="job job--current" data-rise>
+                        <span class="job-dot" aria-hidden="true"></span>
+                        <p class="job-dates mono">Mar 2026 / May 2026</p>
+                        <div class="job-body">
+                            <h3 class="job-role">Prácticas Full Stack Developer</h3>
+                            <p class="job-company">Accenture (cliente: BBVA), Madrid</p>
+                            <ul class="job-points">
+                                <li>Desarrollo de aplicaciones integrales para proyectos complejos del sector bancario.</li>
+                                <li>Componentes frontend dinámicos con JavaScript y Lit.</li>
+                                <li>Desarrollo, testing y mantenimiento de servicios backend con Node.js.</li>
+                            </ul>
                         </div>
-                        <ul class="job-detail job-bullets">
-                            <li>Desarrollo de aplicaciones integrales para proyectos complejos del sector bancario.</li>
-                            <li>Componentes frontend dinámicos con JavaScript y Lit.</li>
-                            <li>Desarrollo, testing y mantenimiento de servicios backend con Node.js.</li>
-                        </ul>
                     </li>
 
-                    <li class="job" data-reveal>
-                        <p class="job-dates"><span>Nov 2023</span><span class="sep"> - </span><span>Sep 2025</span></p>
-                        <div class="job-role">
-                            <h3>Encargado de Camareros</h3>
-                            <p>Anubis Coctelería, Fuenlabrada</p>
+                    <li class="job" data-rise>
+                        <span class="job-dot" aria-hidden="true"></span>
+                        <p class="job-dates mono">Nov 2023 / Sep 2025</p>
+                        <div class="job-body">
+                            <h3 class="job-role">Encargado de Camareros</h3>
+                            <p class="job-company">Anubis Coctelería, Fuenlabrada</p>
+                            <p class="job-text">Gestión de equipos, organización del servicio y atención al cliente. Liderazgo y resolución de conflictos bajo presión.</p>
                         </div>
-                        <p class="job-detail">Gestión de equipos, organización del servicio y atención al cliente. Liderazgo y resolución de conflictos bajo presión.</p>
                     </li>
 
-                    <li class="job" data-reveal>
-                        <p class="job-dates"><span>Abr 2021</span><span class="sep"> - </span><span>Dic 2023</span></p>
-                        <div class="job-role">
-                            <h3>Socorrista</h3>
-                            <p>Real Summar, Fuenlabrada</p>
+                    <li class="job" data-rise>
+                        <span class="job-dot" aria-hidden="true"></span>
+                        <p class="job-dates mono">Abr 2021 / Dic 2023</p>
+                        <div class="job-body">
+                            <h3 class="job-role">Socorrista</h3>
+                            <p class="job-company">Real Summar, Fuenlabrada</p>
+                            <p class="job-text">Responsabilidad directa sobre seguridad y prevención, con atención constante y decisiones críticas inmediatas.</p>
                         </div>
-                        <p class="job-detail">Responsabilidad directa sobre seguridad y prevención, con atención constante y decisiones críticas inmediatas.</p>
                     </li>
                 </ol>
             </div>
         </section>
 
-        <section id="contact" class="contact">
+        <!-- 05 · CONTACTO -->
+        <section id="contacto" class="contact">
             <div class="wrap">
-                <h2 class="contact-title" data-reveal>¿Tienes un proyecto o una oportunidad? <span>Hablemos.</span></h2>
+                <header class="sec-head">
+                    <span class="sec-num mono">05</span>
+                    <h2 class="sec-title">Contacto</h2>
+                </header>
+
+                <p class="contact-big" aria-label="¿Tienes un proyecto o una oportunidad? Hablemos.">
+                    <span class="contact-big-line" aria-hidden="true">¿Tienes un proyecto</span>
+                    <span class="contact-big-line" aria-hidden="true">o una oportunidad?</span>
+                    <span class="contact-big-line contact-big-line--accent" aria-hidden="true">Hablemos.</span>
+                </p>
 
                 <div class="contact-grid">
-                    <ul class="contact-details" data-reveal>
-                        <li>
-                            <span class="detail-label">Correo</span>
-                            <a href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
-                        </li>
-                        <li>
-                            <span class="detail-label">GitHub</span>
-                            <a href="https://github.com/vaquero-javi" target="_blank" rel="noopener">vaquero-javi</a>
-                        </li>
-                        <li>
-                            <span class="detail-label">LinkedIn</span>
-                            <a href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener">javier-vaquero-vila</a>
-                        </li>
-                        <li>
-                            <span class="detail-label">Ubicación</span>
-                            <span>Fuenlabrada, Madrid</span>
-                        </li>
-                    </ul>
+                    <div class="contact-side">
+                        <div class="mail-row" data-rise>
+                            <a class="mail-link" href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
+                            <button class="copy-btn mono" type="button" data-copy="javiervaquerovila@gmail.com">
+                                <i class="ti ti-copy" aria-hidden="true"></i><span class="copy-label">Copiar</span>
+                            </button>
+                        </div>
+                        <ul class="contact-links" data-rise>
+                            <li><span class="mono">GitHub</span><a href="https://github.com/vaquero-javi" target="_blank" rel="noopener">vaquero-javi <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a></li>
+                            <li><span class="mono">LinkedIn</span><a href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener">javier-vaquero-vila <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a></li>
+                            <li><span class="mono">Ubicación</span><span>Fuenlabrada, Madrid</span></li>
+                        </ul>
+                    </div>
 
-                    <form id="contact-form" action="https://formspree.io/f/mpqnvvdd" method="POST" class="contact-form" novalidate data-reveal>
+                    <form id="contact-form" action="https://formspree.io/f/mpqnvvdd" method="POST" class="form" novalidate data-rise>
                         <div class="field">
                             <label for="name">Nombre</label>
                             <input type="text" name="nombre" id="name" autocomplete="name" required>
@@ -281,8 +329,8 @@
                             <p class="field-error" id="message-error"></p>
                         </div>
                         <input type="hidden" name="_subject" value="Nuevo mensaje desde tu Portfolio Web">
-                        <div class="form-footer field--wide">
-                            <button type="submit" id="form-btn" class="btn btn-solid">Enviar mensaje <i class="ti ti-send" aria-hidden="true"></i></button>
+                        <div class="form-foot field--wide">
+                            <button type="submit" id="form-btn" class="pill pill--solid">Enviar mensaje <i class="ti ti-send" aria-hidden="true"></i></button>
                             <p class="form-status" role="status" aria-live="polite"></p>
                         </div>
                     </form>
@@ -291,16 +339,20 @@
         </section>
     </main>
 
-    <footer class="site-footer">
+    <footer class="footer">
         <div class="wrap">
-            <p class="footer-mark" aria-hidden="true">Javier Vaquero</p>
-            <div class="footer-row">
-                <p>&copy; 2026 Javier Vaquero Vila</p>
-                <a href="#home" class="text-link">Volver arriba <i class="ti ti-arrow-up" aria-hidden="true"></i></a>
+            <p class="footer-name" aria-hidden="true">Javier Vaquero</p>
+            <div class="footer-row mono">
+                <span>&copy; 2026 Javier Vaquero Vila</span>
+                <span>Madrid <time data-clock>--:--</time></span>
+                <a href="#inicio" class="to-top">Volver arriba <i class="ti ti-arrow-up" aria-hidden="true"></i></a>
             </div>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
 </html>
