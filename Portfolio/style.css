@@ -463,6 +463,8 @@ section { padding: 8rem 0; }
 }
 .project-art i { font-size: clamp(6rem, 14vw, 11rem); transition: transform 0.8s var(--ease); }
 .project:hover .project-art i { transform: translate(10px, -10px) rotate(-6deg); }
+.project-art--video { aspect-ratio: 16 / 9; align-self: center; background: #000; }
+.project-art--video video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .project-body { grid-column: 8 / 13; display: flex; flex-direction: column; gap: 1.25rem; }
 .project-body h3 { font-size: clamp(2rem, 4vw, 3.25rem); letter-spacing: -0.045em; line-height: 1; }

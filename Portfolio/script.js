@@ -80,7 +80,22 @@ const initMotion = () => {
     targets.forEach(el => io.observe(el));
 };
 
-// --- 4. FORMULARIO (Formspree) CON VALIDACIÓN Y ESTADOS EN LÍNEA ---
+// --- 4. VÍDEOS: se reproducen en silencio solo mientras están en pantalla ---
+const initVideos = () => {
+    const videos = document.querySelectorAll('video[data-autoplay]');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!videos.length || reduced || !('IntersectionObserver' in window)) return;
+
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(({ target, isIntersecting }) => {
+            if (isIntersecting) target.play().catch(() => {});
+            else target.pause();
+        });
+    }, { threshold: 0.4 });
+    videos.forEach(video => io.observe(video));
+};
+
+// --- 5. FORMULARIO (Formspree) CON VALIDACIÓN Y ESTADOS EN LÍNEA ---
 const initContactForm = () => {
     const form = document.getElementById('contact-form');
     if (!form) return;
@@ -154,5 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initHeader();
     initMotion();
+    initVideos();
     initContactForm();
 });
