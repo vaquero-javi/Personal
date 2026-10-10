@@ -1,337 +1,234 @@
-// Asegurar el registro de los plugins adicionales de GSAP
 gsap.registerPlugin(ScrollTrigger, Flip);
 
-// --- 1. INTRO CON EL ORDENADOR EN 3D CONTROLADO POR SCROLL ---
-const initLaptopScrollIntro = () => {
-    const laptop = document.getElementById('interactive-laptop');
-    const introContainer = document.querySelector('.intro-3d-container');
-    
-    if (!laptop || !introContainer) return;
+const EASE = "expo.out";
+const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Línea de tiempo que retiene la pantalla e inclina el ordenador en 3D
-    const introTimeline = gsap.timeline({
-        scrollTrigger: {
-            trigger: introContainer,
-            start: "top top",      
-            end: "+=120%",         // Cuánto scroll se necesita para completar la animación
-            scrub: 1,              // Movimiento elástico y fluido ligado al scroll
-            pin: true,             // Congela el scroll de la web durante la animación
-            anticipatePin: 1
-        }
-    });
+// --- 1. TEMA CLARO / OSCURO ---
+const initThemeToggle = () => {
+    const toggle = document.querySelector('.theme-toggle');
+    if (!toggle) return;
 
-    introTimeline
-        .to(laptop, {
-            rotateX: 65,          // Inclinación hacia atrás en perspectiva
-            rotateY: -15,         // Rotación lateral sutil
-            scale: 0.35,          // Reducción de escala para alejarlo
-            y: -160,              // Desplazamiento hacia el borde superior
-            opacity: 0,           // Desvanecimiento completo
-            duration: 2
-        })
-        .to(".scroll-hint", {
-            opacity: 0,
-            y: -20,
-            duration: 0.5
-        }, "<")                   // Se ejecuta simulando simultáneamente con la animación inicial del Mac
-        .to(".navbar", {
-            opacity: 1,           // Revela el menú flotante justo al terminar la intro
-            pointerEvents: "auto",
-            duration: 0.8
-        }, "-=0.5");              
-};
+    const currentTheme = () => {
+        const explicit = document.documentElement.dataset.theme;
+        if (explicit) return explicit;
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    };
 
-// --- 2. ANIMACIÓN DE ENTRADA HERO Y MÁSCARA MORPHING EXPANDIDA ---
-const initHeroAnimations = () => {
-    // Orquestación en cascada de los textos del Hero
-    gsap.from(".gsap-fade", {
-        scrollTrigger: {
-            trigger: ".hero-section",
-            start: "top 40%" // Se dispara de forma natural tras pasar la intro del laptop
-        },
-        y: 40,
-        opacity: 0,
-        stagger: 0.15,
-        duration: 1.2,
-        ease: "power4.out"
-    });
-
-    const blobPath = document.getElementById("vector-blob");
-    
-    // Coordenadas optimizadas: se expanden hacia fuera para dejar el centro totalmente libre para tu cara
-    const shape1 = "M0.75,0.20 C0.85,0.32,0.92,0.45,0.90,0.58 C0.88,0.71,0.77,0.84,0.65,0.90 C0.53,0.96,0.40,0.95,0.28,0.89 C0.16,0.83,0.05,0.72,0.02,0.59 C-0.01,0.46,0.04,0.31,0.13,0.21 C0.22,0.11,0.36,0.05,0.50,0.04 C0.64,0.03,0.65,0.08,0.75,0.20Z";
-    const shape2 = "M0.80,0.25 C0.88,0.35,0.95,0.48,0.93,0.60 C0.91,0.72,0.80,0.82,0.68,0.88 C0.56,0.94,0.42,0.95,0.30,0.90 C0.18,0.85,0.08,0.74,0.06,0.62 C0.04,0.50,0.10,0.36,0.18,0.26 C0.26,0.16,0.38,0.10,0.52,0.09 C0.66,0.08,0.72,0.15,0.80,0.25Z";
-
-    if (blobPath) {
-        // Fijamos el estado inicial abierto y seguro
-        gsap.set(blobPath, { attr: { d: shape1 } });
-
-        // Animación elástica continua perimetral (suave y pausada a 5 segundos)
-        gsap.to(blobPath, {
-            attr: { d: shape2 },
-            duration: 5,
-            yoyo: true,
-            repeat: -1,
-            ease: "sine.inOut"
-        });
-    }
-};
-
-// --- 3. ANIMACIÓN DE GRÁFICOS 3D (Cubo de Tecnologías en Rotación Infinita) ---
-const init3DCube = () => {
-    gsap.to(".cube-3d", {
-        rotateX: 360,
-        rotateY: 360,
-        duration: 12,
-        repeat: -1,
-        ease: "none"
-    });
-
-    // Ligera oscilación de la escena 3D en base al movimiento del puntero del ratón
-    window.addEventListener("mousemove", (e) => {
-        const xPercent = (e.clientX / window.innerWidth) - 0.5;
-        const yPercent = (e.clientY / window.innerHeight) - 0.5;
-        
-        gsap.to(".scene-3d", {
-            x: xPercent * 40,
-            y: yPercent * 40,
-            duration: 0.8,
-            ease: "power1.out"
-        });
+    toggle.addEventListener('click', () => {
+        const next = currentTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('theme', next); } catch (e) {}
     });
 };
 
-// --- 4. ANIMACIONES CONTROLADAS POR SCROLL (ScrollTrigger general) ---
-const initScrollAnimations = () => {
-    // Revelado sutil de los títulos de las secciones
-    const titles = document.querySelectorAll('.trigger-title');
-    titles.forEach(title => {
-        gsap.from(title, {
-            scrollTrigger: {
-                trigger: title,
-                start: "top 85%",
-                toggleActions: "play none none none"
-            },
-            opacity: 0,
-            y: 30,
-            duration: 0.8,
-            ease: "power2.out"
+// --- 2. NAVEGACIÓN: sombra al hacer scroll, enlace activo y menú móvil ---
+const initNavbar = () => {
+    const navbar = document.querySelector('.navbar');
+    const burger = document.querySelector('.burger');
+    const nav = document.querySelector('.nav-links');
+    const links = document.querySelectorAll('.nav-links a');
+
+    ScrollTrigger.create({
+        start: 40,
+        end: "max",
+        toggleClass: { targets: navbar, className: "is-scrolled" }
+    });
+
+    // Marca el enlace de la sección visible
+    links.forEach(link => {
+        const section = document.querySelector(link.getAttribute('href'));
+        if (!section) return;
+        ScrollTrigger.create({
+            trigger: section,
+            start: "top 45%",
+            end: "bottom 45%",
+            onToggle: self => link.classList.toggle('is-active', self.isActive)
         });
     });
 
-    // Entrada elegante de los paneles principales
-    const cards = document.querySelectorAll('.trigger-card');
-    cards.forEach(card => {
-        gsap.from(card, {
-            scrollTrigger: {
-                trigger: card,
-                start: "top 80%"
-            },
+    if (!burger) return;
+
+    const setOpen = (open) => {
+        nav.classList.toggle('nav-active', open);
+        burger.setAttribute('aria-expanded', String(open));
+        burger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+    };
+
+    burger.addEventListener('click', () => setOpen(!nav.classList.contains('nav-active')));
+    links.forEach(link => link.addEventListener('click', () => setOpen(false)));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+};
+
+// --- 3. ANIMACIONES DE ENTRADA Y SCROLL (solo sin movimiento reducido) ---
+const initMotion = () => {
+    const mm = gsap.matchMedia();
+
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Entrada del hero: jerarquía de lectura (etiqueta, título, texto, botones)
+        gsap.timeline({ defaults: { ease: EASE } })
+            .from(".hero-reveal", { y: 32, opacity: 0, duration: 1.1, stagger: 0.09 })
+            .from(".hero-reveal-img", { y: 40, opacity: 0, scale: 0.97, duration: 1.3 }, 0.15);
+
+        // Bloques que aparecen al entrar en pantalla
+        ScrollTrigger.batch(".reveal", {
+            start: "top 85%",
+            once: true,
+            onEnter: els => gsap.from(els, { y: 36, opacity: 0, duration: 1, stagger: 0.1, ease: EASE })
+        });
+
+        // Bento de habilidades en cascada
+        gsap.from(".reveal-tile", {
+            scrollTrigger: { trigger: ".bento", start: "top 80%", once: true },
+            y: 40,
             opacity: 0,
-            y: 50,
             duration: 1,
-            ease: "power3.out"
+            stagger: 0.08,
+            ease: EASE
         });
-    });
 
-    // Despliegue en ráfaga elástica (Stagger) de tus tarjetas de habilidades
-    gsap.from(".anim-skill", {
-        scrollTrigger: {
-            trigger: ".skills-section",
-            start: "top 70%"
-        },
-        opacity: 0,
-        scale: 0.9,
-        y: 30,
-        stagger: 0.1,
-        duration: 0.8,
-        ease: "back.out(1.7)"
-    });
-
-    // Crecimiento reactivo de la línea vertical en la sección de Experiencia
-    gsap.to(".timeline-progress-bar", {
-        scrollTrigger: {
-            trigger: ".timeline-wrapper",
-            start: "top 60%",
-            end: "bottom 60%",
-            scrub: true
-        },
-        height: "100%",
-        ease: "none"
-    });
-
-    // Activación progresiva y encendido de los nodos de la línea cronológica
-    const timelineItems = document.querySelectorAll('.anim-timeline');
-    timelineItems.forEach(item => {
-        gsap.from(item.querySelector('.timeline-content'), {
+        // La línea de experiencia avanza con el scroll
+        gsap.fromTo(".timeline-progress-bar", { scaleY: 0 }, {
+            scaleY: 1,
+            ease: "none",
             scrollTrigger: {
-                trigger: item,
-                start: "top 75%",
-                onEnter: () => item.classList.add('active-dot'),
-                onLeaveBack: () => item.classList.remove('active-dot')
-            },
-            opacity: 0,
-            x: -40,
-            duration: 0.8,
-            ease: "power2.out"
+                trigger: ".timeline-wrapper",
+                start: "top 60%",
+                end: "bottom 60%",
+                scrub: true
+            }
         });
+
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            gsap.from(item.querySelectorAll('.timeline-date, .timeline-content'), {
+                scrollTrigger: {
+                    trigger: item,
+                    start: "top 70%",
+                    onEnter: () => item.classList.add('active-dot'),
+                    onLeaveBack: () => item.classList.remove('active-dot')
+                },
+                y: 24,
+                opacity: 0,
+                duration: 0.9,
+                stagger: 0.08,
+                ease: EASE
+            });
+        });
+    });
+
+    mm.add("(prefers-reduced-motion: reduce)", () => {
+        document.querySelectorAll('.timeline-item').forEach(item => item.classList.add('active-dot'));
     });
 };
 
-// --- 5. TRANSICIÓN DE ESTADOS FLUIDA CON REAJUSTE INTELIGENTE (Plugin FLIP) ---
+// --- 4. FILTRO DE PROYECTOS CON TRANSICIÓN FLIP ---
 const initFlipFiltering = () => {
     const filterBtns = document.querySelectorAll('.filter-btn');
     const projectItems = document.querySelectorAll('.filter-item');
 
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelector('.filter-btn.active').classList.remove('active');
-            btn.classList.add('active');
+            filterBtns.forEach(b => {
+                b.classList.toggle('active', b === btn);
+                b.setAttribute('aria-pressed', String(b === btn));
+            });
 
-            const filterValue = btn.getAttribute('data-filter');
-
-            // Captura el estado posicional exacto de las tarjetas antes del cambio estructural
+            const filterValue = btn.dataset.filter;
             const state = Flip.getState(projectItems);
 
             projectItems.forEach(item => {
-                const tech = item.getAttribute('data-tech');
-                if (filterValue === 'all' || tech === filterValue) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
+                const visible = filterValue === 'all' || item.dataset.tech === filterValue;
+                item.style.display = visible ? '' : 'none';
             });
 
-            // Reajuste fluido interpolando dimensiones y vectores de posición
             Flip.from(state, {
-                duration: 0.6,
-                ease: "power2.inOut",
-                absolute: true, 
-                onComplete: () => {
-                    ScrollTrigger.refresh(); // Actualiza las métricas de scroll por si la web cambia de altura
-                }
+                duration: prefersReducedMotion() ? 0 : 0.7,
+                ease: "power3.inOut",
+                absolute: true,
+                onEnter: els => gsap.fromTo(els, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5 }),
+                onLeave: els => gsap.to(els, { opacity: 0, scale: 0.96, duration: 0.3 }),
+                onComplete: () => ScrollTrigger.refresh()
             });
         });
     });
 };
 
-// --- 6. ELEMENTO ARRASTRABLE CON FÍSICAS DE AMORTIGUACIÓN ELÁSTICA (Widget) ---
-const initDraggableWidget = () => {
-    const widget = document.getElementById('draggable-widget');
-    if (!widget) return;
-
-    let isDragging = false;
-    let startX, startY;
-
-    const startDrag = (e) => {
-        isDragging = true;
-        const pageX = e.type === "touchstart" ? e.touches[0].pageX : e.pageX;
-        const pageY = e.type === "touchstart" ? e.touches[0].pageY : e.pageY;
-        
-        startX = pageX - widget.offsetLeft;
-        startY = pageY - widget.offsetTop;
-        
-        gsap.to(widget, { scale: 1.1, boxShadow: "0 15px 30px rgba(251, 191, 36, 0.3)", duration: 0.2 });
-    };
-
-    const doDrag = (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-        
-        const pageX = e.type === "touchmove" ? e.touches[0].pageX : e.pageX;
-        const pageY = e.type === "touchmove" ? e.touches[0].pageY : e.pageY;
-
-        let x = pageX - startX;
-        let y = pageY - startY;
-
-        // Previene que el widget salga de las fronteras visibles del navegador
-        x = Math.max(10, Math.min(x, window.innerWidth - widget.offsetWidth - 10));
-        y = Math.max(10, Math.min(y, window.innerHeight - widget.offsetHeight - 10));
-
-        gsap.set(widget, { left: x, top: y, bottom: 'auto', right: 'auto' });
-    };
-
-    const stopDrag = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        gsap.to(widget, { scale: 1, boxShadow: "0 10px 25px rgba(251, 191, 36, 0.15)", duration: 0.3, ease: "back.out(2)" });
-    };
-
-    widget.addEventListener('mousedown', startDrag);
-    window.addEventListener('mousemove', doDrag);
-    window.addEventListener('mouseup', stopDrag);
-
-    widget.addEventListener('touchstart', startDrag, { passive: false });
-    window.addEventListener('touchmove', doDrag, { passive: false });
-    window.addEventListener('touchend', stopDrag);
-};
-
-// --- 7. MENÚ HAMBURGUESA MÓVIL REGULAR ---
-const initNavbarBurger = () => {
-    const burger = document.querySelector('.burger');
-    const nav = document.querySelector('.nav-links');
-    const navLinks = document.querySelectorAll('.nav-links li');
-
-    if(!burger) return;
-
-    burger.addEventListener('click', () => {
-        nav.classList.toggle('nav-active');
-        burger.classList.toggle('toggle');
-    });
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            nav.classList.remove('nav-active');
-            burger.classList.remove('toggle');
-        });
-    });
-};
-
-// --- 8. ENVÍO DE FORMULARIO VÍA ASYNC/FETCH (Formspree) ---
+// --- 5. FORMULARIO (Formspree) CON VALIDACIÓN Y ESTADOS EN LÍNEA ---
 const initFormspreeHandler = () => {
     const form = document.getElementById('contact-form');
     const submitBtn = document.getElementById('form-btn');
-
+    const status = form ? form.querySelector('.form-status') : null;
     if (!form) return;
 
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'Enviando...';
+    const btnLabel = submitBtn.innerHTML;
 
-        const formData = new FormData(this);
-        const actionUrl = this.getAttribute('action');
+    const setFieldError = (input, message) => {
+        const field = input.closest('.field');
+        const error = document.getElementById(`${input.id}-error`);
+        field.classList.toggle('has-error', Boolean(message));
+        input.setAttribute('aria-invalid', message ? 'true' : 'false');
+        if (message) input.setAttribute('aria-describedby', error.id);
+        else input.removeAttribute('aria-describedby');
+        error.textContent = message;
+    };
+
+    const validate = () => {
+        let firstInvalid = null;
+        form.querySelectorAll('input[required], textarea[required]').forEach(input => {
+            let message = '';
+            if (!input.value.trim()) message = 'Este campo es obligatorio.';
+            else if (input.type === 'email' && !input.validity.valid) message = 'Introduce un correo válido.';
+            setFieldError(input, message);
+            if (message && !firstInvalid) firstInvalid = input;
+        });
+        if (firstInvalid) firstInvalid.focus();
+        return !firstInvalid;
+    };
+
+    form.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('input', () => {
+            if (input.closest('.field')?.classList.contains('has-error')) setFieldError(input, '');
+        });
+    });
+
+    const setStatus = (text, type) => {
+        status.textContent = text;
+        status.className = `form-status${type ? ` is-${type}` : ''}`;
+    };
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        setStatus('', '');
+        if (!validate()) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
 
         try {
-            const response = await fetch(actionUrl, {
+            const response = await fetch(form.action, {
                 method: 'POST',
-                body: formData,
+                body: new FormData(form),
                 headers: { 'Accept': 'application/json' }
             });
 
             if (response.ok) {
-                this.reset();
-                alert('¡Gracias! Tu mensaje ha sido enviado correctamente.');
+                form.reset();
+                setStatus('¡Gracias! Tu mensaje se ha enviado correctamente.', 'success');
             } else {
-                alert('Hubo un problema al procesar el envío. Por favor, inténtalo de nuevo.');
+                setStatus('No se pudo enviar el mensaje. Inténtalo de nuevo.', 'error');
             }
         } catch (error) {
-            alert('Error de conexión. Inténtalo de nuevo.');
+            setStatus('Error de conexión. Revisa tu red e inténtalo de nuevo.', 'error');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.innerText = 'Enviar Mensaje';
+            submitBtn.innerHTML = btnLabel;
         }
     });
 };
 
-// Orquestación unificada al levantar la carga del DOM
 document.addEventListener('DOMContentLoaded', () => {
-    initLaptopScrollIntro();
-    initHeroAnimations();
-    init3DCube();
-    initScrollAnimations();
+    initThemeToggle();
+    initNavbar();
+    initMotion();
     initFlipFiltering();
-    initDraggableWidget();
-    initNavbarBurger();
     initFormspreeHandler();
 });
