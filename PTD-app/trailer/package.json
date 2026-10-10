@@ -1,0 +1,16 @@
+{
+  "name": "ptd-trailer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "music": "node music.mjs",
+    "studio": "remotion studio src/index.jsx",
+    "render": "remotion render src/index.jsx Launch out/ptd-lanzamiento.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.533",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.533"
+  }
+}
