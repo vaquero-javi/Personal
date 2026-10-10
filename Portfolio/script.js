@@ -10,7 +10,10 @@ const initTheme = () => {
 
     toggle.addEventListener('click', () => {
         const next = current() === 'dark' ? 'light' : 'dark';
-        root.dataset.theme = next;
+        const apply = () => { root.dataset.theme = next; };
+        // Fundido entre temas para evitar el salto brusco de brillo, donde el navegador lo permite
+        if (document.startViewTransition) document.startViewTransition(apply);
+        else apply();
         try { localStorage.setItem('theme', next); } catch (e) {}
     });
 };
@@ -28,13 +31,40 @@ const initHeader = () => {
         header.classList.toggle('is-scrolled', !entry.isIntersecting);
     }).observe(sentinel);
 
+    // Barra única bajo el enlace activo: viaja de uno a otro con el muelle de --spring.
+    // Es una transición CSS, así que si cambia de destino a mitad de camino sale desde donde está.
+    const indicator = document.createElement('span');
+    indicator.className = 'nav-indicator is-placing';
+    indicator.setAttribute('aria-hidden', 'true');
+    nav.querySelector('ul').append(indicator);
+
+    let activeLink = null;
+    const placeIndicator = () => {
+        if (!activeLink) {
+            indicator.classList.remove('is-visible');
+            return;
+        }
+        indicator.style.setProperty('--x', `${activeLink.offsetLeft}px`);
+        indicator.style.setProperty('--w', activeLink.offsetWidth);
+        indicator.classList.add('is-visible');
+    };
+    const setActive = link => {
+        if (link === activeLink) return;
+        activeLink = link;
+        links.forEach(l => l.classList.toggle('is-active', l === link));
+        placeIndicator();
+        // Tras colocarse por primera vez, a partir de ahora se desplaza
+        if (link) requestAnimationFrame(() => requestAnimationFrame(() => indicator.classList.remove('is-placing')));
+    };
+    window.addEventListener('resize', placeIndicator);
+    document.fonts?.ready.then(placeIndicator);
+
     // Enlace activo según la sección que ocupa el centro de la pantalla
     const byId = new Map(links.map(link => [link.getAttribute('href').slice(1), link]));
     const sectionObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
-            const active = byId.get(entry.target.id);
-            links.forEach(link => link.classList.toggle('is-active', link === active));
+            setActive(byId.get(entry.target.id) || null);
         });
     }, { rootMargin: '-45% 0px -50% 0px' });
     document.querySelectorAll('main section[id]').forEach(section => sectionObserver.observe(section));
@@ -70,9 +100,10 @@ const initMotion = () => {
         targets.forEach(el => el.classList.add('is-in'));
         return;
     }
+    // Los elementos que entran en pantalla a la vez llegan escalonados, como mucho 4 pasos
     const io = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
+        entries.filter(entry => entry.isIntersecting).forEach((entry, i) => {
+            entry.target.style.setProperty('--stagger', `${Math.min(i, 4) * 70}ms`);
             entry.target.classList.add('is-in');
             io.unobserve(entry.target);
         });
@@ -120,6 +151,13 @@ const initContactForm = () => {
             else if (input.type === 'email' && !input.validity.valid) message = 'Introduce un correo válido.';
             setFieldError(input, message);
             if (message && !firstInvalid) firstInvalid = input;
+            // Sacudida corta para señalar el campo con error; se reinicia en cada envío fallido
+            const field = input.closest('.field');
+            field.classList.remove('is-shaking');
+            if (message) {
+                void field.offsetWidth;
+                field.classList.add('is-shaking');
+            }
         });
         firstInvalid?.focus();
         return !firstInvalid;

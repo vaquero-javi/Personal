@@ -33,6 +33,10 @@
 
     --r: 6px;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    /* Muelle críticamente amortiguado (sin rebote), como los de Apple con damping 1 y response 0.4 */
+    --spring: cubic-bezier(0.25, 0.9, 0.3, 1);
+    --spring-dur: 0.55s;
+    --press: 100ms ease-out;
     --display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
     --body: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
     color-scheme: light;
@@ -74,6 +78,12 @@
     color-scheme: dark;
 }
 
+@supports (transition-timing-function: linear(0, 1)) {
+    :root {
+        --spring: linear(0, 0.079, 0.236, 0.403, 0.551, 0.671, 0.764, 0.833, 0.883, 0.919, 0.944, 0.962, 0.974, 0.983, 0.988, 0.992, 0.995, 0.997, 0.998, 0.998, 1);
+    }
+}
+
 /* --- Base --- */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -113,17 +123,36 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; }
 .skip-link:focus { top: 1rem; }
 
 /* --- Cabecera --- */
+/* Material translúcido: el contenido pasa por debajo. Al hacer scroll aparece un borde difuso, no una línea dura */
 .site-header {
     position: fixed;
     inset: 0 0 auto 0;
     z-index: 50;
     background-color: var(--header-bg);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.4s var(--ease);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
-.site-header.is-scrolled { border-bottom-color: var(--line); }
+.site-header::after {
+    content: '';
+    position: absolute;
+    inset: 100% 0 auto 0;
+    height: 18px;
+    background: linear-gradient(var(--header-bg), transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease);
+}
+.site-header.is-scrolled::after { opacity: 1; }
+
+@media (prefers-reduced-transparency: reduce) {
+    .site-header { background-color: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .site-header::after { display: none; }
+    .site-header.is-scrolled { box-shadow: 0 1px 0 var(--line); }
+}
+@media (prefers-contrast: more) {
+    .site-header { background-color: var(--bg); }
+    .site-header.is-scrolled { box-shadow: 0 1px 0 var(--line-strong); }
+}
 
 .header-inner { height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
 
@@ -137,29 +166,35 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; }
     text-decoration: none;
 }
 
-.site-nav ul { display: flex; gap: 2rem; }
+.site-nav ul { position: relative; display: flex; gap: 2rem; }
 .site-nav a {
     position: relative;
+    display: block;
     font-size: 0.95rem;
     font-weight: 500;
     color: var(--muted);
     text-decoration: none;
     transition: color 0.3s var(--ease);
 }
-.site-nav a::after {
-    content: '';
+.site-nav a:hover, .site-nav a.is-active { color: var(--text); }
+
+/* Una sola barra que viaja de un enlace a otro (la mueve script.js), en vez de una por enlace */
+.nav-indicator {
     position: absolute;
     left: 0;
-    right: 0;
     bottom: -6px;
+    width: 1px;
     height: 2px;
     background-color: var(--accent);
-    transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.4s var(--ease);
+    transform: translateX(var(--x, 0)) scaleX(var(--w, 0));
+    opacity: 0;
+    pointer-events: none;
+    transition: transform var(--spring-dur) var(--spring), opacity 0.3s var(--ease);
 }
-.site-nav a:hover, .site-nav a.is-active { color: var(--text); }
-.site-nav a.is-active::after { transform: scaleX(1); }
+.nav-indicator.is-visible { opacity: 1; }
+/* La primera vez aparece en su sitio, sin viajar desde el borde */
+.nav-indicator.is-placing { transition: opacity 0.3s var(--ease); }
 
 .header-actions { display: flex; gap: 0.25rem; }
 
@@ -173,24 +208,31 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; }
     background: transparent;
     font-size: 1.3rem;
     cursor: pointer;
-    transition: background-color 0.3s var(--ease);
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.3s var(--ease), transform 0.3s var(--spring);
 }
-.icon-btn:hover { background-color: var(--surface-2); }
-.icon-btn i { grid-area: 1 / 1; }
+.icon-btn:active { transform: scale(0.9); transition: transform var(--press); }
+.icon-btn i {
+    grid-area: 1 / 1;
+    transition: opacity 0.25s var(--ease), transform var(--spring-dur) var(--spring);
+}
 
-/* Icono del modo activo */
-.icon-moon { display: none; }
-:root[data-theme="dark"] .icon-moon { display: block; }
-:root[data-theme="dark"] .icon-sun { display: none; }
+/* Los iconos se transforman uno en otro (giran y se funden) en lugar de cambiar de golpe */
+.icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+:root[data-theme="dark"] .icon-moon { opacity: 1; transform: none; }
+:root[data-theme="dark"] .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) .icon-moon { display: block; }
-    :root:not([data-theme]) .icon-sun { display: none; }
+    :root:not([data-theme]) .icon-moon { opacity: 1; transform: none; }
+    :root:not([data-theme]) .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
 }
 
 .menu-toggle { display: none; }
-.menu-toggle .icon-close { display: none; }
-.menu-toggle[aria-expanded="true"] .icon-open { display: none; }
-.menu-toggle[aria-expanded="true"] .icon-close { display: block; }
+.menu-toggle .icon-close { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+.menu-toggle[aria-expanded="true"] .icon-open { opacity: 0; transform: rotate(90deg) scale(0.5); }
+.menu-toggle[aria-expanded="true"] .icon-close { opacity: 1; transform: none; }
+
+/* Cambio de tema: fundido corto en vez de un salto brusco de brillo */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; animation-timing-function: ease; }
 
 /* --- Botones y enlaces --- */
 .btn {
@@ -205,18 +247,27 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; }
     white-space: nowrap;
     cursor: pointer;
     border: 1px solid transparent;
-    transition: transform 0.3s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease);
+    -webkit-tap-highlight-color: transparent;
+    /* Al soltar vuelve con el muelle; al pulsar responde al instante (ver :active) */
+    transition: transform 0.4s var(--spring), background-color 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease);
 }
-.btn:active { transform: scale(0.97); }
-.btn i { font-size: 1.15em; transition: transform 0.4s var(--ease); }
-.btn:hover i { transform: translate(3px, 3px); }
+.btn:active { transform: scale(0.97); transition: transform var(--press), background-color 0.3s var(--ease), color 0.3s var(--ease); }
+.btn i { font-size: 1.15em; transition: transform var(--spring-dur) var(--spring); }
 
 .btn-solid { background-color: var(--accent); color: var(--on-accent); }
-.btn-solid:hover { background-color: var(--text); color: var(--bg); }
 .btn-solid:disabled { opacity: 0.6; cursor: progress; }
 
 .btn-line { border-color: var(--line-strong); }
-.btn-line:hover { border-color: var(--text); }
+
+/* Hover solo en dispositivos con ratón, para que no se quede pegado al tocar en el móvil */
+@media (hover: hover) {
+    .btn-solid:hover { background-color: var(--text); color: var(--bg); }
+    .btn-line:hover { border-color: var(--text); }
+    /* El icono anticipa la acción: la flecha de descarga baja un poco */
+    .btn:hover .ti-download { transform: translateY(2px); }
+    .btn:hover .ti-send { transform: translate(2px, -2px); }
+    .icon-btn:hover { background-color: var(--surface-2); }
+}
 
 .text-link {
     display: inline-flex;
@@ -229,9 +280,12 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; }
     background-position: 0 100%;
     background-repeat: no-repeat;
     padding-bottom: 3px;
-    transition: background-size 0.4s var(--ease);
+    transition: background-size 0.4s var(--ease), opacity var(--press);
 }
-.text-link:hover { background-size: 0% 2px; background-position: 100% 100%; }
+.text-link:active { opacity: 0.6; }
+@media (hover: hover) {
+    .text-link:hover { background-size: 0% 2px; background-position: 100% 100%; }
+}
 
 /* --- Títulos compartidos --- */
 section { padding: 8rem 0; }
@@ -315,6 +369,11 @@ section { padding: 8rem 0; }
     .js.is-ready .hero-title .line:nth-child(2) .line-inner { transition-delay: 0.08s; }
     .js.is-ready .hero-portrait { clip-path: inset(0 0 0 0); transition: clip-path 1.4s var(--ease) 0.15s; }
     .js.is-ready .hero-bottom { opacity: 1; transform: none; transition: opacity 1s var(--ease) 0.4s, transform 1s var(--ease) 0.4s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js .hero-grid { opacity: 0; }
+    .js.is-ready .hero-grid { opacity: 1; transition: opacity 0.5s ease; }
 }
 
 /* --- Marquesina de tecnologías --- */
@@ -461,8 +520,6 @@ section { padding: 8rem 0; }
     background-image: radial-gradient(color-mix(in srgb, var(--on-accent) 22%, transparent) 1.5px, transparent 1.5px);
     background-size: 24px 24px;
 }
-.project-art i { font-size: clamp(6rem, 14vw, 11rem); transition: transform 0.8s var(--ease); }
-.project:hover .project-art i { transform: translate(10px, -10px) rotate(-6deg); }
 .project-art--video { aspect-ratio: 16 / 9; align-self: center; background: #000; }
 .project-art--video video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -542,7 +599,10 @@ section { padding: 8rem 0; }
     text-decoration: none;
     overflow-wrap: anywhere;
 }
-.contact-details a:hover { color: var(--accent-ink); }
+.contact-details a { transition: color 0.3s var(--ease); }
+@media (hover: hover) {
+    .contact-details a:hover { color: var(--accent-ink); }
+}
 
 .contact-form {
     grid-column: 6 / 13;
@@ -581,6 +641,23 @@ section { padding: 8rem 0; }
 .form-status.is-success { color: var(--text); font-weight: 500; }
 .form-status.is-error { color: var(--danger); }
 
+/* Los mensajes aparecen pegados a lo que los provoca; el campo con error hace el "no" de macOS */
+@media (prefers-reduced-motion: no-preference) {
+    .field-error:not(:empty), .form-status.is-success, .form-status.is-error { animation: message-in 0.35s var(--ease) both; }
+    .field.is-shaking input, .field.is-shaking textarea { animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .field-error:not(:empty), .form-status.is-success, .form-status.is-error { animation: fade-in 0.25s ease both; }
+}
+@keyframes message-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes shake {
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+}
+
 /* --- Pie --- */
 .site-footer { padding: 4rem 0 2.5rem; overflow: hidden; }
 .footer-mark {
@@ -597,9 +674,19 @@ section { padding: 8rem 0; }
 .footer-row .text-link { color: var(--text); }
 
 /* --- Aparición al hacer scroll --- */
+/* Lo que entra a la vez llega escalonado (--stagger lo pone script.js). Con movimiento reducido solo se funde */
 @media (prefers-reduced-motion: no-preference) {
-    .js [data-reveal] { opacity: 0; transform: translateY(28px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+    .js [data-reveal] {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.8s var(--ease), transform 0.9s var(--ease);
+        transition-delay: var(--stagger, 0s);
+    }
     .js [data-reveal].is-in { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .js [data-reveal] { opacity: 0; transition: opacity 0.4s ease; }
+    .js [data-reveal].is-in { opacity: 1; }
 }
 
 /* --- Responsivo --- */
@@ -625,15 +712,23 @@ section { padding: 8rem 0; }
         padding: 0.5rem 1rem 1.25rem;
         background-color: var(--bg);
         border-bottom: 1px solid var(--line);
+        /* Nace del botón del menú (arriba a la derecha) y vuelve por el mismo camino al cerrarse */
+        transform-origin: top right;
         opacity: 0;
-        transform: translateY(-8px);
+        transform: translateY(-8px) scale(0.98);
         visibility: hidden;
-        transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), visibility 0.3s;
+        transition: opacity 0.25s var(--ease), transform 0.4s var(--spring), visibility 0s linear 0.4s;
     }
-    .site-nav.is-open { opacity: 1; transform: none; visibility: visible; }
+    .site-nav.is-open { opacity: 1; transform: none; visibility: visible; transition: opacity 0.25s var(--ease), transform 0.4s var(--spring), visibility 0s; }
     .site-nav ul { flex-direction: column; gap: 0; }
-    .site-nav a { display: block; padding: 0.9rem 0; font-family: var(--display); font-size: 1.6rem; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--line); }
-    .site-nav a::after { display: none; }
+    .site-nav a { padding: 0.9rem 0; font-family: var(--display); font-size: 1.6rem; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--line); }
+    .site-nav li { opacity: 0; transform: translateY(-6px); transition: opacity 0.2s var(--ease), transform 0.3s var(--spring); }
+    .site-nav.is-open li { opacity: 1; transform: none; transition-duration: 0.3s, var(--spring-dur); }
+    .site-nav.is-open li:nth-child(2) { transition-delay: 0.03s; }
+    .site-nav.is-open li:nth-child(3) { transition-delay: 0.06s; }
+    .site-nav.is-open li:nth-child(4) { transition-delay: 0.09s; }
+    .site-nav.is-open li:nth-child(5) { transition-delay: 0.12s; }
+    .nav-indicator { display: none; }
 }
 
 @media (max-width: 768px) {
@@ -674,7 +769,11 @@ section { padding: 8rem 0; }
     .footer-row { flex-direction: column; align-items: flex-start; }
 }
 
+/* Movimiento reducido: nada se desplaza, gira ni escala; los cambios de color y opacidad se mantienen como fundidos */
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    *, *::before, *::after { transition-duration: 0.01ms !important; }
+    .btn, .btn i, .icon-btn, .icon-btn i, .nav-indicator, .site-nav, .site-nav li { transition-property: opacity, color, background-color, border-color; }
+    .btn:active, .icon-btn:active { transform: none; }
+    .icon-btn i, .site-nav, .site-nav li { transform: none !important; }
+    .nav-indicator { transition: opacity 0.2s ease; }
 }
