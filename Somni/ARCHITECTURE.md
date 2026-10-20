@@ -10,6 +10,7 @@ Somni/
 │   ├── Models/                   SleepMode, CycleModel, SleepSessionConfig, SensorEpoch, MotionEpochAggregator
 │   ├── Engine/                   RingBuffer, SleepStateBuffer, SleepEngine (máquina de estados pura)
 │   ├── Alarm/                    AlarmPlanner (cálculo puro de Modo 1 / Modo 2 / fail-safe / estrategia de runtime)
+│   ├── Stats/                    SessionMetrics, SleepSummary, SleepStatistics (ciclos, medias, rachas)
 │   └── Sync/                     SessionSnapshot, SomniSettings, SleepSessionRecord, SyncCommand, ConnectivityBridge
 ├── Apps/SomniWatch/              Nodo de captura y de alarma
 │   ├── Services/                 SleepDetectionService (HealthKit + CoreMotion), AlarmManager (disparo + redundancia)
@@ -137,6 +138,6 @@ El pulso basal es la mediana de los 2 primeros minutos. Si no llega pulso, se us
 ## Cómo compilar
 
 ```bash
-cd Packages/SomniKit && swift test      # 15 tests del motor y del planificador
+cd Packages/SomniKit && swift test      # 21 tests del motor, el planificador y las estadísticas
 brew install xcodegen && xcodegen        # genera Somni.xcodeproj desde project.yml
 ```
