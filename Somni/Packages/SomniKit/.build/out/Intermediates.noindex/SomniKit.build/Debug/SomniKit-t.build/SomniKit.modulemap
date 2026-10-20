@@ -1,0 +1,4 @@
+module SomniKit {
+header "SomniKit-Swift.h"
+export *
+}

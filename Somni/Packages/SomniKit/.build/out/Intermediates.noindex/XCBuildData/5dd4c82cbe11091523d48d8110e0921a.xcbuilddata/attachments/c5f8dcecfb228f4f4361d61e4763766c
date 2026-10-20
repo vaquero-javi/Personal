@@ -1,0 +1,4 @@
+module SomniDesign {
+header "SomniDesign-Swift.h"
+export *
+}

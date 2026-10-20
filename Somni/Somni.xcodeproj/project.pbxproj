@@ -1,0 +1,590 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01AED2BDFD33FD5924F92987 /* AlarmManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF692CEA67691D0D51FC3EC3 /* AlarmManager.swift */; };
+		038CA02C37661EA592A6B37A /* WakeAlarm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D584E323BF043DB8DC1A082A /* WakeAlarm.swift */; };
+		0999A2756C7402F32C6DAADD /* BackupAlarmScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF10555C871BDB4505D9541 /* BackupAlarmScheduler.swift */; };
+		127B45100295219F8D73B304 /* ClockStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1570609669947591EBA7B3F2 /* ClockStyle.swift */; };
+		18C945032D5A3D309CB13190 /* PhoneSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0964708A1B4545277382C38 /* PhoneSessionStore.swift */; };
+		353FA75D8D584287C2E4C400 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 75927EB95C86AC421E8A7F56 /* PrivacyInfo.xcprivacy */; };
+		44A67C47F05C22C49B2352EE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C330C871C9F0E339EDDCE038 /* PrivacyInfo.xcprivacy */; };
+		54316A771B4CBD345C2C4164 /* PhoneRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE5DBF04BFA3C6D50EEE020 /* PhoneRootView.swift */; };
+		57588D3A6BE89A2F822C39A7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CFFCFA42A0A28D41F537C720 /* Assets.xcassets */; };
+		5954FE5C1E39B7FBCCE7AA0F /* SomniKit in Frameworks */ = {isa = PBXBuildFile; productRef = 69160A5EA0ACFDFED045FA7D /* SomniKit */; };
+		645D33486C3FA32B9B59A16E /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2FEA8BD5D34868B7877278 /* WatchContentView.swift */; };
+		8603013FEC494ADE61984053 /* NapTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA9C2CEEFC8B18BF0BB8736 /* NapTabView.swift */; };
+		8D3D53070BD7E4C046BD15C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D0740F411513D091A0568F03 /* Assets.xcassets */; };
+		8F82BCC9E94347D5A17B0ED5 /* MoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5E4C1C18F318B73966A7CCC /* MoreViews.swift */; };
+		970D044095EA2F437DEECAE1 /* SomniWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 44AE4F1B54233C5AED4EAB5A /* SomniWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9B625D41A75E2849C1CDC17D /* StatsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752E415FC3A3BFA538A35F16 /* StatsTabView.swift */; };
+		AC74DDF7CA7266F7DE135D17 /* SomniDesign in Frameworks */ = {isa = PBXBuildFile; productRef = 50F176A8E432863157A11BC5 /* SomniDesign */; };
+		ACA15B368423040A9C2D5061 /* SleepDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEB77CC42B0CAB284831023 /* SleepDetectionService.swift */; };
+		BBCE1D31615CBE8985D6A9A8 /* WatchSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC4F994644AA8404C38FEBE /* WatchSessionViewModel.swift */; };
+		D302DAAFA08909F63DE0CB55 /* SomniWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93FA629ACEC0272848F86111 /* SomniWatchApp.swift */; };
+		DAF25F04D433A47FF6DB2AAB /* SimulatedSensorFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD5241D2252B845FF3A71FD6 /* SimulatedSensorFeed.swift */; };
+		DBE42FD0318DA08B9AD3E28C /* SomniDesign in Frameworks */ = {isa = PBXBuildFile; productRef = 24345B757DF2A30C1FB86268 /* SomniDesign */; };
+		DC3B25244304BBF523D7DCB1 /* SomniKit in Frameworks */ = {isa = PBXBuildFile; productRef = 17A19F68C60B48E381F06EEA /* SomniKit */; };
+		DCC807B636AD4CA6A26FDE10 /* CyclesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0BAA678C9A9D9FE106486D4 /* CyclesTabView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		59422BBF12834D6F6EB6036E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 755FA29A658815697A3C598B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7060AC38AA49DA5FB4FBC533;
+			remoteInfo = SomniWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E8610F232E8F2A3D661C4533 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				970D044095EA2F437DEECAE1 /* SomniWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0E56114D04DA5002BEA3EB22 /* SomniPhone.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SomniPhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1570609669947591EBA7B3F2 /* ClockStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockStyle.swift; sourceTree = "<group>"; };
+		2CE5DBF04BFA3C6D50EEE020 /* PhoneRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneRootView.swift; sourceTree = "<group>"; };
+		2E2FEA8BD5D34868B7877278 /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
+		2FD05A215AE281382C91B333 /* SomniWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SomniWatch.entitlements; sourceTree = "<group>"; };
+		3BA9C2CEEFC8B18BF0BB8736 /* NapTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NapTabView.swift; sourceTree = "<group>"; };
+		44AE4F1B54233C5AED4EAB5A /* SomniWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SomniWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4AF10555C871BDB4505D9541 /* BackupAlarmScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupAlarmScheduler.swift; sourceTree = "<group>"; };
+		5EC4F994644AA8404C38FEBE /* WatchSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionViewModel.swift; sourceTree = "<group>"; };
+		752E415FC3A3BFA538A35F16 /* StatsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsTabView.swift; sourceTree = "<group>"; };
+		75927EB95C86AC421E8A7F56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		93FA629ACEC0272848F86111 /* SomniWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SomniWatchApp.swift; sourceTree = "<group>"; };
+		AA9E79A6A47115E833859217 /* SomniKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SomniKit; path = Packages/SomniKit; sourceTree = SOURCE_ROOT; };
+		BBD500EC3D9EE624A7D56150 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C330C871C9F0E339EDDCE038 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CD5241D2252B845FF3A71FD6 /* SimulatedSensorFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatedSensorFeed.swift; sourceTree = "<group>"; };
+		CFEB77CC42B0CAB284831023 /* SleepDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDetectionService.swift; sourceTree = "<group>"; };
+		CFFCFA42A0A28D41F537C720 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D0740F411513D091A0568F03 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D584E323BF043DB8DC1A082A /* WakeAlarm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakeAlarm.swift; sourceTree = "<group>"; };
+		E0964708A1B4545277382C38 /* PhoneSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSessionStore.swift; sourceTree = "<group>"; };
+		E5E4C1C18F318B73966A7CCC /* MoreViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreViews.swift; sourceTree = "<group>"; };
+		EF692CEA67691D0D51FC3EC3 /* AlarmManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmManager.swift; sourceTree = "<group>"; };
+		F0BAA678C9A9D9FE106486D4 /* CyclesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclesTabView.swift; sourceTree = "<group>"; };
+		FFA31BBFA5DF4AB9974E0950 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2089B995185135BDC9CFA267 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC3B25244304BBF523D7DCB1 /* SomniKit in Frameworks */,
+				AC74DDF7CA7266F7DE135D17 /* SomniDesign in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		61823388CC4BCB9C1124BA9F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5954FE5C1E39B7FBCCE7AA0F /* SomniKit in Frameworks */,
+				DBE42FD0318DA08B9AD3E28C /* SomniDesign in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1D9329CF09148462E46B944C /* SomniWatch */ = {
+			isa = PBXGroup;
+			children = (
+				CFFCFA42A0A28D41F537C720 /* Assets.xcassets */,
+				FFA31BBFA5DF4AB9974E0950 /* Info.plist */,
+				C330C871C9F0E339EDDCE038 /* PrivacyInfo.xcprivacy */,
+				2FD05A215AE281382C91B333 /* SomniWatch.entitlements */,
+				93FA629ACEC0272848F86111 /* SomniWatchApp.swift */,
+				774650EA10EF93E8B2CF814E /* Services */,
+				C591B138721D40748A7F0428 /* ViewModels */,
+				94AA9E2FA680A792B04F51A4 /* Views */,
+			);
+			name = SomniWatch;
+			path = Apps/SomniWatch;
+			sourceTree = "<group>";
+		};
+		22BDF0A22925A8D3C4C9B57A /* SomniPhone */ = {
+			isa = PBXGroup;
+			children = (
+				D0740F411513D091A0568F03 /* Assets.xcassets */,
+				4AF10555C871BDB4505D9541 /* BackupAlarmScheduler.swift */,
+				BBD500EC3D9EE624A7D56150 /* Info.plist */,
+				2CE5DBF04BFA3C6D50EEE020 /* PhoneRootView.swift */,
+				E0964708A1B4545277382C38 /* PhoneSessionStore.swift */,
+				75927EB95C86AC421E8A7F56 /* PrivacyInfo.xcprivacy */,
+				D584E323BF043DB8DC1A082A /* WakeAlarm.swift */,
+				4F5523A9F6F5534EED7F171A /* Views */,
+			);
+			name = SomniPhone;
+			path = Apps/SomniPhone;
+			sourceTree = "<group>";
+		};
+		4F5523A9F6F5534EED7F171A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1570609669947591EBA7B3F2 /* ClockStyle.swift */,
+				F0BAA678C9A9D9FE106486D4 /* CyclesTabView.swift */,
+				E5E4C1C18F318B73966A7CCC /* MoreViews.swift */,
+				3BA9C2CEEFC8B18BF0BB8736 /* NapTabView.swift */,
+				752E415FC3A3BFA538A35F16 /* StatsTabView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		68D2F3134B8A599EFBA16309 = {
+			isa = PBXGroup;
+			children = (
+				75A83A9280711FF5256089D2 /* Packages */,
+				22BDF0A22925A8D3C4C9B57A /* SomniPhone */,
+				1D9329CF09148462E46B944C /* SomniWatch */,
+				C9A092FA75DB02F8B3B1A315 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		75A83A9280711FF5256089D2 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				AA9E79A6A47115E833859217 /* SomniKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		774650EA10EF93E8B2CF814E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				EF692CEA67691D0D51FC3EC3 /* AlarmManager.swift */,
+				CD5241D2252B845FF3A71FD6 /* SimulatedSensorFeed.swift */,
+				CFEB77CC42B0CAB284831023 /* SleepDetectionService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		94AA9E2FA680A792B04F51A4 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2E2FEA8BD5D34868B7877278 /* WatchContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C591B138721D40748A7F0428 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				5EC4F994644AA8404C38FEBE /* WatchSessionViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		C9A092FA75DB02F8B3B1A315 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0E56114D04DA5002BEA3EB22 /* SomniPhone.app */,
+				44AE4F1B54233C5AED4EAB5A /* SomniWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2D67992EFC9A3E07290FFEA3 /* SomniPhone */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7EF6BCB761039E56681567B /* Build configuration list for PBXNativeTarget "SomniPhone" */;
+			buildPhases = (
+				9B1202B5695BBBC7F46317A9 /* Sources */,
+				6F3D46EFCCC62D73177F4E06 /* Resources */,
+				61823388CC4BCB9C1124BA9F /* Frameworks */,
+				E8610F232E8F2A3D661C4533 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				69A091C8A91979B18AC4861E /* PBXTargetDependency */,
+			);
+			name = SomniPhone;
+			packageProductDependencies = (
+				69160A5EA0ACFDFED045FA7D /* SomniKit */,
+				24345B757DF2A30C1FB86268 /* SomniDesign */,
+			);
+			productName = SomniPhone;
+			productReference = 0E56114D04DA5002BEA3EB22 /* SomniPhone.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7060AC38AA49DA5FB4FBC533 /* SomniWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8D338A095D101A19242E92AC /* Build configuration list for PBXNativeTarget "SomniWatch" */;
+			buildPhases = (
+				9957322FBE884917C93FAEFF /* Sources */,
+				2F0485D9131E8CF75062B924 /* Resources */,
+				2089B995185135BDC9CFA267 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SomniWatch;
+			packageProductDependencies = (
+				17A19F68C60B48E381F06EEA /* SomniKit */,
+				50F176A8E432863157A11BC5 /* SomniDesign */,
+			);
+			productName = SomniWatch;
+			productReference = 44AE4F1B54233C5AED4EAB5A /* SomniWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		755FA29A658815697A3C598B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 705DC1469EAB5BE4759B70FC /* Build configuration list for PBXProject "Somni" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 68D2F3134B8A599EFBA16309;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				04A3064DA1C3FAF05DD62587 /* XCLocalSwiftPackageReference "Packages/SomniKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C9A092FA75DB02F8B3B1A315 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2D67992EFC9A3E07290FFEA3 /* SomniPhone */,
+				7060AC38AA49DA5FB4FBC533 /* SomniWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2F0485D9131E8CF75062B924 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				57588D3A6BE89A2F822C39A7 /* Assets.xcassets in Resources */,
+				44A67C47F05C22C49B2352EE /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F3D46EFCCC62D73177F4E06 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D3D53070BD7E4C046BD15C6 /* Assets.xcassets in Resources */,
+				353FA75D8D584287C2E4C400 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9957322FBE884917C93FAEFF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01AED2BDFD33FD5924F92987 /* AlarmManager.swift in Sources */,
+				DAF25F04D433A47FF6DB2AAB /* SimulatedSensorFeed.swift in Sources */,
+				ACA15B368423040A9C2D5061 /* SleepDetectionService.swift in Sources */,
+				D302DAAFA08909F63DE0CB55 /* SomniWatchApp.swift in Sources */,
+				645D33486C3FA32B9B59A16E /* WatchContentView.swift in Sources */,
+				BBCE1D31615CBE8985D6A9A8 /* WatchSessionViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B1202B5695BBBC7F46317A9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0999A2756C7402F32C6DAADD /* BackupAlarmScheduler.swift in Sources */,
+				127B45100295219F8D73B304 /* ClockStyle.swift in Sources */,
+				DCC807B636AD4CA6A26FDE10 /* CyclesTabView.swift in Sources */,
+				8F82BCC9E94347D5A17B0ED5 /* MoreViews.swift in Sources */,
+				8603013FEC494ADE61984053 /* NapTabView.swift in Sources */,
+				54316A771B4CBD345C2C4164 /* PhoneRootView.swift in Sources */,
+				18C945032D5A3D309CB13190 /* PhoneSessionStore.swift in Sources */,
+				9B625D41A75E2849C1CDC17D /* StatsTabView.swift in Sources */,
+				038CA02C37661EA592A6B37A /* WakeAlarm.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		69A091C8A91979B18AC4861E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7060AC38AA49DA5FB4FBC533 /* SomniWatch */;
+			targetProxy = 59422BBF12834D6F6EB6036E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		31554BD919795910B7D06911 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		5C2AB52D9E066D4CAB965AD0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/SomniWatch/SomniWatch.entitlements;
+				INFOPLIST_FILE = Apps/SomniWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		93B6819B81F6C0FFDD749969 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/SomniWatch/SomniWatch.entitlements;
+				INFOPLIST_FILE = Apps/SomniWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		970ED34B0CA7DADB434AFF3D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Apps/SomniPhone/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D7E7FCB119D6A3A7587E86CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		E1BDE0BACE881DFF51B73EF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Apps/SomniPhone/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		705DC1469EAB5BE4759B70FC /* Build configuration list for PBXProject "Somni" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				31554BD919795910B7D06911 /* Debug */,
+				D7E7FCB119D6A3A7587E86CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8D338A095D101A19242E92AC /* Build configuration list for PBXNativeTarget "SomniWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C2AB52D9E066D4CAB965AD0 /* Debug */,
+				93B6819B81F6C0FFDD749969 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B7EF6BCB761039E56681567B /* Build configuration list for PBXNativeTarget "SomniPhone" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1BDE0BACE881DFF51B73EF0 /* Debug */,
+				970ED34B0CA7DADB434AFF3D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		04A3064DA1C3FAF05DD62587 /* XCLocalSwiftPackageReference "Packages/SomniKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SomniKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		17A19F68C60B48E381F06EEA /* SomniKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SomniKit;
+		};
+		24345B757DF2A30C1FB86268 /* SomniDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SomniDesign;
+		};
+		50F176A8E432863157A11BC5 /* SomniDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SomniDesign;
+		};
+		69160A5EA0ACFDFED045FA7D /* SomniKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SomniKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 755FA29A658815697A3C598B /* Project object */;
+}

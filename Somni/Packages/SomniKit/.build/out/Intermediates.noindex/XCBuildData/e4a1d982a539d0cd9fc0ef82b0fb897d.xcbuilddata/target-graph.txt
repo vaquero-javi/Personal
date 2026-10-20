@@ -1,0 +1,11 @@
+Target dependency graph (4 targets)
+Target 'AllIncludingTests' in project 'Aggregate'
+➜ Explicit dependency on target 'SomniKitTests-product' in project 'SomniKit'
+➜ Dependency on target 'SomniKitTests-product' in project 'SomniKit' via transitive dependency through 'SomniKitTests-test-runner'
+➜ Explicit dependency on target 'SomniKit-product' in project 'SomniKit'
+➜ Explicit dependency on target 'SomniKit' in project 'SomniKit'
+Target 'SomniKit-product' in project 'SomniKit'
+➜ Explicit dependency on target 'SomniKit' in project 'SomniKit'
+Target 'SomniKitTests-product' in project 'SomniKit'
+➜ Explicit dependency on target 'SomniKit' in project 'SomniKit'
+Target 'SomniKit' in project 'SomniKit' (no dependencies)

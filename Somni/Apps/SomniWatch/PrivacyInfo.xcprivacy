@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Manifiesto de privacidad de Somni para Apple Watch.
+  - Sin rastreo ni dominios de rastreo.
+  - Sin datos recopilados: pulso y movimiento se procesan en memoria en el reloj; el sueño se guarda
+    en Salud del propio usuario y el resumen de cada sesión solo viaja a su iPhone.
+    Si algún día se envían datos a un servidor, hay que declararlo aquí.
+  - APIs de motivo obligatorio:
+    * UserDefaults: snapshot de la sesión, plan de alarma y ajustes, para recuperarse si watchOS relanza la app.
+    * Hora de arranque del sistema (ProcessInfo.systemUptime): convierte la marca de tiempo de
+      CMDeviceMotion (segundos desde el arranque) en fecha real para fechar las épocas de sueño.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- Leer y escribir datos accesibles solo para la propia app. -->
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- Medir tiempo transcurrido entre eventos de la app / calcular temporizadores. -->
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

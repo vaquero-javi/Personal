@@ -1,0 +1,69 @@
+# Genera Somni.xcodeproj con XcodeGen:  brew install xcodegen && xcodegen
+name: Somni
+options:
+  bundleIdPrefix: com.javiervaquero
+  deploymentTarget:
+    iOS: "26.0"
+    watchOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    # Icono generado desde Images/iconSomni.png (aplanado sobre negro, sin canal alfa).
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+packages:
+  SomniKit:
+    path: Packages/SomniKit
+
+targets:
+  SomniPhone:
+    type: application
+    platform: iOS
+    sources: [Apps/SomniPhone]
+    scheme: {}
+    dependencies:
+      - package: SomniKit
+        product: SomniKit
+      - package: SomniKit
+        product: SomniDesign
+      - target: SomniWatch
+    info:
+      path: Apps/SomniPhone/Info.plist
+      properties:
+        CFBundleDisplayName: Somni
+        CFBundleDevelopmentRegion: es
+        CFBundleLocalizations: [es]
+        UILaunchScreen: {}
+        NSAlarmKitUsageDescription: Somni programa una alarma de respaldo por si el Apple Watch no consigue despertarte.
+
+  SomniWatch:
+    type: application
+    platform: watchOS
+    sources: [Apps/SomniWatch]
+    scheme: {}
+    settings:
+      base:
+        # Debe empezar por el bundle id de la app del iPhone.
+        PRODUCT_BUNDLE_IDENTIFIER: com.javiervaquero.SomniPhone.watchkitapp
+    dependencies:
+      - package: SomniKit
+        product: SomniKit
+      - package: SomniKit
+        product: SomniDesign
+    info:
+      path: Apps/SomniWatch/Info.plist
+      properties:
+        CFBundleDisplayName: Somni
+        CFBundleDevelopmentRegion: es
+        CFBundleLocalizations: [es]
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.javiervaquero.SomniPhone
+        WKBackgroundModes: [workout-processing, smart-alarm]
+        NSHealthShareUsageDescription: Somni lee tu frecuencia cardíaca para detectar cuándo te duermes.
+        NSHealthUpdateUsageDescription: Somni guarda tus periodos de sueño en Salud.
+        NSMotionUsageDescription: Somni analiza los micro-movimientos de tu muñeca para detectar el inicio del sueño.
+    entitlements:
+      path: Apps/SomniWatch/SomniWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.usernotifications.time-sensitive: true

@@ -1,0 +1,19 @@
+{
+  "" : {
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/SomniDesign-primary.dia",
+    "emit-module-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/SomniDesign-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/SomniDesign-primary-emit-module.dia",
+    "pch" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/SomniDesign-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/SomniDesign-primary.swiftdeps"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniDesign/Motion.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniDesign-t.build/Objects-normal/arm64/Motion~partial.swiftmodule"
+  }
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Manifiesto de privacidad de Somni para iPhone.
+  - Sin rastreo ni dominios de rastreo.
+  - Sin datos recopilados: la app no tiene servidor; los ajustes, el histórico y los datos de Salud
+    se quedan en el dispositivo (y viajan solo entre el iPhone y el Apple Watch del propio usuario).
+    Si algún día se añade analítica, informes de errores o una cuenta, hay que declararlo aquí.
+  - APIs de motivo obligatorio: UserDefaults (ajustes, horas límite, siestas recientes, pestaña).
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- Leer y escribir datos accesibles solo para la propia app. -->
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

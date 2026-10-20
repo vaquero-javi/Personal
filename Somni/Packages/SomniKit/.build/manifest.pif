@@ -1,0 +1,1992 @@
+[
+  {
+    "contents" : {
+      "guid" : "Workspace:/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit",
+      "name" : "SomniKit",
+      "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit",
+      "projects" : [
+        "7dec590f43b3ca29fb79d86c9a07ca9e428ec38cd193e1f989d71659da5a9c3a",
+        "75263522ef13955893edf82f142890a6072643f4d4d4f384a636ba531edc72f3"
+      ]
+    },
+    "signature" : "bafdb9834d5cc4e331301283dd3c728e2336de9e989f0c02f57b0d5066b36554",
+    "type" : "workspace"
+  },
+  {
+    "contents" : {
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "CLANG_ENABLE_MODULES[__platform_filter=driverkit]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=ios-maccatalyst]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=ios;ios-simulator]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=macos]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=tvos;tvos-simulator]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=watchos;watchos-simulator]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=xros;xros-simulator]" : "YES",
+            "CODE_SIGNING_REQUIRED" : "NO",
+            "CODE_SIGN_IDENTITY" : "",
+            "COMPILER_WORKING_DIRECTORY" : "$(WORKSPACE_DIR)",
+            "COPY_PHASE_STRIP" : "NO",
+            "DEBUG_INFORMATION_FORMAT" : "dwarf",
+            "DRIVERKIT_DEPLOYMENT_TARGET" : "21.0",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=driverkit]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=ios-maccatalyst]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=ios;ios-simulator]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=macos]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=tvos;tvos-simulator]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=watchos;watchos-simulator]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=xros;xros-simulator]" : "@rpath",
+            "ENABLE_NS_ASSERTIONS" : "YES",
+            "ENABLE_TESTABILITY" : "YES",
+            "ENABLE_TESTING_SEARCH_PATHS" : "YES",
+            "ENTITLEMENTS_REQUIRED" : "NO",
+            "GCC_OPTIMIZATION_LEVEL" : "0",
+            "GCC_PREPROCESSOR_DEFINITIONS" : [
+              "$(inherited)",
+              "SWIFT_PACKAGE",
+              "DEBUG=1"
+            ],
+            "INDEX_ENABLE_DATA_STORE" : "YES",
+            "IPHONEOS_DEPLOYMENT_TARGET" : "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET[__platform_filter=ios-maccatalyst]" : "18.0",
+            "KEEP_PRIVATE_EXTERNS" : "NO",
+            "LIBTOOL_NO_WARNING_FOR_NO_SYMBOLS" : "YES",
+            "LINKER_DRIVER" : "auto",
+            "MACOSX_DEPLOYMENT_TARGET" : "15.0",
+            "ONLY_ACTIVE_ARCH" : "YES",
+            "OTHER_CFLAGS" : [
+              "$(inherited)",
+              "-DXcode"
+            ],
+            "OTHER_LDRFLAGS" : [
+
+            ],
+            "OTHER_SWIFT_FLAGS" : [
+              "$(inherited)",
+              "-DXcode"
+            ],
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SKIP_INSTALL" : "YES",
+            "SPECIALIZATION_SDK_OPTIONS[__platform_filter=ios;ios-simulator]" : [
+
+            ],
+            "SPECIALIZATION_SDK_OPTIONS[__platform_filter=macos]" : [
+
+            ],
+            "SPECIALIZATION_SDK_OPTIONS[__platform_filter=watchos;watchos-simulator]" : [
+
+            ],
+            "SUPPORTED_PLATFORMS" : [
+              "$(AVAILABLE_PLATFORMS)"
+            ],
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_PACKAGE",
+              "DEBUG"
+            ],
+            "SWIFT_INSTALL_OBJC_HEADER" : "NO",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "",
+            "SWIFT_OPTIMIZATION_LEVEL" : "-Onone",
+            "TARGETED_DEVICE_FAMILY" : "",
+            "TVOS_DEPLOYMENT_TARGET" : "15.0",
+            "USE_HEADERMAP" : "NO",
+            "WATCHOS_DEPLOYMENT_TARGET" : "11.0",
+            "XROS_DEPLOYMENT_TARGET" : "1.0"
+          },
+          "guid" : "PACKAGE:somnikit::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "CLANG_ENABLE_MODULES[__platform_filter=driverkit]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=ios-maccatalyst]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=ios;ios-simulator]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=macos]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=tvos;tvos-simulator]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=watchos;watchos-simulator]" : "YES",
+            "CLANG_ENABLE_MODULES[__platform_filter=xros;xros-simulator]" : "YES",
+            "CODE_SIGNING_REQUIRED" : "NO",
+            "CODE_SIGN_IDENTITY" : "",
+            "COMPILER_WORKING_DIRECTORY" : "$(WORKSPACE_DIR)",
+            "COPY_PHASE_STRIP" : "YES",
+            "DEBUG_INFORMATION_FORMAT" : "dwarf-with-dsym",
+            "DEPLOYMENT_POSTPROCESSING" : "YES",
+            "DRIVERKIT_DEPLOYMENT_TARGET" : "21.0",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=driverkit]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=ios-maccatalyst]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=ios;ios-simulator]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=macos]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=tvos;tvos-simulator]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=watchos;watchos-simulator]" : "@rpath",
+            "DYLIB_INSTALL_NAME_BASE[__platform_filter=xros;xros-simulator]" : "@rpath",
+            "ENABLE_TESTING_SEARCH_PATHS" : "YES",
+            "ENTITLEMENTS_REQUIRED" : "NO",
+            "GCC_OPTIMIZATION_LEVEL" : "s",
+            "GCC_PREPROCESSOR_DEFINITIONS" : [
+              "$(inherited)",
+              "SWIFT_PACKAGE"
+            ],
+            "IPHONEOS_DEPLOYMENT_TARGET" : "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET[__platform_filter=ios-maccatalyst]" : "18.0",
+            "KEEP_PRIVATE_EXTERNS" : "NO",
+            "LIBTOOL_NO_WARNING_FOR_NO_SYMBOLS" : "YES",
+            "LINKER_DRIVER" : "auto",
+            "MACOSX_DEPLOYMENT_TARGET" : "15.0",
+            "OTHER_CFLAGS" : [
+              "$(inherited)",
+              "-DXcode"
+            ],
+            "OTHER_LDRFLAGS" : [
+
+            ],
+            "OTHER_SWIFT_FLAGS" : [
+              "$(inherited)",
+              "-DXcode"
+            ],
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SKIP_INSTALL" : "YES",
+            "SPECIALIZATION_SDK_OPTIONS[__platform_filter=ios;ios-simulator]" : [
+
+            ],
+            "SPECIALIZATION_SDK_OPTIONS[__platform_filter=macos]" : [
+
+            ],
+            "SPECIALIZATION_SDK_OPTIONS[__platform_filter=watchos;watchos-simulator]" : [
+
+            ],
+            "SUPPORTED_PLATFORMS" : [
+              "$(AVAILABLE_PLATFORMS)"
+            ],
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_PACKAGE"
+            ],
+            "SWIFT_INSTALL_OBJC_HEADER" : "NO",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "",
+            "SWIFT_OPTIMIZATION_LEVEL" : "-Owholemodule",
+            "TARGETED_DEVICE_FAMILY" : "",
+            "TVOS_DEPLOYMENT_TARGET" : "15.0",
+            "USE_HEADERMAP" : "NO",
+            "WATCHOS_DEPLOYMENT_TARGET" : "11.0",
+            "XROS_DEPLOYMENT_TARGET" : "1.0"
+          },
+          "guid" : "PACKAGE:somnikit::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "defaultConfigurationName" : "Release",
+      "groupTree" : {
+        "children" : [
+          {
+            "children" : [
+
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_0",
+            "name" : "AdditionalFiles",
+            "path" : "/",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          },
+          {
+            "children" : [
+
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_1",
+            "name" : "Binaries",
+            "path" : "/",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          },
+          {
+            "children" : [
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_2::REF_0",
+                "name" : "AlarmPlannerTests.swift",
+                "path" : "AlarmPlannerTests.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_2::REF_1",
+                "name" : "SleepEngineTests.swift",
+                "path" : "SleepEngineTests.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_2::REF_2",
+                "name" : "SleepStatisticsTests.swift",
+                "path" : "SleepStatisticsTests.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              }
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_2",
+            "name" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Tests/SomniKitTests",
+            "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Tests/SomniKitTests",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          },
+          {
+            "children" : [
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_0",
+                "name" : "Alarm/AlarmPlanner.swift",
+                "path" : "Alarm/AlarmPlanner.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_1",
+                "name" : "Engine/SleepEngine.swift",
+                "path" : "Engine/SleepEngine.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_2",
+                "name" : "Engine/SleepStateBuffer.swift",
+                "path" : "Engine/SleepStateBuffer.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_3",
+                "name" : "Models/SensorEpoch.swift",
+                "path" : "Models/SensorEpoch.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_4",
+                "name" : "Models/SleepMode.swift",
+                "path" : "Models/SleepMode.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_5",
+                "name" : "Stats/SleepStatistics.swift",
+                "path" : "Stats/SleepStatistics.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_6",
+                "name" : "Sync/ConnectivityBridge.swift",
+                "path" : "Sync/ConnectivityBridge.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_7",
+                "name" : "Sync/SyncModels.swift",
+                "path" : "Sync/SyncModels.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              }
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_3",
+            "name" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit",
+            "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          },
+          {
+            "children" : [
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_0",
+                "name" : "Alarm/AlarmPlanner.swift",
+                "path" : "Alarm/AlarmPlanner.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_1",
+                "name" : "Engine/SleepEngine.swift",
+                "path" : "Engine/SleepEngine.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_2",
+                "name" : "Engine/SleepStateBuffer.swift",
+                "path" : "Engine/SleepStateBuffer.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_3",
+                "name" : "Models/SensorEpoch.swift",
+                "path" : "Models/SensorEpoch.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_4",
+                "name" : "Models/SleepMode.swift",
+                "path" : "Models/SleepMode.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_5",
+                "name" : "Stats/SleepStatistics.swift",
+                "path" : "Stats/SleepStatistics.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_6",
+                "name" : "Sync/ConnectivityBridge.swift",
+                "path" : "Sync/ConnectivityBridge.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              },
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_7",
+                "name" : "Sync/SyncModels.swift",
+                "path" : "Sync/SyncModels.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              }
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_4",
+            "name" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit",
+            "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          },
+          {
+            "children" : [
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_5::REF_0",
+                "name" : "Motion.swift",
+                "path" : "Motion.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              }
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_5",
+            "name" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniDesign",
+            "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniDesign",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          },
+          {
+            "children" : [
+              {
+                "fileType" : "sourcecode.swift",
+                "guid" : "PACKAGE:somnikit::MAINGROUP::REF_6::REF_0",
+                "name" : "Motion.swift",
+                "path" : "Motion.swift",
+                "sourceTree" : "<group>",
+                "type" : "file"
+              }
+            ],
+            "guid" : "PACKAGE:somnikit::MAINGROUP::REF_6",
+            "name" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniDesign",
+            "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniDesign",
+            "sourceTree" : "<absolute>",
+            "type" : "group"
+          }
+        ],
+        "guid" : "PACKAGE:somnikit::MAINGROUP",
+        "name" : "",
+        "path" : "",
+        "sourceTree" : "<group>",
+        "type" : "group"
+      },
+      "guid" : "PACKAGE:somnikit",
+      "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Package.swift",
+      "projectDirectory" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit",
+      "projectIsPackage" : "true",
+      "projectName" : "SomniKit",
+      "targets" : [
+        "30c423c0dc667b79342c24c159a6e8aeb6b781342502669fef0ebc6017b123d4",
+        "b1873153dceaecbc0abd5b1b8ce5fc75acda0f1382df498f4c859ce098c12cb0",
+        "114f2bd0f8df24b935720cecf5286583af9cfdeb267f5dab0abaa9727b2b9960",
+        "07987d421c36cc955e2b54737b9eefa06d5f859952920bee2a4ff3bc51cd36b0",
+        "24f195f5eb789c993303beb3df6f433bb5dd9d0e63fc7b06eceec8b29ba5818d",
+        "0d6d6a72af7bb62625d9e2372ba89b60062563a33abf990c540a13f0947d3ab9",
+        "d47f9c18c347426a86ee3332308b2ac1433c40bd600515980fc6d49f427d437d",
+        "d8a66eacfa4f581962defe592c8eaa3f62f948c658439e88d953bba8ad896231",
+        "b4f69f0ed2bca270227c3d237435f1d126e494171ef71dd7fff4a11798c7eded"
+      ]
+    },
+    "signature" : "7dec590f43b3ca29fb79d86c9a07ca9e428ec38cd193e1f989d71659da5a9c3a",
+    "type" : "project"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "APPLE_TEST_BUNDLE_RPATH" : "$(APPLE_TEST_BUNDLE_RPATH_SHALLOW_BUNDLE_$(SHALLOW_BUNDLE:default=NO))",
+            "APPLE_TEST_BUNDLE_RPATH_SHALLOW_BUNDLE_NO" : "@loader_path/../../..",
+            "APPLE_TEST_BUNDLE_RPATH_SHALLOW_BUNDLE_YES" : "@loader_path/../..",
+            "BUILD_SERVER_PROTOCOL_TARGET_TAGS" : [
+              "$(inherited)",
+              "test"
+            ],
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "DRIVERKIT_DEPLOYMENT_TARGET" : "21.0",
+            "GENERATE_EMBED_IN_CODE_ACCESSORS" : "NO",
+            "GENERATE_INFOPLIST_FILE" : "YES",
+            "GENERATE_RESOURCE_ACCESSORS" : "YES",
+            "INDEX_ENABLE_DATA_STORE" : "YES",
+            "IPHONEOS_DEPLOYMENT_TARGET" : "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET[__platform_filter=ios-maccatalyst]" : "18.0",
+            "LD_RUNPATH_SEARCH_PATHS" : [
+              "$(RPATH_ORIGIN)/Frameworks",
+              "$(RPATH_ORIGIN)/../Frameworks",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=driverkit]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=ios-maccatalyst]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=ios;ios-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=macos]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=tvos;tvos-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=watchos;watchos-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=xros;xros-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "MACOSX_DEPLOYMENT_TARGET" : "15.0",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKitTests",
+            "PRODUCT_MODULE_NAME" : "SomniKitTests",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SKIP_INSTALL" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKitTests.symbolgraphs",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKitTests.symbolgraphs",
+            "TARGET_NAME" : "SomniKitTests",
+            "TARGET_TEMP_DIR_SUFFIX" : "-p",
+            "TVOS_DEPLOYMENT_TARGET" : "17.0",
+            "WATCHOS_DEPLOYMENT_TARGET" : "26.0",
+            "XROS_DEPLOYMENT_TARGET" : "1.0"
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "APPLE_TEST_BUNDLE_RPATH" : "$(APPLE_TEST_BUNDLE_RPATH_SHALLOW_BUNDLE_$(SHALLOW_BUNDLE:default=NO))",
+            "APPLE_TEST_BUNDLE_RPATH_SHALLOW_BUNDLE_NO" : "@loader_path/../../..",
+            "APPLE_TEST_BUNDLE_RPATH_SHALLOW_BUNDLE_YES" : "@loader_path/../..",
+            "BUILD_SERVER_PROTOCOL_TARGET_TAGS" : [
+              "$(inherited)",
+              "test"
+            ],
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "DRIVERKIT_DEPLOYMENT_TARGET" : "21.0",
+            "GENERATE_EMBED_IN_CODE_ACCESSORS" : "NO",
+            "GENERATE_INFOPLIST_FILE" : "YES",
+            "GENERATE_RESOURCE_ACCESSORS" : "YES",
+            "INDEX_ENABLE_DATA_STORE" : "YES",
+            "IPHONEOS_DEPLOYMENT_TARGET" : "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET[__platform_filter=ios-maccatalyst]" : "18.0",
+            "LD_RUNPATH_SEARCH_PATHS" : [
+              "$(RPATH_ORIGIN)/Frameworks",
+              "$(RPATH_ORIGIN)/../Frameworks",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=driverkit]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=ios-maccatalyst]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=ios;ios-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=macos]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=tvos;tvos-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=watchos;watchos-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "LD_RUNPATH_SEARCH_PATHS[__platform_filter=xros;xros-simulator]" : [
+              "$(APPLE_TEST_BUNDLE_RPATH)",
+              "$(inherited)"
+            ],
+            "MACOSX_DEPLOYMENT_TARGET" : "15.0",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKitTests",
+            "PRODUCT_MODULE_NAME" : "SomniKitTests",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SKIP_INSTALL" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKitTests.symbolgraphs",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKitTests.symbolgraphs",
+            "TARGET_NAME" : "SomniKitTests",
+            "TARGET_TEMP_DIR_SUFFIX" : "-p",
+            "TVOS_DEPLOYMENT_TARGET" : "17.0",
+            "WATCHOS_DEPLOYMENT_TARGET" : "26.0",
+            "XROS_DEPLOYMENT_TARGET" : "1.0"
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_2::REF_0",
+              "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_2::REF_1",
+              "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDPHASE_0::1",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_2::REF_2",
+              "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDPHASE_0::2",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            }
+          ],
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.sources"
+        },
+        {
+          "buildFiles" : [
+            {
+              "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDPHASE_1::0",
+              "platformFilters" : [
+
+              ],
+              "targetReference" : "PACKAGE-TARGET:SomniKit"
+            }
+          ],
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests::BUILDPHASE_1",
+          "type" : "com.apple.buildphase.frameworks"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-TARGET:SomniKit",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests",
+      "name" : "SomniKitTests-product",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "com.apple.product-type.bundle.unit-test",
+      "type" : "standard"
+    },
+    "signature" : "30c423c0dc667b79342c24c159a6e8aeb6b781342502669fef0ebc6017b123d4",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "DRIVERKIT_DEPLOYMENT_TARGET" : "21.0",
+            "IPHONEOS_DEPLOYMENT_TARGET" : "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET[__platform_filter=ios-maccatalyst]" : "18.0",
+            "LD_RUNPATH_SEARCH_PATHS" : [
+              "$(inherited)",
+              "$(RPATH_ORIGIN)"
+            ],
+            "LINKER_DRIVER" : "swiftc",
+            "MACOSX_DEPLOYMENT_TARGET" : "15.0",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKitTests-test-runner",
+            "PRODUCT_MODULE_NAME" : "SomniKitTests_test_runner",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SKIP_INSTALL" : "NO",
+            "SWIFT_VERSION" : "5.0",
+            "TARGET_NAME" : "SomniKitTests-test-runner",
+            "TVOS_DEPLOYMENT_TARGET" : "17.0",
+            "WATCHOS_DEPLOYMENT_TARGET" : "26.0",
+            "XROS_DEPLOYMENT_TARGET" : "1.0"
+          },
+          "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "DRIVERKIT_DEPLOYMENT_TARGET" : "21.0",
+            "IPHONEOS_DEPLOYMENT_TARGET" : "18.0",
+            "IPHONEOS_DEPLOYMENT_TARGET[__platform_filter=ios-maccatalyst]" : "18.0",
+            "LD_RUNPATH_SEARCH_PATHS" : [
+              "$(inherited)",
+              "$(RPATH_ORIGIN)"
+            ],
+            "LINKER_DRIVER" : "swiftc",
+            "MACOSX_DEPLOYMENT_TARGET" : "15.0",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKitTests-test-runner",
+            "PRODUCT_MODULE_NAME" : "SomniKitTests_test_runner",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SKIP_INSTALL" : "NO",
+            "SWIFT_VERSION" : "5.0",
+            "TARGET_NAME" : "SomniKitTests-test-runner",
+            "TVOS_DEPLOYMENT_TARGET" : "17.0",
+            "WATCHOS_DEPLOYMENT_TARGET" : "26.0",
+            "XROS_DEPLOYMENT_TARGET" : "1.0"
+          },
+          "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+
+          ],
+          "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.sources"
+        },
+        {
+          "buildFiles" : [
+            {
+              "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner::BUILDPHASE_1::0",
+              "platformFilters" : [
+
+              ],
+              "targetReference" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests"
+            }
+          ],
+          "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner::BUILDPHASE_1",
+          "type" : "com.apple.buildphase.frameworks"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner",
+      "name" : "SomniKitTests-test-runner",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-TARGET:SomniKitTests_test_runner",
+        "name" : "SomniKitTests-test-runner",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "com.apple.product-type.tool.swiftpm-test-runner",
+      "type" : "standard"
+    },
+    "signature" : "b1873153dceaecbc0abd5b1b8ce5fc75acda0f1382df498f4c859ce098c12cb0",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "PRODUCT_NAME" : "SomniKit",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "TARGET_NAME" : "SomniKit-product",
+            "TARGET_TEMP_DIR_SUFFIX" : "-p",
+            "USES_SWIFTPM_UNSAFE_FLAGS" : "NO"
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "PRODUCT_NAME" : "SomniKit",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "TARGET_NAME" : "SomniKit-product",
+            "TARGET_TEMP_DIR_SUFFIX" : "-p",
+            "USES_SWIFTPM_UNSAFE_FLAGS" : "NO"
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "targetReference" : "PACKAGE-TARGET:SomniKit"
+            }
+          ],
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.frameworks"
+        },
+        {
+          "buildFiles" : [
+
+          ],
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit::BUILDPHASE_1",
+          "type" : "com.apple.buildphase.sources"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-TARGET:SomniKit",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit",
+      "name" : "SomniKit-product",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "com.apple.product-type.library.static",
+      "type" : "standard"
+    },
+    "signature" : "114f2bd0f8df24b935720cecf5286583af9cfdeb267f5dab0abaa9727b2b9960",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "PRODUCT_NAME" : "SomniDesign",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "TARGET_NAME" : "SomniDesign-product",
+            "TARGET_TEMP_DIR_SUFFIX" : "-p",
+            "USES_SWIFTPM_UNSAFE_FLAGS" : "NO"
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "PRODUCT_NAME" : "SomniDesign",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "TARGET_NAME" : "SomniDesign-product",
+            "TARGET_TEMP_DIR_SUFFIX" : "-p",
+            "USES_SWIFTPM_UNSAFE_FLAGS" : "NO"
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "targetReference" : "PACKAGE-TARGET:SomniDesign"
+            }
+          ],
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.frameworks"
+        },
+        {
+          "buildFiles" : [
+
+          ],
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign::BUILDPHASE_1",
+          "type" : "com.apple.buildphase.sources"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-TARGET:SomniDesign",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign",
+      "name" : "SomniDesign-product",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "com.apple.product-type.library.static",
+      "type" : "standard"
+    },
+    "signature" : "07987d421c36cc955e2b54737b9eefa06d5f859952920bee2a4ff3bc51cd36b0",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "GENERATE_PRELINK_OBJECT_FILE" : "NO",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniKit {\nheader \"SomniKit-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKit",
+            "PRODUCT_MODULE_NAME" : "SomniKit",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "STRIP_INSTALLED_PRODUCT" : "NO",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniKit-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TAPI_DYLIB_INSTALL_NAME" : "SomniKit",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TARGET_NAME" : "SomniKit",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniKit::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "GENERATE_PRELINK_OBJECT_FILE" : "NO",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniKit {\nheader \"SomniKit-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKit",
+            "PRODUCT_MODULE_NAME" : "SomniKit",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "STRIP_INSTALLED_PRODUCT" : "NO",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniKit-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TAPI_DYLIB_INSTALL_NAME" : "SomniKit",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TARGET_NAME" : "SomniKit",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniKit::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_0",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_1",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::1",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_2",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::2",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_3",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::3",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_4",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::4",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_5",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::5",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_6",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::6",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_3::REF_7",
+              "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0::7",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            }
+          ],
+          "guid" : "PACKAGE-TARGET:SomniKit::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.sources"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+
+      ],
+      "dynamicTargetVariantGuid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic",
+      "guid" : "PACKAGE-TARGET:SomniKit",
+      "name" : "SomniKit",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-TARGET:SomniKit",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "org.swift.product-type.library.static",
+      "type" : "standard"
+    },
+    "signature" : "24f195f5eb789c993303beb3df6f433bb5dd9d0e63fc7b06eceec8b29ba5818d",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "GENERATE_PRELINK_OBJECT_FILE" : "NO",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniDesign {\nheader \"SomniDesign-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniDesign",
+            "PRODUCT_MODULE_NAME" : "SomniDesign",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "STRIP_INSTALLED_PRODUCT" : "NO",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniDesign-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TAPI_DYLIB_INSTALL_NAME" : "SomniDesign",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TARGET_NAME" : "SomniDesign",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniDesign::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "GENERATE_PRELINK_OBJECT_FILE" : "NO",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniDesign {\nheader \"SomniDesign-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniDesign",
+            "PRODUCT_MODULE_NAME" : "SomniDesign",
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "STRIP_INSTALLED_PRODUCT" : "NO",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniDesign-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TAPI_DYLIB_INSTALL_NAME" : "SomniDesign",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TARGET_NAME" : "SomniDesign",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniDesign::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_5::REF_0",
+              "guid" : "PACKAGE-TARGET:SomniDesign::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            }
+          ],
+          "guid" : "PACKAGE-TARGET:SomniDesign::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.sources"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+
+      ],
+      "dynamicTargetVariantGuid" : "PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic",
+      "guid" : "PACKAGE-TARGET:SomniDesign",
+      "name" : "SomniDesign",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-TARGET:SomniDesign",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "org.swift.product-type.library.static",
+      "type" : "standard"
+    },
+    "signature" : "d47f9c18c347426a86ee3332308b2ac1433c40bd600515980fc6d49f427d437d",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit-SomniKitPackageTests.SomniKitPackageTests::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+
+          },
+          "guid" : "PACKAGE-PRODUCT:somnikit-SomniKitPackageTests.SomniKitPackageTests::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "PACKAGE-PRODUCT:somnikit-SomniKitPackageTests.SomniKitPackageTests",
+      "name" : "SomniKitPackageTests-product",
+      "type" : "aggregate"
+    },
+    "signature" : "b4f69f0ed2bca270227c3d237435f1d126e494171ef71dd7fff4a11798c7eded",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniKit {\nheader \"SomniKit-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKit",
+            "PRODUCT_MODULE_NAME" : "SomniKit",
+            "PRODUCT_NAME" : "SomniKit",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniKit-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TARGET_NAME" : "SomniKit",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniKit {\nheader \"SomniKit-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniKit",
+            "PRODUCT_MODULE_NAME" : "SomniKit",
+            "PRODUCT_NAME" : "SomniKit",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniKit-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniKit.symbolgraphs",
+            "TARGET_NAME" : "SomniKit",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniKit.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_0",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_1",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::1",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_2",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::2",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_3",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::3",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_4",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::4",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_5",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::5",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_6",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::6",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            },
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_4::REF_7",
+              "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0::7",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            }
+          ],
+          "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.sources"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+
+      ],
+      "guid" : "PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic",
+      "name" : "SomniKit",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-TARGET:SomniKit--2903D0B92A3394CA-dynamic",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "com.apple.product-type.library.dynamic",
+      "type" : "standard"
+    },
+    "signature" : "0d6d6a72af7bb62625d9e2372ba89b60062563a33abf990c540a13f0947d3ab9",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "approvedByUser" : "true",
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniDesign {\nheader \"SomniDesign-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniDesign",
+            "PRODUCT_MODULE_NAME" : "SomniDesign",
+            "PRODUCT_NAME" : "SomniDesign",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniDesign-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TARGET_NAME" : "SomniDesign",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "DEFINES_MODULE" : "YES",
+            "DOCC_EXTRACT_PROJECT_HEADERS_DOCUMENTATION" : "YES",
+            "EXECUTABLE_PREFIX" : "lib",
+            "EXECUTABLE_PREFIX[__platform_filter=windows-msvc]" : "",
+            "MODULEMAP_FILE_CONTENTS" : "module SomniDesign {\nheader \"SomniDesign-Swift.h\"\nexport *\n}",
+            "MODULEMAP_PATH" : "$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+            "PACKAGE_RESOURCE_TARGET_KIND" : "regular",
+            "PRODUCT_BUNDLE_IDENTIFIER" : "somnikit.SomniDesign",
+            "PRODUCT_MODULE_NAME" : "SomniDesign",
+            "PRODUCT_NAME" : "SomniDesign",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SUPPORTS_TEXT_BASED_API" : "NO",
+            "SWIFT_ACTIVE_COMPILATION_CONDITIONS" : [
+              "$(inherited)",
+              "SWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE"
+            ],
+            "SWIFT_DISABLE_PARSE_AS_LIBRARY" : "NO",
+            "SWIFT_ENABLE_BARE_SLASH_REGEX" : "NO",
+            "SWIFT_LIBRARIES_ONLY" : "YES",
+            "SWIFT_OBJC_INTERFACE_HEADER_DIR" : "$(GENERATED_MODULEMAP_DIR)",
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME" : "SomniDesign-Swift.h",
+            "SWIFT_PACKAGE_NAME" : "somnikit",
+            "SWIFT_VERSION" : "6",
+            "SYMBOL_GRAPH_EXTRACTOR_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TAPI_EXTRACT_API_OUTPUT_DIR" : "$(TARGET_BUILD_DIR)/$(CURRENT_ARCH)/SomniDesign.symbolgraphs",
+            "TARGET_NAME" : "SomniDesign",
+            "TARGET_TEMP_DIR_SUFFIX" : "-t"
+          },
+          "guid" : "PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+              "FRAMEWORK_SEARCH_PATHS" : [
+                "$(BUILT_PRODUCTS_DIR)/PackageFrameworks",
+                "$(inherited)"
+              ],
+              "LD_RUNPATH_SEARCH_PATHS" : [
+                "$(RPATH_ORIGIN)",
+                "$(inherited)"
+              ],
+              "LD_WARN_DUPLICATE_LIBRARIES" : "NO",
+              "OTHER_CFLAGS" : [
+                "-fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/SomniDesign.modulemap",
+                "$(inherited)"
+              ]
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+        {
+          "buildFiles" : [
+            {
+              "codeSignOnCopy" : "false",
+              "fileReference" : "PACKAGE:somnikit::MAINGROUP::REF_6::REF_0",
+              "guid" : "PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic::BUILDPHASE_0::0",
+              "platformFilters" : [
+
+              ],
+              "removeHeadersOnCopy" : "false"
+            }
+          ],
+          "guid" : "PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic::BUILDPHASE_0",
+          "type" : "com.apple.buildphase.sources"
+        }
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+
+      ],
+      "guid" : "PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic",
+      "name" : "SomniDesign",
+      "productReference" : {
+        "guid" : "PRODUCTREF-PACKAGE-TARGET:SomniDesign--59F1A4FA5595AB95-dynamic",
+        "name" : "$(EXECUTABLE_NAME)",
+        "type" : "file"
+      },
+      "productTypeIdentifier" : "com.apple.product-type.library.dynamic",
+      "type" : "standard"
+    },
+    "signature" : "d8a66eacfa4f581962defe592c8eaa3f62f948c658439e88d953bba8ad896231",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SKIP_INSTALL" : "YES",
+            "SUPPORTED_PLATFORMS" : [
+              "$(AVAILABLE_PLATFORMS)"
+            ]
+          },
+          "guid" : "AGGREGATE::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+            "PRODUCT_NAME" : "$(TARGET_NAME)",
+            "SDKROOT" : "auto",
+            "SDK_VARIANT" : "auto",
+            "SKIP_INSTALL" : "YES",
+            "SUPPORTED_PLATFORMS" : [
+              "$(AVAILABLE_PLATFORMS)"
+            ]
+          },
+          "guid" : "AGGREGATE::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "defaultConfigurationName" : "Release",
+      "developmentRegion" : "en",
+      "groupTree" : {
+        "children" : [
+
+        ],
+        "guid" : "AGGREGATE::MAINGROUP",
+        "name" : "",
+        "path" : "",
+        "sourceTree" : "<group>",
+        "type" : "group"
+      },
+      "guid" : "AGGREGATE",
+      "path" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Package.swift",
+      "projectDirectory" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit",
+      "projectIsPackage" : "true",
+      "projectName" : "Aggregate",
+      "targets" : [
+        "a6d324251055d1128bc0ba203aacb53795201fc7372b26a90d7d9df4263ec57f",
+        "bda5996cec448b1fbf9d878947ac1cf25438607dc8377a76edf8be713991b4f5"
+      ]
+    },
+    "signature" : "75263522ef13955893edf82f142890a6072643f4d4d4f384a636ba531edc72f3",
+    "type" : "project"
+  },
+  {
+    "contents" : {
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+
+          },
+          "guid" : "ALL-INCLUDING-TESTS::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+
+          },
+          "guid" : "ALL-INCLUDING-TESTS::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKitTests.SomniKitTests",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-TARGET:SomniKitTests_test_runner",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-TARGET:SomniKit",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-TARGET:SomniDesign",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "ALL-INCLUDING-TESTS",
+      "name" : "AllIncludingTests",
+      "type" : "aggregate"
+    },
+    "signature" : "a6d324251055d1128bc0ba203aacb53795201fc7372b26a90d7d9df4263ec57f",
+    "type" : "target"
+  },
+  {
+    "contents" : {
+      "buildConfigurations" : [
+        {
+          "buildSettings" : {
+
+          },
+          "guid" : "ALL-EXCLUDING-TESTS::BUILDCONFIG_0",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Debug"
+        },
+        {
+          "buildSettings" : {
+
+          },
+          "guid" : "ALL-EXCLUDING-TESTS::BUILDCONFIG_1",
+          "impartedBuildProperties" : {
+            "buildSettings" : {
+
+            }
+          },
+          "name" : "Release"
+        }
+      ],
+      "buildPhases" : [
+
+      ],
+      "buildRules" : [
+
+      ],
+      "customTasks" : [
+
+      ],
+      "dependencies" : [
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniKit.SomniKit",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-PRODUCT:somnikit_SomniDesign.SomniDesign",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-TARGET:SomniKit",
+          "platformFilters" : [
+
+          ]
+        },
+        {
+          "guid" : "PACKAGE-TARGET:SomniDesign",
+          "platformFilters" : [
+
+          ]
+        }
+      ],
+      "guid" : "ALL-EXCLUDING-TESTS",
+      "name" : "AllExcludingTests",
+      "type" : "aggregate"
+    },
+    "signature" : "bda5996cec448b1fbf9d878947ac1cf25438607dc8377a76edf8be713991b4f5",
+    "type" : "target"
+  }
+]

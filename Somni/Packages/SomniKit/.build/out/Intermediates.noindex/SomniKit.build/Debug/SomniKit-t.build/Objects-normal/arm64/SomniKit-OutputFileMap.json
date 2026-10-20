@@ -1,0 +1,89 @@
+{
+  "" : {
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SomniKit-primary.dia",
+    "emit-module-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SomniKit-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SomniKit-primary-emit-module.dia",
+    "pch" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SomniKit-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SomniKit-primary.swiftdeps"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Alarm/AlarmPlanner.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/AlarmPlanner~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Engine/SleepEngine.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepEngine~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Engine/SleepStateBuffer.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStateBuffer~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Models/SensorEpoch.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SensorEpoch~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Models/SleepMode.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepMode~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Stats/SleepStatistics.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SleepStatistics~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Sync/ConnectivityBridge.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/ConnectivityBridge~partial.swiftmodule"
+  },
+  "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/Sources/SomniKit/Sync/SyncModels.swift" : {
+    "const-values" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.swiftconstvalues",
+    "dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.d",
+    "diagnostics" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.dia",
+    "index-unit-output-path" : "/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.o",
+    "llvm-bc" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.bc",
+    "object" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.o",
+    "swift-dependencies" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels.swiftdeps",
+    "swiftmodule" : "/Users/javi/Documents/GitHub/Personal/Somni/Packages/SomniKit/.build/out/Intermediates.noindex/SomniKit.build/Debug/SomniKit-t.build/Objects-normal/arm64/SyncModels~partial.swiftmodule"
+  }
+}
