@@ -101,7 +101,40 @@ struct StatsTabView: View {
             }
         }
         .animation(Motion.state(reduceMotion: reduceMotion), value: period)
+        #if DEBUG
+        .task { await runDemoTour() }
+        #endif
     }
+
+    #if DEBUG
+    /// Recorrido para el vídeo promocional (`-SomniDemo stats`): cambia a Mes y baja despacio por las tarjetas.
+    private func runDemoTour() async {
+        guard UserDefaults.standard.string(forKey: "SomniDemo") == "stats" else { return }
+        try? await Task.sleep(for: .seconds(2.5))
+        period = .month
+        try? await Task.sleep(for: .seconds(2.5))
+        // `scrollPosition` no mueve un List: se desplaza la vista de UIKit que hay debajo.
+        guard let scroll = Self.largestScrollView() else { return }
+        let top = scroll.contentOffset.y
+        let distance = min(1500, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom - top)
+        let steps = 480
+        for step in 0...steps {
+            let x = Double(step) / Double(steps)
+            scroll.contentOffset.y = top + distance * (0.5 - 0.5 * cos(.pi * x))
+            try? await Task.sleep(for: .seconds(1.0 / 60))
+        }
+    }
+
+    private static func largestScrollView() -> UIScrollView? {
+        func all(in view: UIView) -> [UIScrollView] {
+            ((view as? UIScrollView).map { [$0] } ?? []) + view.subviews.flatMap(all)
+        }
+        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
+        return windows.flatMap(all)
+            .filter { $0.window != nil && !$0.isHidden && $0.contentSize.height > $0.bounds.height }
+            .max { $0.bounds.height < $1.bounds.height }
+    }
+    #endif
 }
 
 // MARK: - Resumen

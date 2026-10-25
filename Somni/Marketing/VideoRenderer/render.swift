@@ -11,6 +11,9 @@
 // Lenguaje de movimiento (motion-design skill, personalidad "Premium" calmada):
 // curva firma cubic-bezier(0.4,0,0.2,1), entradas que deceleran, salidas que aceleran,
 // sin rebotes, revelaciones de 0,6–1,2 s y capas primaria / secundaria / ambiente en cada escena.
+//
+// Grabaciones necesarias (Debug, `xcrun simctl io <sim> recordVideo`): watch_nap (`-SomniDemo nap` en el reloj),
+// phone_nap, phone_cycles y phone_stats (`-SomniDemo nap|cycles|stats` en el iPhone).
 
 import AVFoundation
 import AppKit
@@ -19,7 +22,6 @@ import VideoToolbox
 
 let W = 1920, H = 1080
 let FPS: Int32 = 30
-let TOTAL = 69.0
 
 let args = CommandLine.arguments
 let footageDir = URL(fileURLWithPath: args[1])
@@ -457,6 +459,78 @@ let grain: CGImage = {
                    provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!
 }()
 
+// MARK: - Icono
+
+/// Icono de la app (Images/iconSomni.png) y su luminancia, que sirve de máscara para el reflejo del metal.
+let iconImage: CGImage = {
+    // #filePath es relativo si se compiló con una ruta relativa: se prueba también desde el directorio actual.
+    let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+    let candidates = [source.appendingPathComponent("../../Images/iconSomni.png"), URL(fileURLWithPath: "../../Images/iconSomni.png"),
+                      URL(fileURLWithPath: "Images/iconSomni.png")]
+    guard let url = candidates.first(where: { FileManager.default.fileExists(atPath: $0.path) }) else {
+        fatalError("No encuentro Images/iconSomni.png: compila con la ruta absoluta de render.swift o ejecútalo desde el repositorio.")
+    }
+    return NSImage(contentsOf: url)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+}()
+
+let iconLuma: CGImage = {
+    let size = iconImage.width
+    let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size,
+                        space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)!
+    ctx.draw(iconImage, in: CGRect(x: 0, y: 0, width: size, height: size))
+    return ctx.makeImage()!
+}()
+
+let silver = [rgb(0.96, 0.96, 0.98), rgb(0.64, 0.64, 0.68), rgb(0.93, 0.93, 0.96)]
+
+extension Canvas {
+    /// El anillo metálico flotando sobre el negro, con una franja de luz que lo recorre en diagonal.
+    func icon(center: CGPoint, size: CGFloat, alpha: Double, scale: Double = 1, sheen: Double = -1, tile: Bool = false) {
+        guard alpha > 0.001 else { return }
+        let s = size * scale
+        let rect = CGRect(x: center.x - s / 2, y: center.y - s / 2, width: s, height: s)
+        ctx.saveGState()
+        ctx.setAlpha(alpha)
+        if tile {
+            // Forma de icono de app, como en la App Store.
+            let path = rounded(rect, s * 0.2237)
+            ctx.saveGState()
+            ctx.setShadow(offset: CGSize(width: 0, height: 24), blur: 60, color: rgb(0, 0, 0, 0.9))
+            ctx.addPath(path)
+            ctx.setFillColor(rgb(0, 0, 0))
+            ctx.fillPath()
+            ctx.restoreGState()
+            ctx.addPath(path)
+            ctx.clip()
+        } else {
+            // El fondo del PNG no es negro puro: en modo pantalla el negro desaparece y solo queda el metal.
+            ctx.setBlendMode(.screen)
+        }
+        image(iconImage, in: rect)
+        ctx.setBlendMode(.normal)
+        if sheen > 0 && sheen < 1 {
+            ctx.saveGState()
+            ctx.translateBy(x: rect.minX, y: rect.maxY)
+            ctx.scaleBy(x: 1, y: -1)
+            ctx.clip(to: CGRect(origin: .zero, size: rect.size), mask: iconLuma)
+            let band = s * 0.45
+            let o = CGFloat(mix(-0.5, 1.5, sheen)) * s
+            let g = CGGradient(colorsSpace: sRGB, colors: [rgb(1, 1, 1, 0), rgb(1, 1, 1, 0.75), rgb(1, 1, 1, 0)] as CFArray,
+                               locations: [0, 0.5, 1])!
+            ctx.drawLinearGradient(g, start: CGPoint(x: o - band, y: o - band), end: CGPoint(x: o, y: o), options: [])
+            ctx.restoreGState()
+        }
+        if tile {
+            ctx.resetClip()
+            ctx.addPath(rounded(rect.insetBy(dx: 0.75, dy: 0.75), s * 0.2237))
+            ctx.setStrokeColor(rgb(1, 1, 1, 0.14))
+            ctx.setLineWidth(1.5)
+            ctx.strokePath()
+        }
+        ctx.restoreGState()
+    }
+}
+
 // MARK: - Escenas
 
 struct Scene {
@@ -465,68 +539,155 @@ struct Scene {
     let draw: (Canvas, Double) -> Void
 }
 
+/// Inicio de cada escena. La banda sonora cambia de acorde en estos mismos puntos.
+enum Cue {
+    static let logo = 0.0, problem = 6.5, watch = 11.5, sensors = 24.0, napPhone = 30.5, napLine = 40.0
+    static let cyclesPhone = 48.5, hypnogram = 57.0, wake = 64.5, stats = 71.0, sync = 83.5, privacy = 91.0, close = 97.5
+}
+
+let TOTAL = 104.5
+
+// Una instancia por escena: el lector de vídeo solo avanza, así no hay que rebobinar.
 let watchClip = Clip("watch_nap")
 let watchWakeClip = Clip("watch_nap")
+let watchSyncClip = Clip("watch_nap")
 let napClip = Clip("phone_nap")
 let napWakeClip = Clip("phone_nap")
+let napSyncClip = Clip("phone_nap")
 let cyclesClip = Clip("phone_cycles")
+let statsClip = Clip("phone_stats")
+
+/// Texto secundario que cambia mientras el dispositivo muestra otra parte de la app.
+struct Caption {
+    let start: Double, end: Double
+    let symbol: String
+    let lines: [String]
+}
+
+extension Canvas {
+    func captions(_ items: [Caption], t: Double, x: CGFloat, y: CGFloat, color: CGColor) {
+        for item in items {
+            let r = reveal(t, at: item.start, dur: 0.8, out: item.end, outDur: 0.45, rise: 22)
+            guard r.alpha > 0.001 else { continue }
+            symbol(item.symbol, size: 30, color: color, center: CGPoint(x: x + 18, y: y - 13 + r.dy), alpha: r.alpha)
+            for (i, line) in item.lines.enumerated() {
+                text(line, size: 40, weight: i == 0 ? .medium : .regular, color: i == 0 ? white : gray,
+                     x: x + 54, y: y + CGFloat(i) * 52, align: .left, alpha: r.alpha, dy: r.dy)
+            }
+        }
+    }
+}
 
 let scenes: [Scene] = [
-    // 1. Apertura: la frase que plantea el problema.
-    Scene(start: 0, end: 5.2) { c, t in
-        c.glow(x: 960, y: 640, radius: 900, color: indigo, intensity: 0.16 * p(t, 0, 2.5) * (1 - p(t, 4.4, 0.8)))
-        let a = reveal(t, at: 0.5, dur: 1.1, out: 4.4, outDur: 0.6, rise: 34)
-        c.text("Dormir bien", size: 120, weight: .semibold, x: 960, y: 520, alpha: a.alpha, dy: a.dy, tracking: -0.02)
-        let b = reveal(t, at: 1.7, dur: 1.0, out: 4.45, outDur: 0.55)
-        c.text("empieza por saber cuándo te duermes.", size: 54, weight: .regular, color: gray, x: 960, y: 620, alpha: b.alpha, dy: b.dy)
+    // 1. Logo: el anillo aparece, la luz recorre el metal y llega el nombre.
+    Scene(start: Cue.logo, end: Cue.problem) { c, t in
+        let out = 1 - p(t, 5.7, 0.8, exitEase)
+        c.glow(x: 960, y: 450, radius: 640, color: rgb(0.55, 0.55, 0.62), intensity: 0.14 * p(t, 0.2, 2.2) * out)
+        let i = p(t, 0.3, 1.8, entrance)
+        c.icon(center: CGPoint(x: 960, y: 430), size: 700, alpha: i * out, scale: mix(0.86, 1, i) * mix(1, 0.97, 1 - out),
+               sheen: (t - 1.5) / 1.6)
+        let word = p(t, 2.3, 1.3)
+        c.text("Somni", size: 150, weight: .bold, x: 960, y: 830, alpha: word * out, tracking: -0.035,
+               gradient: silver, scale: mix(1.05, 1, word))
+        let tag = reveal(t, at: 3.0, dur: 1.0, out: 5.7, outDur: 0.7)
+        c.text("Alarmas que entienden tu sueño.", size: 44, color: gray, x: 960, y: 920, alpha: tag.alpha, dy: tag.dy)
     },
 
-    // 2. Marca.
-    Scene(start: 5.2, end: 10.4) { c, t in
-        let fade = 1 - p(t, 4.5, 0.7, exitEase)
-        c.glow(x: 960, y: 560, radius: 760, color: rgb(0.55, 0.45, 1.0), intensity: 0.22 * p(t, 0, 1.8) * fade)
-        c.glow(x: 1180, y: 700, radius: 520, color: orange, intensity: 0.10 * p(t, 0.8, 2.0) * fade)
-        let icon = reveal(t, at: 0.2, dur: 1.1, out: 4.5, outDur: 0.6, rise: 24)
-        c.symbol("moon.stars.fill", size: 92, color: indigoLight, center: CGPoint(x: 960, y: 360 + icon.dy),
-                 alpha: icon.alpha, scale: mix(0.88, 1, p(t, 0.2, 1.1)))
-        let word = p(t, 0.5, 1.5)
-        c.text("Somni", size: 210, weight: .bold, x: 960, y: 620, alpha: word * fade, tracking: -0.035,
-               gradient: brandGradient, scale: mix(1.06, 1, word) * mix(1, 0.98, 1 - fade))
-        let tag = reveal(t, at: 1.5, dur: 1.0, out: 4.5, outDur: 0.6)
-        c.text("Alarmas que entienden tu sueño.", size: 48, color: gray, x: 960, y: 735, alpha: tag.alpha, dy: tag.dy)
+    // 2. El problema.
+    Scene(start: Cue.problem, end: Cue.watch) { c, t in
+        c.glow(x: 960, y: 560, radius: 900, color: indigo, intensity: 0.12 * p(t, 0, 2) * (1 - p(t, 4.3, 0.7)))
+        let a = reveal(t, at: 0.3, dur: 1.0, out: 2.7, outDur: 0.5, rise: 30)
+        c.text("Tu alarma no sabe", size: 104, weight: .semibold, x: 960, y: 500, alpha: a.alpha, dy: a.dy, tracking: -0.025)
+        c.text("cuándo te has dormido.", size: 104, weight: .semibold, color: gray, x: 960, y: 620, alpha: a.alpha, dy: a.dy, tracking: -0.025)
+        let b = reveal(t, at: 3.1, dur: 1.0, out: 4.3, outDur: 0.6, rise: 30)
+        c.text("Somni, sí.", size: 150, weight: .bold, x: 960, y: 590, alpha: b.alpha, dy: b.dy, tracking: -0.035, gradient: brandGradient)
     },
 
-    // 3. Apple Watch: detección del sueño con la interfaz real.
-    Scene(start: 10.4, end: 21.0) { c, t in
-        let out = 1 - p(t, 10.0, 0.6, exitEase)
-        c.glow(x: 1290, y: 560, radius: 700, color: indigo, intensity: 0.20 * p(t, 0, 1.5) * out)
+    // 3. Apple Watch: la app por dentro, del inicio al sueño detectado.
+    Scene(start: Cue.watch, end: Cue.sensors) { c, t in
+        let out = 1 - p(t, 11.9, 0.6, exitEase)
+        c.glow(x: 1300, y: 560, radius: 700, color: indigo, intensity: 0.20 * p(t, 0, 1.5) * out)
+        c.glow(x: 1300, y: 560, radius: 520, color: rgb(0.2, 0.75, 0.8), intensity: 0.14 * p(t, 8.2, 1.5) * out)
         let enter = p(t, 0, 1.4, entrance)
-        let scale = mix(0.96, 1.04, p(t, 0, 10.6, push))
-        c.watch(screen: watchClip.frame(at: 4.3 + t), center: CGPoint(x: 1290, y: 545 + (1 - enter) * 150),
-                caseHeight: 470 * scale, alpha: enter * out)
-        let h1 = reveal(t, at: 0.5, out: 10.0, outDur: 0.6)
-        c.text("Sabe cuándo", size: 96, weight: .bold, x: 170, y: 430, align: .left, alpha: h1.alpha, dy: h1.dy, tracking: -0.025)
-        c.text("te duermes.", size: 96, weight: .bold, x: 170, y: 535, align: .left, alpha: h1.alpha, dy: h1.dy, tracking: -0.025)
-        let s1 = reveal(t, at: 1.2, out: 5.5, outDur: 0.5)
-        c.text("Movimiento y pulso,", size: 40, color: gray, x: 172, y: 640, align: .left, alpha: s1.alpha, dy: s1.dy)
-        c.text("analizados en tiempo real.", size: 40, color: gray, x: 172, y: 692, align: .left, alpha: s1.alpha, dy: s1.dy)
-        let s2 = reveal(t, at: 6.1, out: 10.0, outDur: 0.6)
-        c.text("Sueño detectado al instante.", size: 40, weight: .medium, color: indigoLight, x: 172, y: 640, align: .left, alpha: s2.alpha, dy: s2.dy)
-        c.text("Sin esperas. Sin sincronizar.", size: 40, color: gray, x: 172, y: 692, align: .left, alpha: s2.alpha, dy: s2.dy)
+        let scale = mix(0.95, 1.04, p(t, 0, 12.5, push))
+        c.watch(screen: watchClip.frame(at: 2.0 + t), center: CGPoint(x: 1300, y: 545 + (1 - enter) * 150),
+                caseHeight: 500 * scale, alpha: enter * out)
+        let h = reveal(t, at: 0.5, out: 11.9, outDur: 0.6)
+        c.text("Apple Watch.", size: 40, weight: .semibold, color: indigoLight, x: 172, y: 330, align: .left, alpha: h.alpha, dy: h.dy)
+        c.text("Sabe cuándo", size: 100, weight: .bold, x: 168, y: 440, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.025)
+        c.text("te duermes.", size: 100, weight: .bold, x: 168, y: 550, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.025)
+        c.captions([
+            Caption(start: 1.1, end: 2.6, symbol: "hand.tap.fill", lines: ["Un toque para empezar.", "Siesta o Ciclos."]),
+            Caption(start: 3.0, end: 5.2, symbol: "heart.fill", lines: ["Vigila tu pulso", "y tu movimiento."]),
+            Caption(start: 5.6, end: 8.2, symbol: "hand.raised.fill", lines: ["Detecta la quietud", "de tu muñeca."]),
+            Caption(start: 8.6, end: 11.9, symbol: "moon.zzz.fill", lines: ["Sueño detectado.", "La alarma se programa sola."])
+        ], t: t, x: 168, y: 680, color: indigoLight)
     },
 
-    // 4. La idea clave: la cuenta empieza al dormirte.
-    Scene(start: 21.0, end: 30.0) { c, t in
-        let out = 1 - p(t, 8.3, 0.7, exitEase)
+    // 4. Cómo lo hace: tres señales, sin esperar a Salud.
+    Scene(start: Cue.sensors, end: Cue.napPhone) { c, t in
+        let out = 1 - p(t, 5.8, 0.7, exitEase)
+        c.glow(x: 960, y: 620, radius: 980, color: indigo, intensity: 0.12 * p(t, 0, 1.5) * out)
+        let head = reveal(t, at: 0.2, out: 5.8, outDur: 0.6)
+        c.text("En tiempo real. Sin esperar a Salud.", size: 70, weight: .semibold, x: 960, y: 260, alpha: head.alpha, dy: head.dy, tracking: -0.02)
+        let columns: [(String, CGColor, String, [String])] = [
+            ("waveform.path", indigoLight, "Movimiento", ["Acelerómetro a 25 Hz,", "resumido cada 10 s."]),
+            ("heart.fill", rgb(1, 0.38, 0.42), "Pulso", ["Medido cada pocos segundos", "con una sesión ligera."]),
+            ("clock.arrow.circlepath", orange, "Al instante", ["Fecha el sueño desde", "el inicio de la quietud."])
+        ]
+        for (i, column) in columns.enumerated() {
+            let x = CGFloat(420 + i * 540)
+            let start = 0.9 + Double(i) * 0.18
+            let k = p(t, start, 0.9, entrance)
+            let r = reveal(t, at: start, out: 5.8, outDur: 0.6, rise: 30)
+            c.ctx.saveGState()
+            c.ctx.setAlpha(r.alpha)
+            c.ctx.addPath(c.rounded(CGRect(x: x - 220, y: 380 + r.dy, width: 440, height: 440), 44))
+            c.ctx.setFillColor(rgb(1, 1, 1, 0.055))
+            c.ctx.fillPath()
+            c.ctx.restoreGState()
+            c.glow(x: x, y: 500 + r.dy, radius: 120, color: column.1, intensity: 0.25 * r.alpha)
+            c.symbol(column.0, size: 64, color: column.1, center: CGPoint(x: x, y: 500 + r.dy), alpha: r.alpha, scale: mix(0.8, 1, k), weight: .semibold)
+            c.text(column.2, size: 46, weight: .semibold, x: x, y: 640, alpha: r.alpha, dy: r.dy)
+            c.text(column.3[0], size: 30, color: gray, x: x, y: 700, alpha: r.alpha, dy: r.dy)
+            c.text(column.3[1], size: 30, color: gray, x: x, y: 742, alpha: r.alpha, dy: r.dy)
+        }
+        let foot = reveal(t, at: 2.4, out: 5.8, outDur: 0.6)
+        c.text("Todo se procesa en la memoria del reloj.", size: 34, color: dimGray, x: 960, y: 920, alpha: foot.alpha, dy: foot.dy)
+    },
+
+    // 5. iPhone, Siesta.
+    Scene(start: Cue.napPhone, end: Cue.napLine) { c, t in
+        let out = 1 - p(t, 8.9, 0.6, exitEase)
+        c.glow(x: 640, y: 560, radius: 720, color: orange, intensity: 0.11 * p(t, 0, 1.5) * out)
+        c.glow(x: 1400, y: 420, radius: 620, color: indigo, intensity: 0.08 * p(t, 0, 2) * out)
+        let enter = p(t, 0, 1.4, entrance)
+        let scale = mix(0.97, 1.03, p(t, 0, 9.5, push))
+        c.phone(screen: napClip.frame(at: 3.5 + t), center: CGPoint(x: 640, y: 555 + (1 - enter) * 170), height: 880 * scale, alpha: enter * out)
+        let h = reveal(t, at: 0.5, out: 8.9, outDur: 0.6)
+        c.text("iPhone.", size: 40, weight: .semibold, color: orange, x: 1064, y: 330, align: .left, alpha: h.alpha, dy: h.dy)
+        c.text("Siesta.", size: 120, weight: .bold, x: 1060, y: 450, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.03)
+        let s = reveal(t, at: 1.0, out: 8.9, outDur: 0.6)
+        c.text("Elige los minutos.", size: 42, color: gray, x: 1064, y: 545, align: .left, alpha: s.alpha, dy: s.dy)
+        c.text("Somni los cuenta desde", size: 42, color: gray, x: 1064, y: 599, align: .left, alpha: s.alpha, dy: s.dy)
+        c.text("que te duermes.", size: 42, color: gray, x: 1064, y: 653, align: .left, alpha: s.alpha, dy: s.dy)
+        c.captions([
+            Caption(start: 1.8, end: 4.4, symbol: "eye.fill", lines: ["En vigilancia."]),
+            Caption(start: 4.8, end: 8.9, symbol: "moon.zzz.fill", lines: ["El anillo arranca al dormirte."])
+        ], t: t, x: 1046, y: 790, color: orange)
+    },
+
+    // 6. La idea clave: la cuenta empieza al dormirte.
+    Scene(start: Cue.napLine, end: Cue.cyclesPhone) { c, t in
+        let out = 1 - p(t, 7.8, 0.7, exitEase)
         let ctx = c.ctx
         c.glow(x: 960, y: 600, radius: 900, color: indigo, intensity: 0.10 * p(t, 0, 1.5) * out)
-        let head = reveal(t, at: 0.3, out: 8.3, outDur: 0.6)
+        let head = reveal(t, at: 0.3, out: 7.8, outDur: 0.6)
         c.text("La siesta empieza cuando tú te duermes.", size: 66, weight: .semibold, x: 960, y: 250, alpha: head.alpha, dy: head.dy, tracking: -0.02)
 
         let y: CGFloat = 560, xA: CGFloat = 340, xB: CGFloat = 860, xC: CGFloat = 1580
         ctx.saveGState()
         ctx.setAlpha(out)
-        // Línea base.
         let base = p(t, 0.8, 1.2)
         ctx.setStrokeColor(rgb(1, 1, 1, 0.16))
         ctx.setLineWidth(4)
@@ -534,7 +695,6 @@ let scenes: [Scene] = [
         ctx.move(to: CGPoint(x: 240, y: y))
         ctx.addLine(to: CGPoint(x: 240 + (1680 - 240) * base, y: y))
         ctx.strokePath()
-        // Tramo de insomnio (discontinuo).
         let wait = p(t, 2.0, 1.2)
         if wait > 0 {
             ctx.setStrokeColor(rgb(0.6, 0.6, 0.66, 0.9))
@@ -545,7 +705,6 @@ let scenes: [Scene] = [
             ctx.strokePath()
             ctx.setLineDash(phase: 0, lengths: [])
         }
-        // Barra de siesta.
         let nap = p(t, 3.9, 2.0)
         if nap > 0 {
             ctx.setStrokeColor(orange)
@@ -556,74 +715,59 @@ let scenes: [Scene] = [
         }
         ctx.restoreGState()
 
-        // Marcadores.
         let a = p(t, 1.6, 0.5, entrance)
         ctx.saveGState()
         ctx.setAlpha(a * out)
         ctx.setFillColor(white)
         ctx.fillEllipse(in: CGRect(x: xA - 11 * a, y: y - 11 * a, width: 22 * a, height: 22 * a))
         ctx.restoreGState()
-        let la = reveal(t, at: 1.8, out: 8.3, outDur: 0.6, rise: 16)
+        let la = reveal(t, at: 1.8, out: 7.8, outDur: 0.6, rise: 16)
         c.text("Pulsas Iniciar", size: 32, weight: .semibold, x: xA, y: 640, alpha: la.alpha, dy: la.dy)
         c.text("15:02", size: 28, color: gray, x: xA, y: 680, alpha: la.alpha, dy: la.dy)
-        let lw = reveal(t, at: 2.6, out: 8.3, outDur: 0.6, rise: 16)
+        let lw = reveal(t, at: 2.6, out: 7.8, outDur: 0.6, rise: 16)
         c.text("12 min dando vueltas", size: 30, color: gray, x: (xA + xB) / 2, y: 515, alpha: lw.alpha, dy: lw.dy)
 
         let b = p(t, 3.2, 0.7)
         c.glow(x: xB, y: y, radius: 40 + 80 * p(t, 3.2, 1.2), color: indigo, intensity: 0.55 * b * (1 - p(t, 3.6, 1.2)) * out)
         c.symbol("moon.zzz.fill", size: 46, color: indigoLight, center: CGPoint(x: xB, y: y), alpha: b * out, scale: mix(0.6, 1, b))
-        let lb = reveal(t, at: 3.4, out: 8.3, outDur: 0.6, rise: 16)
+        let lb = reveal(t, at: 3.4, out: 7.8, outDur: 0.6, rise: 16)
         c.text("Te duermes", size: 32, weight: .semibold, color: indigoLight, x: xB, y: 640, alpha: lb.alpha, dy: lb.dy)
         c.text("15:14", size: 28, color: gray, x: xB, y: 680, alpha: lb.alpha, dy: lb.dy)
-        let ln = reveal(t, at: 4.6, out: 8.3, outDur: 0.6, rise: 16)
+        let ln = reveal(t, at: 4.6, out: 7.8, outDur: 0.6, rise: 16)
         c.text("20 min de siesta", size: 32, weight: .semibold, color: orange, x: (xB + xC) / 2, y: 515, alpha: ln.alpha, dy: ln.dy)
 
         let cc = p(t, 5.9, 0.6)
         c.symbol("bell.fill", size: 40, color: orange, center: CGPoint(x: xC, y: y), alpha: cc * out, scale: mix(0.6, 1, cc))
-        let lc = reveal(t, at: 6.0, out: 8.3, outDur: 0.6, rise: 16)
+        let lc = reveal(t, at: 6.0, out: 7.8, outDur: 0.6, rise: 16)
         c.text("Suena", size: 32, weight: .semibold, color: orange, x: xC, y: 640, alpha: lc.alpha, dy: lc.dy)
         c.text("15:34", size: 28, color: gray, x: xC, y: 680, alpha: lc.alpha, dy: lc.dy)
 
-        let cap = reveal(t, at: 6.7, out: 8.3, outDur: 0.6)
+        let cap = reveal(t, at: 6.5, out: 7.8, outDur: 0.6)
         c.text("El tiempo hasta dormirte no cuenta.", size: 44, color: rgb(1, 1, 1, 0.88), x: 960, y: 860, alpha: cap.alpha, dy: cap.dy)
     },
 
-    // 5. iPhone, Siesta.
-    Scene(start: 30.0, end: 39.4) { c, t in
-        let out = 1 - p(t, 8.8, 0.6, exitEase)
-        c.glow(x: 640, y: 560, radius: 720, color: orange, intensity: 0.10 * p(t, 0, 1.5) * out)
-        c.glow(x: 1400, y: 420, radius: 620, color: indigo, intensity: 0.08 * p(t, 0, 2) * out)
-        let enter = p(t, 0, 1.4, entrance)
-        let scale = mix(0.97, 1.03, p(t, 0, 9.4, push))
-        c.phone(screen: napClip.frame(at: 4.2 + t), center: CGPoint(x: 640, y: 555 + (1 - enter) * 170), height: 880 * scale, alpha: enter * out)
-        let h = reveal(t, at: 0.5, out: 8.8, outDur: 0.6)
-        c.text("Siesta.", size: 120, weight: .bold, x: 1060, y: 440, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.03)
-        let s = reveal(t, at: 1.0, out: 8.8, outDur: 0.6)
-        c.text("Elige los minutos.", size: 42, color: gray, x: 1064, y: 540, align: .left, alpha: s.alpha, dy: s.dy)
-        c.text("Somni los cuenta desde", size: 42, color: gray, x: 1064, y: 594, align: .left, alpha: s.alpha, dy: s.dy)
-        c.text("que te duermes.", size: 42, color: gray, x: 1064, y: 648, align: .left, alpha: s.alpha, dy: s.dy)
-        let k = reveal(t, at: 5.0, out: 8.8, outDur: 0.6)
-        c.symbol("moon.zzz.fill", size: 30, color: orange, center: CGPoint(x: 1084, y: 760 + k.dy), alpha: k.alpha)
-        c.text("El anillo arranca al dormirte.", size: 34, weight: .medium, color: orange, x: 1118, y: 772, align: .left, alpha: k.alpha, dy: k.dy)
-    },
-
-    // 6. iPhone, Ciclos.
-    Scene(start: 39.4, end: 47.9) { c, t in
+    // 7. iPhone, Ciclos.
+    Scene(start: Cue.cyclesPhone, end: Cue.hypnogram) { c, t in
         let out = 1 - p(t, 7.9, 0.6, exitEase)
         c.glow(x: 1280, y: 560, radius: 720, color: indigo, intensity: 0.16 * p(t, 0, 1.5) * out)
         let enter = p(t, 0, 1.4, entrance)
         let scale = mix(0.97, 1.03, p(t, 0, 8.5, push))
-        c.phone(screen: cyclesClip.frame(at: 1.6 + t), center: CGPoint(x: 1280, y: 555 + (1 - enter) * 170), height: 880 * scale, alpha: enter * out)
+        c.phone(screen: cyclesClip.frame(at: 2.6 + t), center: CGPoint(x: 1280, y: 555 + (1 - enter) * 170), height: 880 * scale, alpha: enter * out)
         let h = reveal(t, at: 0.5, out: 7.9, outDur: 0.6)
-        c.text("Ciclos.", size: 120, weight: .bold, x: 170, y: 440, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.03)
+        c.text("iPhone.", size: 40, weight: .semibold, color: indigoLight, x: 174, y: 330, align: .left, alpha: h.alpha, dy: h.dy)
+        c.text("Ciclos.", size: 120, weight: .bold, x: 170, y: 450, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.03)
         let s = reveal(t, at: 1.0, out: 7.9, outDur: 0.6)
-        c.text("Elige tu hora límite.", size: 42, color: gray, x: 174, y: 540, align: .left, alpha: s.alpha, dy: s.dy)
-        c.text("Te despierta al terminar", size: 42, color: gray, x: 174, y: 594, align: .left, alpha: s.alpha, dy: s.dy)
-        c.text("el último ciclo completo.", size: 42, color: gray, x: 174, y: 648, align: .left, alpha: s.alpha, dy: s.dy)
+        c.text("Elige tu hora límite.", size: 42, color: gray, x: 174, y: 545, align: .left, alpha: s.alpha, dy: s.dy)
+        c.text("Te despierta al terminar", size: 42, color: gray, x: 174, y: 599, align: .left, alpha: s.alpha, dy: s.dy)
+        c.text("el último ciclo completo.", size: 42, color: gray, x: 174, y: 653, align: .left, alpha: s.alpha, dy: s.dy)
+        c.captions([
+            Caption(start: 3.9, end: 6.6, symbol: "moon.stars.fill", lines: ["Dormido a las 23:24.", "Alarma a las 6:49, tras 5 ciclos."]),
+            Caption(start: 7.0, end: 7.9, symbol: "sun.horizon.fill", lines: ["Buenos días."])
+        ], t: t, x: 156, y: 790, color: indigoLight)
     },
 
-    // 7. Hipnograma: nunca en mitad de un ciclo.
-    Scene(start: 47.9, end: 55.4) { c, t in
+    // 8. Hipnograma: nunca en mitad de un ciclo.
+    Scene(start: Cue.hypnogram, end: Cue.wake) { c, t in
         let out = 1 - p(t, 6.9, 0.6, exitEase)
         let ctx = c.ctx
         c.glow(x: 960, y: 620, radius: 980, color: indigo, intensity: 0.12 * p(t, 0, 1.5) * out)
@@ -657,14 +801,12 @@ let scenes: [Scene] = [
         ctx.saveGState()
         ctx.setAlpha(out)
         ctx.clip(to: CGRect(x: 0, y: 0, width: x0 + (x1 - x0) * draw + 2, height: CGFloat(H)))
-        // Relleno tenue bajo la curva.
         let fill = path.mutableCopy()!
         fill.addLine(to: CGPoint(x: x1, y: top))
         fill.closeSubpath()
         ctx.addPath(fill)
         ctx.setFillColor(rgb(0.45, 0.45, 1.0, 0.10))
         ctx.fillPath()
-        // Trazo con degradado noche -> amanecer.
         ctx.addPath(path)
         ctx.setLineWidth(5)
         ctx.setLineJoin(.round)
@@ -674,14 +816,12 @@ let scenes: [Scene] = [
         ctx.drawLinearGradient(g, start: CGPoint(x: x0, y: 0), end: CGPoint(x: x1, y: 0), options: [])
         ctx.restoreGState()
 
-        // Fin de cada ciclo: puntos que aparecen al pasar la curva.
         for end in cycleEnds {
             let x = x0 + CGFloat(end) * pxPerMin
             let k = p(t, 1.0 + 3.2 * Double((x - x0) / (x1 - x0)) * 0.9, 0.4)
             ctx.setFillColor(rgb(1, 1, 1, 0.75 * k * out))
             ctx.fillEllipse(in: CGRect(x: x - 5, y: top - 5, width: 10, height: 10))
         }
-        // Límite.
         let lim = p(t, 0.8, 0.6)
         ctx.saveGState()
         ctx.setStrokeColor(rgb(1, 1, 1, 0.35 * lim * out))
@@ -697,7 +837,6 @@ let scenes: [Scene] = [
         c.text("7:30", size: 34, weight: .semibold, x: x1, y: 840, align: .right, alpha: axis.alpha, dy: axis.dy)
         c.text("Límite", size: 28, color: gray, x: x1, y: 880, align: .right, alpha: axis.alpha, dy: axis.dy)
 
-        // La alarma: al final del 5.º ciclo.
         let xa = x0 + 445 * pxPerMin
         let line = p(t, 4.3, 0.7)
         ctx.saveGState()
@@ -712,37 +851,101 @@ let scenes: [Scene] = [
         c.symbol("bell.fill", size: 34, color: orange, center: CGPoint(x: xa, y: top - 75), alpha: bell * out, scale: mix(0.6, 1, bell))
         let la = reveal(t, at: 5.0, out: 6.9, outDur: 0.6, rise: 14)
         c.text("6:49 · 5 ciclos completos", size: 32, weight: .semibold, color: orange, x: xa, y: 300, alpha: la.alpha, dy: la.dy)
+        let lg = reveal(t, at: 5.4, out: 6.9, outDur: 0.6, rise: 14)
+        c.text("Y si detecta sueño ligero poco antes, se adelanta.", size: 30, color: gray, x: 960, y: 990, alpha: lg.alpha, dy: lg.dy)
     },
 
-    // 8. Amanecer: los dos dispositivos suenan.
-    Scene(start: 55.4, end: 62.4) { c, t in
-        let out = 1 - p(t, 6.4, 0.6, exitEase)
+    // 9. Amanecer: los dos dispositivos suenan.
+    Scene(start: Cue.wake, end: Cue.stats) { c, t in
+        let out = 1 - p(t, 5.9, 0.6, exitEase)
         let sun = p(t, 0.2, 3.0)
         c.glow(x: 960, y: 1180, radius: 1300, color: orange, intensity: 0.38 * sun * out)
         c.glow(x: 960, y: 1080, radius: 600, color: rgb(1, 0.82, 0.5), intensity: 0.20 * sun * out)
         let enter = p(t, 0, 1.4, entrance)
-        let drift = p(t, 0, 7, push)
-        c.watch(screen: watchWakeClip.frame(at: 14.6 + t), center: CGPoint(x: 700, y: 660 + (1 - enter) * 150 + 12 * drift),
+        let drift = p(t, 0, 6.5, push)
+        c.watch(screen: watchWakeClip.frame(at: 14.3 + t), center: CGPoint(x: 700, y: 660 + (1 - enter) * 150 + 12 * drift),
                 caseHeight: 380, alpha: enter * out)
         let enter2 = p(t, 0.15, 1.4, entrance)
-        c.phone(screen: napWakeClip.frame(at: 13.6 + t), center: CGPoint(x: 1210, y: 650 + (1 - enter2) * 170 - 12 * drift),
+        c.phone(screen: napWakeClip.frame(at: 12.8 + t), center: CGPoint(x: 1210, y: 650 + (1 - enter2) * 170 - 12 * drift),
                 height: 820, alpha: enter2 * out)
-        let h = reveal(t, at: 1.2, out: 6.4, outDur: 0.6)
+        let h = reveal(t, at: 1.2, out: 5.9, outDur: 0.6)
         c.text("Despierta en el momento justo.", size: 64, weight: .semibold, x: 960, y: 170, alpha: h.alpha, dy: h.dy, tracking: -0.02)
     },
 
-    // 9. Cierre.
-    Scene(start: 62.4, end: TOTAL) { c, t in
-        let fade = 1 - p(t, 5.6, 1.0, exitEase)
-        c.glow(x: 960, y: 560, radius: 820, color: rgb(0.55, 0.45, 1.0), intensity: 0.18 * p(t, 0, 2) * fade)
-        c.glow(x: 1180, y: 660, radius: 560, color: orange, intensity: 0.12 * p(t, 0.6, 2) * fade)
-        let word = p(t, 0.3, 1.5)
-        c.text("Somni", size: 190, weight: .bold, x: 960, y: 540, alpha: word * fade, tracking: -0.035,
-               gradient: brandGradient, scale: mix(1.05, 1, word))
-        let a = reveal(t, at: 1.1, out: 5.6, outDur: 1.0)
-        c.text("Para iPhone y Apple Watch.", size: 46, color: gray, x: 960, y: 650, alpha: a.alpha, dy: a.dy)
-        let b = reveal(t, at: 1.8, out: 5.6, outDur: 1.0)
-        c.text("Próximamente.", size: 32, color: dimGray, x: 960, y: 740, alpha: b.alpha, dy: b.dy)
+    // 10. Estadísticas: recorrido real por la pestaña.
+    Scene(start: Cue.stats, end: Cue.sync) { c, t in
+        let out = 1 - p(t, 11.9, 0.6, exitEase)
+        c.glow(x: 640, y: 560, radius: 760, color: orange, intensity: 0.13 * p(t, 0, 1.5) * out)
+        c.glow(x: 1400, y: 640, radius: 600, color: rgb(0.78, 0.52, 0.95), intensity: 0.07 * p(t, 0, 2) * out)
+        let enter = p(t, 0, 1.4, entrance)
+        let scale = mix(0.97, 1.03, p(t, 0, 12.5, push))
+        c.phone(screen: statsClip.frame(at: 1.5 + t), center: CGPoint(x: 640, y: 555 + (1 - enter) * 170), height: 880 * scale, alpha: enter * out)
+        let h = reveal(t, at: 0.5, out: 11.9, outDur: 0.6)
+        c.text("Tu sueño, en números.", size: 40, weight: .semibold, color: orange, x: 1064, y: 330, align: .left, alpha: h.alpha, dy: h.dy)
+        c.text("Estadísticas.", size: 120, weight: .bold, x: 1060, y: 450, align: .left, alpha: h.alpha, dy: h.dy, tracking: -0.03)
+        let s = reveal(t, at: 1.0, out: 11.9, outDur: 0.6)
+        c.text("Por semana, por mes o desde siempre.", size: 42, color: gray, x: 1064, y: 545, align: .left, alpha: s.alpha, dy: s.dy)
+        c.captions([
+            Caption(start: 1.6, end: 4.8, symbol: "chart.bar.fill", lines: ["Cuánto duermes,", "noche a noche."]),
+            Caption(start: 5.2, end: 7.8, symbol: "hourglass", lines: ["Cuánto tardas en dormirte", "y a qué hora te acuestas."]),
+            Caption(start: 8.2, end: 10.0, symbol: "arrow.trianglehead.2.clockwise", lines: ["Los ciclos que completas."]),
+            Caption(start: 10.4, end: 11.9, symbol: "list.bullet", lines: ["Y cada noche y cada siesta."])
+        ], t: t, x: 1046, y: 680, color: orange)
+    },
+
+    // 11. Reloj e iPhone, sincronizados.
+    Scene(start: Cue.sync, end: Cue.privacy) { c, t in
+        let out = 1 - p(t, 6.9, 0.6, exitEase)
+        c.glow(x: 960, y: 600, radius: 900, color: indigo, intensity: 0.13 * p(t, 0, 1.5) * out)
+        let enter = p(t, 0, 1.4, entrance)
+        let drift = p(t, 0, 7.5, push)
+        c.watch(screen: watchSyncClip.frame(at: 5.0 + t), center: CGPoint(x: 700, y: 600 + (1 - enter) * 150 - 10 * drift),
+                caseHeight: 360, alpha: enter * out)
+        let enter2 = p(t, 0.15, 1.4, entrance)
+        c.phone(screen: napSyncClip.frame(at: 4.6 + t), center: CGPoint(x: 1220, y: 590 + (1 - enter2) * 170 + 10 * drift),
+                height: 700, alpha: enter2 * out)
+        // Enlace entre ambos: un punto de luz que viaja del reloj al iPhone.
+        let link = (t - 1.2).truncatingRemainder(dividingBy: 2.4) / 1.4
+        if t > 1.2, link < 1 {
+            let k = signature(link)
+            c.glow(x: CGFloat(mix(860, 1050, k)), y: 600, radius: 26, color: indigoLight, intensity: 0.9 * sin(.pi * link) * out)
+        }
+        let h = reveal(t, at: 0.6, out: 6.9, outDur: 0.6)
+        c.text("Siempre sincronizados.", size: 64, weight: .semibold, x: 960, y: 150, alpha: h.alpha, dy: h.dy, tracking: -0.02)
+        let a = reveal(t, at: 1.4, out: 4.0, outDur: 0.5)
+        c.text("Empieza y detén la sesión desde cualquiera de los dos.", size: 36, color: gray, x: 960, y: 1010, alpha: a.alpha, dy: a.dy)
+        let b = reveal(t, at: 4.3, out: 6.9, outDur: 0.6)
+        c.text("Y una alarma de respaldo en el iPhone, por si acaso.", size: 36, color: gray, x: 960, y: 1010, alpha: b.alpha, dy: b.dy)
+    },
+
+    // 12. Privacidad.
+    Scene(start: Cue.privacy, end: Cue.close) { c, t in
+        let out = 1 - p(t, 5.8, 0.7, exitEase)
+        c.glow(x: 960, y: 340, radius: 520, color: rgb(0.3, 0.85, 0.55), intensity: 0.16 * p(t, 0.2, 1.5) * out)
+        let k = p(t, 0.2, 1.0, entrance)
+        c.symbol("lock.fill", size: 84, color: rgb(0.4, 0.9, 0.6), center: CGPoint(x: 960, y: 340 + (1 - k) * 24), alpha: k * out,
+                 scale: mix(0.85, 1, k), weight: .semibold)
+        let h = reveal(t, at: 0.6, out: 5.8, outDur: 0.6, rise: 30)
+        c.text("Tu sueño es solo tuyo.", size: 104, weight: .bold, x: 960, y: 560, alpha: h.alpha, dy: h.dy, tracking: -0.03)
+        let a = reveal(t, at: 1.5, out: 5.8, outDur: 0.6)
+        c.text("Sin servidores. Sin cuentas. Sin anuncios.", size: 46, color: gray, x: 960, y: 665, alpha: a.alpha, dy: a.dy)
+        let b = reveal(t, at: 2.3, out: 5.8, outDur: 0.6)
+        c.text("Todo se queda en tu iPhone y tu Apple Watch.", size: 36, color: dimGray, x: 960, y: 740, alpha: b.alpha, dy: b.dy)
+    },
+
+    // 13. Cierre.
+    Scene(start: Cue.close, end: TOTAL) { c, t in
+        let fade = 1 - p(t, 5.9, 1.0, exitEase)
+        c.glow(x: 960, y: 420, radius: 700, color: rgb(0.55, 0.55, 0.62), intensity: 0.14 * p(t, 0, 2) * fade)
+        let i = p(t, 0.2, 1.4, entrance)
+        c.icon(center: CGPoint(x: 960, y: 370), size: 230, alpha: i * fade, scale: mix(0.9, 1, i), sheen: (t - 1.2) / 1.4, tile: true)
+        let word = p(t, 0.7, 1.4)
+        c.text("Somni", size: 150, weight: .bold, x: 960, y: 650, alpha: word * fade, tracking: -0.035,
+               gradient: silver, scale: mix(1.05, 1, word))
+        let a = reveal(t, at: 1.4, out: 5.9, outDur: 1.0)
+        c.text("Para iPhone y Apple Watch.", size: 46, color: gray, x: 960, y: 740, alpha: a.alpha, dy: a.dy)
+        let b = reveal(t, at: 2.1, out: 5.9, outDur: 1.0)
+        c.text("Próximamente.", size: 32, color: dimGray, x: 960, y: 830, alpha: b.alpha, dy: b.dy)
     }
 ]
 
@@ -792,8 +995,10 @@ func synthesizeAudio(to url: URL) {
     let c69: [Double] = [36, 43, 52, 62, 69]
     let sunrise: [Double] = [41, 48, 57, 64, 67, 72, 81]
     let progression: [(Double, [Double])] = [
-        (0, fMaj9), (10.4, dMin9), (16.4, bbMaj9), (21.0, fMaj9), (26.9, c69), (30.0, dMin9), (34.7, bbMaj9),
-        (39.4, fMaj9), (43.6, c69), (47.9, bbMaj9), (52.5, c69), (55.4, sunrise), (62.4, fMaj9)
+        (Cue.logo, fMaj9), (Cue.problem, dMin9), (Cue.watch, bbMaj9), (Cue.watch + 6.3, c69), (Cue.sensors, fMaj9),
+        (Cue.napPhone, dMin9), (Cue.napLine, bbMaj9), (Cue.napLine + 3.2, fMaj9), (Cue.cyclesPhone, c69),
+        (Cue.hypnogram, bbMaj9), (Cue.hypnogram + 4.8, c69), (Cue.wake, sunrise), (Cue.stats, fMaj9),
+        (Cue.stats + 6.2, dMin9), (Cue.sync, bbMaj9), (Cue.privacy, c69), (Cue.close, fMaj9)
     ]
     let crossfade = 2.0
     for (index, (start, chord)) in progression.enumerated() {
@@ -819,8 +1024,11 @@ func synthesizeAudio(to url: URL) {
         }
     }
 
-    // Campanas en los momentos clave (sueño detectado, onset, alarma, amanecer, logo).
-    let chimes: [(Double, Double)] = [(16.4, 84), (24.2, 79), (26.9, 84), (52.9, 84), (55.7, 88), (62.8, 81)]
+    // Campanas en los momentos clave (logo, sueño detectado, onset, alarma, amanecer, cierre).
+    let chimes: [(Double, Double)] = [
+        (Cue.logo + 1.6, 81), (Cue.problem + 3.1, 84), (Cue.watch + 8.6, 84), (Cue.napLine + 3.2, 79),
+        (Cue.napLine + 5.9, 84), (Cue.hypnogram + 4.8, 84), (Cue.wake + 0.3, 88), (Cue.close + 0.4, 81)
+    ]
     for (time, note) in chimes {
         let f = hz(note)
         let partials: [(Double, Double)] = [(1, 1), (2.0, 0.32), (3.01, 0.14), (4.2, 0.06)]
@@ -882,7 +1090,10 @@ func synthesizeAudio(to url: URL) {
         buffer.floatChannelData![1][i] = right[i] * gain
     }
     try? FileManager.default.removeItem(at: url)
-    let file = try! AVAudioFile(forWriting: url, settings: format.settings)
+    // AAC: el MP4 final se monta sin recomprimir (passthrough) y no admite PCM.
+    let file = try! AVAudioFile(forWriting: url, settings: [
+        AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: rate, AVNumberOfChannelsKey: 2, AVEncoderBitRateKey: 256_000
+    ])
     try! file.write(from: buffer)
 }
 
@@ -902,7 +1113,7 @@ if let stillTimes {
 
 let workDir = outputURL.deletingLastPathComponent()
 let silentURL = workDir.appendingPathComponent("video_sin_audio.mov")
-let audioURL = workDir.appendingPathComponent("banda_sonora.caf")
+let audioURL = workDir.appendingPathComponent("banda_sonora.m4a")
 try? FileManager.default.removeItem(at: silentURL)
 
 let writer = try! AVAssetWriter(outputURL: silentURL, fileType: .mov)
@@ -911,7 +1122,8 @@ let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
     AVVideoWidthKey: W,
     AVVideoHeightKey: H,
     AVVideoCompressionPropertiesKey: [
-        AVVideoAverageBitRateKey: 18_000_000,
+        // Por debajo de los 100 MB que admite GitHub con ~105 s de vídeo.
+        AVVideoAverageBitRateKey: 7_000_000,
         AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
     ],
     AVVideoColorPropertiesKey: [
@@ -965,7 +1177,7 @@ try! vTrack.insertTimeRange(range, of: videoAsset.tracks(withMediaType: .video)[
 let aTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)!
 try! aTrack.insertTimeRange(range, of: audioAsset.tracks(withMediaType: .audio)[0], at: .zero)
 try? FileManager.default.removeItem(at: outputURL)
-let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality)!
+let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough)!
 export.outputURL = outputURL
 export.outputFileType = .mp4
 let exported = DispatchSemaphore(value: 0)
