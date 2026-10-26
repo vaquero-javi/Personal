@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T00:00:00Z",
+  "title": "Design System: Omnia Business",
+  "extensions": {
+    "colorMeta": {
+      "carton": {
+        "role": "neutral",
+        "displayName": "Cartón gris",
+        "canonical": "oklch(93.6% 0.005 258.3)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#252629",
+          "#434547",
+          "#646669",
+          "#87898c",
+          "#acaeb1",
+          "#d0d1d3",
+          "#edeef0"
+        ]
+      },
+      "shelf": {
+        "role": "neutral",
+        "displayName": "Balda",
+        "canonical": "oklch(88.1% 0.006 255.5)",
+        "tonalRamp": [
+          "#090b0e",
+          "#24272a",
+          "#434548",
+          "#64666a",
+          "#87898d",
+          "#abaeb2",
+          "#cfd1d3",
+          "#edeff1"
+        ]
+      },
+      "shelf-edge": {
+        "role": "neutral",
+        "displayName": "Canto de balda",
+        "canonical": "oklch(81.6% 0.008 253.9)",
+        "tonalRamp": [
+          "#090b0f",
+          "#24272a",
+          "#424549",
+          "#63666b",
+          "#86898e",
+          "#aaaeb3",
+          "#cfd1d4",
+          "#eceff2"
+        ]
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Hoja",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "sheet-head": {
+        "role": "neutral",
+        "displayName": "Cabecera de hoja",
+        "canonical": "oklch(97.0% 0.003 264.5)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#262628",
+          "#444547",
+          "#656668",
+          "#88898b",
+          "#adaeb0",
+          "#d0d1d2",
+          "#eeeef0"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Filete",
+        "canonical": "oklch(89.6% 0.006 255.5)",
+        "tonalRamp": [
+          "#090b0e",
+          "#24272a",
+          "#434548",
+          "#64666a",
+          "#87898d",
+          "#abaeb2",
+          "#cfd1d3",
+          "#edeff1"
+        ]
+      },
+      "line-soft": {
+        "role": "neutral",
+        "displayName": "Filete suave",
+        "canonical": "oklch(95.4% 0.003 247.9)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#252728",
+          "#444547",
+          "#646668",
+          "#87898b",
+          "#acaeb0",
+          "#d0d1d2",
+          "#edeef0"
+        ]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Tinta de archivo",
+        "canonical": "oklch(20.9% 0.010 268.2)",
+        "tonalRamp": [
+          "#090b10",
+          "#24262c",
+          "#43454b",
+          "#63666c",
+          "#868990",
+          "#abaeb5",
+          "#cfd1d5",
+          "#edeef3"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Tinta 2",
+        "canonical": "oklch(42.9% 0.015 255.6)",
+        "tonalRamp": [
+          "#070b12",
+          "#22272e",
+          "#40464d",
+          "#60676f",
+          "#838a93",
+          "#a8afb8",
+          "#cdd1d7",
+          "#eaeff5"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Tinta 3",
+        "canonical": "oklch(49.0% 0.013 252.2)",
+        "tonalRamp": [
+          "#070c11",
+          "#22272d",
+          "#40464c",
+          "#61676e",
+          "#838a91",
+          "#a8afb6",
+          "#cdd1d6",
+          "#ebeff4"
+        ]
+      },
+      "spine-red": {
+        "role": "secondary",
+        "displayName": "Lomo rojo",
+        "canonical": "oklch(57.7% 0.190 29.2)",
+        "tonalRamp": [
+          "#3d0000",
+          "#670000",
+          "#900000",
+          "#ba2017",
+          "#e54e3f",
+          "#ff7663",
+          "#ffb4a6",
+          "#ffd2c2"
+        ]
+      },
+      "spine-blue": {
+        "role": "secondary",
+        "displayName": "Lomo azul",
+        "canonical": "oklch(52.9% 0.129 248.8)",
+        "tonalRamp": [
+          "#00003e",
+          "#002461",
+          "#004686",
+          "#1769ac",
+          "#428ed3",
+          "#68b4fc",
+          "#aad6ff",
+          "#c7f4ff"
+        ]
+      },
+      "spine-yellow": {
+        "role": "secondary",
+        "displayName": "Lomo amarillo",
+        "canonical": "oklch(83.3% 0.157 89.2)",
+        "tonalRamp": [
+          "#230000",
+          "#441900",
+          "#663b00",
+          "#8a5e00",
+          "#af8200",
+          "#d6a700",
+          "#eace88",
+          "#ffeca5"
+        ]
+      },
+      "spine-green": {
+        "role": "secondary",
+        "displayName": "Lomo verde",
+        "canonical": "oklch(57.3% 0.128 147.7)",
+        "tonalRamp": [
+          "#001500",
+          "#003500",
+          "#005615",
+          "#247938",
+          "#4c9e5b",
+          "#72c47f",
+          "#b0dfb5",
+          "#cdfdd2"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Peligro",
+        "canonical": "oklch(51.3% 0.181 29.6)",
+        "tonalRamp": [
+          "#3b0000",
+          "#640000",
+          "#8d0000",
+          "#b7281c",
+          "#e15342",
+          "#ff7a67",
+          "#ffb6a7",
+          "#ffd3c4"
+        ]
+      },
+      "danger-soft": {
+        "role": "tertiary",
+        "displayName": "Fondo de peligro",
+        "canonical": "oklch(94.8% 0.020 25.2)",
+        "tonalRamp": [
+          "#130807",
+          "#302321",
+          "#4f4140",
+          "#716260",
+          "#958583",
+          "#baa9a8",
+          "#d9cecd",
+          "#f6ecea"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Aviso",
+        "canonical": "oklch(52.2% 0.108 79.7)",
+        "tonalRamp": [
+          "#200000",
+          "#411b00",
+          "#633c00",
+          "#865d00",
+          "#ac8132",
+          "#d2a659",
+          "#e8cda1",
+          "#ffeabe"
+        ]
+      },
+      "warning-soft": {
+        "role": "tertiary",
+        "displayName": "Fondo de aviso",
+        "canonical": "oklch(97.2% 0.034 94.0)",
+        "tonalRamp": [
+          "#100b00",
+          "#2c2613",
+          "#4b4530",
+          "#6c6650",
+          "#908973",
+          "#b5ae96",
+          "#d5d1c3",
+          "#f3efe0"
+        ]
+      },
+      "warning-line": {
+        "role": "tertiary",
+        "displayName": "Trazo de aviso",
+        "canonical": "oklch(78.7% 0.154 87.6)",
+        "tonalRamp": [
+          "#230000",
+          "#451800",
+          "#673a00",
+          "#8b5d00",
+          "#b08100",
+          "#d7a600",
+          "#ebce89",
+          "#ffeca6"
+        ]
+      },
+      "ok": {
+        "role": "tertiary",
+        "displayName": "Correcto",
+        "canonical": "oklch(51.7% 0.118 147.6)",
+        "tonalRamp": [
+          "#001500",
+          "#003400",
+          "#00551a",
+          "#2d783c",
+          "#529c5e",
+          "#78c282",
+          "#b2deb7",
+          "#cffcd4"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Nombre de la sociedad en la cabecera y título de módulo."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Cifra de indicador, tabular y a la derecha."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título de casilla de la hoja."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Filas, tablas, detalle y notas."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulo de indicador y cabecera de tabla, caja normal."
+      },
+      "spine-label": {
+        "displayName": "Spine label",
+        "purpose": "Solo la etiqueta del lomo; 11px fijos, mayúsculas, puntos suspensivos."
+      }
+    },
+    "shadows": [
+      {
+        "name": "spine-rest",
+        "value": "inset -6px 0 0 rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.2)",
+        "purpose": "Canto y apoyo del lomo en la balda."
+      },
+      {
+        "name": "spine-active",
+        "value": "inset -8px 0 0 rgba(0,0,0,0.14), 4px 3px 10px rgba(0,0,0,0.25)",
+        "purpose": "Lomo activo sacado hacia delante."
+      },
+      {
+        "name": "spine-ring",
+        "value": "inset 0 0 0 4px rgba(255,255,255,0.35)",
+        "purpose": "Agujero de anilla del lomo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Única curva del sistema: salida del lomo al cambiar de sociedad."
+      },
+      {
+        "name": "spine-pull",
+        "value": "200ms",
+        "purpose": "Duración de transform, ancho y sombra del lomo; anulada con prefers-reduced-motion."
+      },
+      {
+        "name": "hover-colour",
+        "value": "150ms",
+        "purpose": "Cambio de color en hover de pestañas y botones."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de una franja (p. ej. «Revisar rechazo»). Tinta, nunca color de lomo.",
+      "html": "<button class=\"ds-btn-primary\">Revisar rechazo</button>",
+      "css": ".ds-btn-primary { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border: 0; border-radius: 6px; background: var(--color-ink, #16181d); color: #fff; font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background-color 150ms; } .ds-btn-primary:hover { background: #2c3038; } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-ink, #16181d); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción secundaria junto a la primaria o «Volver».",
+      "html": "<button class=\"ds-btn-secondary\">Ver albaranes</button>",
+      "css": ".ds-btn-secondary { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border: 1px solid var(--color-shelf-edge, #bfc3c8); border-radius: 6px; background: var(--color-sheet, #fff); color: var(--color-ink, #16181d); font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background-color 150ms; } .ds-btn-secondary:hover { background: var(--color-sheet-head, #f4f5f7); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-ink, #16181d); outline-offset: 2px; }"
+    },
+    {
+      "name": "Buscador",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Búsqueda global de la cabecera; foco en tinta.",
+      "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21 21-4.34-4.34\"/><circle cx=\"11\" cy=\"11\" r=\"8\"/></svg><input type=\"search\" placeholder=\"Buscar facturas, artículos, clientes…\"></label>",
+      "css": ".ds-search { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: flex; align-items: center; gap: 8px; width: 320px; height: 34px; padding: 0 12px; border: 1px solid var(--color-shelf-edge, #bfc3c8); border-radius: 6px; background: var(--color-sheet, #fff); color: var(--color-ink-3, #5b6168); } .ds-search:focus-within { border-color: var(--color-ink, #16181d); box-shadow: 0 0 0 2px rgba(22,24,29,0.15); } .ds-search input { flex: 1; border: 0; outline: none; background: transparent; font: inherit; font-size: 0.875rem; color: var(--color-ink, #16181d); caret-color: var(--color-ink, #16181d); } .ds-search input::placeholder { color: var(--color-ink-3, #5b6168); }"
+    },
+    {
+      "name": "Pestañas de separador",
+      "kind": "nav",
+      "refersTo": "divider-tab",
+      "description": "Módulos de la sociedad; la activa toma arriba el color del lomo activo.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\" href=\"#\">Inicio</a><a class=\"ds-tab\" href=\"#\">Ventas</a><a class=\"ds-tab\" href=\"#\">Compras</a><a class=\"ds-tab\" href=\"#\">Almacén</a></nav><div class=\"ds-tabs-sheet\"></div>",
+      "css": ".ds-tabs { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: flex; gap: 4px; padding-left: 4px; margin-bottom: -1px; position: relative; } .ds-tab { display: flex; align-items: center; height: 36px; padding: 0 18px; border: 1px solid var(--color-shelf-edge, #bfc3c8); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--color-shelf, #d5d8dc); color: var(--color-ink-2, #4a5058); font-size: 0.875rem; font-weight: 500; text-decoration: none; transition: background-color 150ms, color 150ms; } .ds-tab:hover { background: #dfe2e5; color: var(--color-ink, #16181d); } .ds-tab:focus-visible { outline: 2px solid var(--color-ink, #16181d); outline-offset: 2px; } .ds-tab-active, .ds-tab-active:hover { z-index: 1; background: var(--color-sheet, #fff); color: var(--color-ink, #16181d); font-weight: 700; border-top: 3px solid var(--color-spine-red, #d23b2e); } .ds-tabs-sheet { height: 40px; border: 1px solid var(--color-shelf-edge, #bfc3c8); border-top-right-radius: 8px; background: var(--color-sheet, #fff); }"
+    },
+    {
+      "name": "Raíl de lomos",
+      "kind": "custom",
+      "refersTo": "spine-label",
+      "description": "Gesto propio: un archivador por sociedad; el activo sale hacia delante (200ms, ease-out-expo).",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-spine ds-spine-active\" style=\"background:#d23b2e\" href=\"#\"><span class=\"ds-spine-label\">Distribuciones Albar</span><span class=\"ds-spine-ring\"></span></a><a class=\"ds-spine\" style=\"background:#1f6fb2\" href=\"#\"><span class=\"ds-spine-label\">Albar Logística</span><span class=\"ds-spine-ring\"></span></a><a class=\"ds-spine\" style=\"background:#f1c232\" href=\"#\"><span class=\"ds-spine-label\">Talleres Albar</span><span class=\"ds-spine-ring\"></span></a></nav>",
+      "css": ".ds-rail { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: flex; flex-direction: column; gap: 10px; width: 132px; padding: 16px 0 16px 14px; background: var(--color-shelf, #d5d8dc); border-right: 1px solid var(--color-shelf-edge, #bfc3c8); box-sizing: border-box; } .ds-spine { position: relative; display: flex; justify-content: center; align-items: flex-start; width: 64px; height: 180px; padding-top: 16px; border-radius: 4px 4px 2px 2px; box-shadow: inset -6px 0 0 rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.2); transition: transform 200ms cubic-bezier(0.16,1,0.3,1), width 200ms cubic-bezier(0.16,1,0.3,1), box-shadow 200ms cubic-bezier(0.16,1,0.3,1); text-decoration: none; } .ds-spine:hover { transform: translateX(4px); } .ds-spine:focus-visible { outline: 2px solid var(--color-ink, #16181d); outline-offset: 2px; } .ds-spine-active, .ds-spine-active:hover { width: 104px; height: 236px; transform: translateX(-6px); box-shadow: inset -8px 0 0 rgba(0,0,0,0.14), 4px 3px 10px rgba(0,0,0,0.25); } .ds-spine-label { display: block; width: 40px; height: calc(100% - 3.75rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; writing-mode: vertical-rl; transform: rotate(180deg); background: #fff; border: 1px solid rgba(0,0,0,0.15); color: var(--color-ink, #16181d); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; text-align: center; line-height: 38px; } .ds-spine-active .ds-spine-label { width: 56px; line-height: 54px; } .ds-spine-ring { position: absolute; bottom: 14px; left: 50%; width: 26px; height: 26px; transform: translateX(-50%); border-radius: 9999px; background: rgba(22,24,29,0.55); box-shadow: inset 0 0 0 4px rgba(255,255,255,0.35); } @media (prefers-reduced-motion: reduce) { .ds-spine { transition-duration: 0.01ms; } }"
+    },
+    {
+      "name": "Hoja pautada con indicadores",
+      "kind": "card",
+      "refersTo": "sheet-cell",
+      "description": "Casillas separadas por filetes de 1px; cifra a la derecha con su contexto y barra de límite.",
+      "html": "<div class=\"ds-sheet\"><section class=\"ds-cell\"><h2 class=\"ds-gauge-label\">Cobrado en octubre</h2><p class=\"ds-gauge-value\">31.880,00 €</p><p class=\"ds-gauge-detail\">de 46.300,00 € emitido · 69 %</p><div class=\"ds-limit\" role=\"meter\" aria-valuenow=\"69\"><div class=\"ds-limit-fill ds-ok\" style=\"width:69%\"></div></div></section><section class=\"ds-cell\"><h2 class=\"ds-gauge-label\">Fichajes de hoy</h2><p class=\"ds-gauge-value\">14 / 17</p><p class=\"ds-gauge-detail\"><b class=\"ds-danger\">2 sin fichar</b> · 1 de vacaciones</p><div class=\"ds-limit\" role=\"meter\" aria-valuenow=\"82\"><div class=\"ds-limit-fill ds-neutral\" style=\"width:82%\"></div></div></section></div>",
+      "css": ".ds-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1px; background: var(--color-line, #dadde1); border: 1px solid var(--color-shelf-edge, #bfc3c8); font-variant-numeric: tabular-nums; color: var(--color-ink, #16181d); } .ds-cell { background: var(--color-sheet, #fff); padding: 14px 20px; } .ds-gauge-label { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--color-ink-3, #5b6168); } .ds-gauge-value { margin: 6px 0 0; text-align: right; font-size: 26px; line-height: 1.25; font-weight: 700; } .ds-gauge-detail { margin: 4px 0 0; text-align: right; font-size: 0.875rem; color: var(--color-ink-3, #5b6168); } .ds-danger { color: var(--color-danger, #b8291d); } .ds-limit { margin-top: 10px; height: 6px; border-radius: 9999px; background: var(--color-carton, #e8eaed); } .ds-limit-fill { height: 100%; border-radius: 9999px; } .ds-ok { background: var(--color-ok, #2f7a3e); } .ds-neutral { background: var(--color-ink-2, #4a5058); }"
+    },
+    {
+      "name": "Chips de estado",
+      "kind": "chip",
+      "description": "Estado VeriFactu: aviso y peligro con tokens de estado, nunca colores de lomo.",
+      "html": "<ul class=\"ds-chips\"><li class=\"ds-chip ds-chip-warning\">2 pendientes</li><li class=\"ds-chip ds-chip-danger\">1 rechazada</li><li class=\"ds-chip\">0 rechazadas</li></ul>",
+      "css": ".ds-chips { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; } .ds-chip { padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; background: var(--color-carton, #e8eaed); color: var(--color-ink-2, #4a5058); } .ds-chip-warning { background: var(--color-warning-soft, #fdf6dd); color: var(--color-warning, #8a6100); font-weight: 600; box-shadow: 0 0 0 1px var(--color-warning-line, #e3b21f); } .ds-chip-danger { background: var(--color-danger, #b8291d); color: #fff; font-weight: 600; }"
+    },
+    {
+      "name": "Nota vacía",
+      "kind": "custom",
+      "refersTo": "empty-note",
+      "description": "Vacío que explica qué aparecería aquí, no un «sin datos».",
+      "html": "<p class=\"ds-empty\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></svg><span>Ninguna factura vencida. Aquí aparecerán los cobros que pasen de su fecha, del más antiguo al más reciente.</span></p>",
+      "css": ".ds-empty { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 12px; border-radius: 4px; background: var(--color-sheet-head, #f4f5f7); color: var(--color-ink-2, #4a5058); font-size: 0.875rem; } .ds-empty svg { flex-shrink: 0; margin-top: 2px; color: var(--color-ok, #2f7a3e); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Archivador AZ",
+    "overview": "**Creative North Star: \"El Archivador AZ\"**\n\nCada sociedad es un archivador de palanca con lomo de color en una estantería de cartón gris; cambiar de empresa es sacar otro archivador. La pantalla se lee como un objeto de oficina: a la izquierda la balda con los lomos, arriba los separadores de módulo, y en el centro una única hoja blanca pautada donde se trabaja. Rechaza la barra lateral gris genérica con el selector de empresa escondido en un desplegable: la sociedad activa se ve antes que nada.\n\nLa densidad es de herramienta de trabajo (modo Operate): sans del sistema, escala fija en rem, cifras tabulares y alineadas a la derecha, filetes de 1px en lugar de tarjetas. El color es escaso y con una sola función por familia: los lomos identifican sociedades, los tonos de estado señalan problemas y todo lo demás es tinta y gris. El único gesto de movimiento es el lomo que sale hacia delante al cambiar de sociedad.",
+    "keyCharacteristics": [
+      "Raíl de lomos (132px) como navegación entre sociedades; el lomo activo es más ancho, más alto y adelantado.",
+      "Pestañas de separador para los módulos; la activa toma arriba el color del lomo activo.",
+      "Una hoja blanca pautada: casillas separadas por filetes (`gap-px` sobre el color de línea), sin tarjetas anidadas.",
+      "Cifras tabulares, a la derecha, siempre junto a su referencia o límite.",
+      "Sans del sistema, escala fija; sin fuentes de display.",
+      "Movimiento mínimo: 200ms ease-out-expo en el lomo; respeta reduced-motion."
+    ],
+    "rules": [
+      {
+        "name": "The Lomo Es Identidad Rule",
+        "body": "Los colores de lomo identifican sociedades y nada más: raíl, borde superior de la pestaña activa y marca de cabecera. Nunca se usan como color de estado, de gráfico, de enlace o de botón; el estado siempre usa danger, warning u ok.",
+        "section": "colors"
+      },
+      {
+        "name": "The Acento Tinta Rule",
+        "body": "Enlaces, anillo de foco, caret, selección, avatar y botón primario son tinta o neutros. Con cuatro lomos en pantalla, cualquier acento de color en la UI competiría con la identidad de la sociedad.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cifra Tabular Rule",
+        "body": "Todas las cifras son tabulares y se alinean a la derecha (columnas de importe y días, valores de indicador, importes de filas), para que se comparen en vertical.",
+        "section": "typography"
+      },
+      {
+        "name": "The Etiqueta de Lomo Rule",
+        "body": "La etiqueta del lomo mide siempre 11px en escritorio, nunca se escala para caber: si un lomo bajo no da para el nombre, puntos suspensivos y el nombre completo en `title`. El lomo activo mide al menos 236px de alto para que el suyo quepa siempre entero.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hoja Única Rule",
+        "body": "El área de trabajo es una sola hoja blanca pautada. Las regiones son casillas separadas por filetes de 1px, no tarjetas con borde, sombra o radio propios dentro de la hoja.",
+        "section": "layout"
+      },
+      {
+        "name": "The Sombra Solo en el Lomo Rule",
+        "body": "Solo los lomos proyectan sombra, porque son el único objeto que sale de la estantería. Nada dentro de la hoja la lleva.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** usar los colores de lomo solo en el raíl, el borde superior de la pestaña activa y la marca de cabecera de la sociedad.",
+      "**Do** expresar el estado con danger, warning y ok (y sus variantes soft y line).",
+      "**Do** mantener enlaces, foco, caret, selección y avatar en tinta o neutros.",
+      "**Do** separar las regiones de la hoja con filetes de 1px (`gap-px` sobre line) y las filas con line-soft.",
+      "**Do** alinear las cifras a la derecha con `tabular-nums` y mostrar cada cantidad contra su límite con la barra de límite.",
+      "**Do** escribir los vacíos explicando qué aparecería y cómo llegaría, nunca un «sin datos».",
+      "**Do** limitar el movimiento a la salida del lomo (200ms, ease-out-expo) y respetar reduced-motion.",
+      "**Do** mantener la etiqueta del lomo en 11px fijos con puntos suspensivos y `title`, y el lomo activo con al menos 236px de alto."
+    ],
+    "donts": [
+      "**Don't** usar un color de lomo como color de estado, de gráfico, de enlace o de botón.",
+      "**Don't** anidar tarjetas con borde, radio o sombra dentro de la hoja.",
+      "**Don't** poner sombras en nada que no sea un lomo.",
+      "**Don't** introducir fuentes de display ni tamaños fluidos; la escala es fija en rem.",
+      "**Don't** escalar la etiqueta del lomo para que quepa el nombre.",
+      "**Don't** esconder el cambio de sociedad en un desplegable."
+    ]
+  }
+}

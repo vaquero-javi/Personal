@@ -1,0 +1,18 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "helvetica",
+        "createdAt": "2026-10-25T13:37:37.646Z"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "helvetica-bold",
+        "createdAt": "2026-10-25T13:37:37.659Z"
+      }
+    ]
+  }
+}

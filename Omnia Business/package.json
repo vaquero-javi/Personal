@@ -1,0 +1,28 @@
+{
+  "name": "omnia",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:test": "node supabase/tests/schema.test.mjs",
+    "db:dev": "node scripts/dev-db.mjs",
+    "db:reset": "node scripts/dev-db.mjs --reset",
+    "test:integration": "vitest run tests/integration"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.11",
+    "@electric-sql/pglite-socket": "^0.2.14",
+    "@types/node": "^26.6.5",
+    "turbo": "^2.11.10",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "packageManager": "npm@11.6.2"
+}

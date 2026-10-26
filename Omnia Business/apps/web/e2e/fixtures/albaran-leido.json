@@ -1,0 +1,12 @@
+{
+  "isDeliveryNote": true,
+  "supplierName": "TORNILLERIA NORTE, S.A.",
+  "supplierTaxId": "ES A48112233",
+  "deliveryNoteNumber": "TN-AL-2026-7781",
+  "date": "2026-10-24",
+  "lines": [
+    { "reference": "T-M6", "barcode": null, "description": "TORNILLO HEX. M6", "quantity": 500, "unitPrice": 0.38, "discountPct": 5 },
+    { "reference": "T-M8", "barcode": null, "description": "TORNILLO HEX. M8", "quantity": 200, "unitPrice": 0.5, "discountPct": null },
+    { "reference": "ZZ-404", "barcode": null, "description": "ARANDELA GROWER M10 (CAJA 100)", "quantity": 4, "unitPrice": 6.2, "discountPct": null }
+  ]
+}

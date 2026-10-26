@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Omnia · Archivador AZ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font:14px/1.4 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#E8EAED;color:#16181D;font-variant-numeric:tabular-nums;display:flex}
+.rail{width:132px;height:900px;background:#D5D8DC;border-right:1px solid #BFC3C8;display:flex;flex-direction:column;align-items:flex-start;padding:16px 0 16px 14px;gap:10px}
+.logo{font-weight:700;font-size:15px;letter-spacing:.02em;margin:0 0 6px 4px}
+.spine{width:64px;height:250px;border-radius:4px 4px 2px 2px;position:relative;box-shadow:inset -6px 0 0 rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.2);display:flex;justify-content:center;padding-top:22px}
+.spine .label{background:#fff;width:40px;height:150px;border:1px solid rgba(0,0,0,.15);writing-mode:vertical-rl;transform:rotate(180deg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;letter-spacing:.04em;color:#16181D}
+.spine .hole{position:absolute;bottom:18px;left:50%;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:#16181D;opacity:.55;box-shadow:inset 0 0 0 4px rgba(255,255,255,.35)}
+.spine.active{width:104px;margin-left:-6px;box-shadow:inset -8px 0 0 rgba(0,0,0,.14),4px 3px 10px rgba(0,0,0,.25)}
+.spine.active .label{width:56px;font-size:13px}
+.red{background:#D23B2E}.blue{background:#1F6FB2}.yellow{background:#F1C232}
+.addspine{margin-top:auto;width:64px;height:40px;border:1.5px dashed #8A9097;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#3F444A;font-size:20px}
+main{flex:1;display:flex;flex-direction:column;padding:16px 24px 0 18px}
+.top{display:flex;align-items:center;gap:14px;height:40px}
+.co{font-size:20px;font-weight:700}
+.co small{display:inline-block;margin-left:8px;width:10px;height:10px;border-radius:2px;background:#D23B2E;vertical-align:middle}
+.date{color:#5B6168}
+.search{margin-left:auto;width:320px;height:34px;border:1px solid #BFC3C8;border-radius:6px;background:#fff;padding:0 12px;display:flex;align-items:center;color:#62676E}
+.tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:#16181D;color:#fff;padding:3px 8px;border-radius:3px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#1F6FB2;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600}
+.tabs{display:flex;gap:4px;margin-top:14px;padding-left:4px}
+.tab{height:36px;padding:0 18px;border-radius:8px 8px 0 0;background:#D5D8DC;border:1px solid #BFC3C8;border-bottom:none;display:flex;align-items:center;font-weight:500;color:#3A3F45}
+.tab.on{background:#fff;color:#16181D;font-weight:700;position:relative;top:1px;border-top:3px solid #D23B2E}
+.sheet{flex:1;background:#fff;border:1px solid #BFC3C8;border-radius:0 8px 0 0;padding:20px 22px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto 1fr;gap:16px}
+.next{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid #F1C232;background:#FDF6DD;border-radius:6px}
+.next b{font-size:15px}
+.btn{margin-left:auto;height:34px;padding:0 16px;border-radius:6px;background:#16181D;color:#fff;font-weight:600;display:flex;align-items:center}
+.btn.ghost{margin-left:0;background:#fff;color:#16181D;border:1px solid #BFC3C8}
+.kpi{border:1px solid #DADDE1;border-radius:6px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.k{font-size:12px;font-weight:600;color:#5B6168;text-transform:uppercase;letter-spacing:.05em}
+.v{font-size:28px;font-weight:700;margin-top:6px;text-align:right}
+.s{color:#5B6168;margin-top:4px;text-align:right}
+.bar{height:6px;background:#E8EAED;border-radius:3px;margin-top:10px}
+.bar i{display:block;height:100%;border-radius:3px;background:#3A8C4A}
+.warn{color:#D23B2E;font-weight:600}
+.pills{display:flex;gap:6px;justify-content:flex-end;margin-top:8px;font-size:12px}
+.pill{padding:2px 8px;border-radius:10px;background:#E8EAED}
+.pill.r{background:#D23B2E;color:#fff}.pill.y{background:#F1C232}
+.panel{border:1px solid #DADDE1;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column}
+.panel h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.panel h3 span{margin-left:auto;font-size:12px;font-weight:500;color:#1F6FB2}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;color:#5B6168;font-weight:600;padding:7px 8px;border-bottom:1px solid #DADDE1;background:#F4F5F7}
+td{padding:9px 8px;border-bottom:1px solid #EEF0F2}
+.n{text-align:right}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEF0F2}
+.row:last-child{border:none}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+</style></head><body>
+<aside class="rail">
+  <div class="logo">Omnia</div>
+  <div class="spine red active"><div class="label">DISTRIBUCIONES ALBAR</div><div class="hole"></div></div>
+  <div class="spine blue"><div class="label">ALBAR LOGÍSTICA</div><div class="hole"></div></div>
+  <div class="spine yellow"><div class="label">TALLERES ALBAR</div><div class="hole"></div></div>
+  <div class="addspine">+</div>
+</aside>
+<main>
+  <div class="top">
+    <div class="co">Distribuciones Albar S.L.<small></small></div>
+    <div class="date">Lunes, 26 oct 2026</div>
+    <div class="search">Buscar facturas, artículos, clientes…</div>
+    <span class="tag">Datos de ejemplo</span>
+    <div class="avatar">LF</div>
+  </div>
+  <nav class="tabs">
+    <div class="tab on">Inicio</div><div class="tab">Ventas</div><div class="tab">Compras</div><div class="tab">Almacén</div>
+    <div class="tab">Facturación</div><div class="tab">RRHH</div><div class="tab">Incidencias</div><div class="tab">Ajustes</div>
+  </nav>
+  <section class="sheet">
+    <div class="next"><b>Siguiente:</b> 1 factura rechazada por VeriFactu (A-2026-000318) · 4 albaranes por contabilizar
+      <div class="btn">Revisar rechazo</div><div class="btn ghost">Ver albaranes</div></div>
+    <div class="kpi" style="--c:#D23B2E"><div class="k">Pendiente de cobro</div><div class="v">18.420,50 €</div><div class="s">12 facturas · <span class="warn">3 vencidas · 4.210,00 €</span></div></div>
+    <div class="kpi" style="--c:#3A8C4A"><div class="k">Cobrado octubre</div><div class="v">31.880,00 €</div><div class="s">de 46.300,00 € · 69 %</div><div class="bar"><i style="width:69%"></i></div></div>
+    <div class="kpi" style="--c:#1F6FB2"><div class="k">VeriFactu</div><div class="v">44</div><div class="s">aceptadas este mes</div><div class="pills"><span class="pill y">2 pendientes</span><span class="pill r">1 rechazada</span></div></div>
+    <div class="kpi" style="--c:#F1C232"><div class="k">Fichajes hoy</div><div class="v">14 / 17</div><div class="s"><span class="warn">2 sin fichar</span> · 1 vacaciones</div><div class="bar"><i style="width:82%;background:#1F6FB2"></i></div></div>
+    <div class="panel" style="grid-column:span 2">
+      <h3>Facturas vencidas <span>Ver todas →</span></h3>
+      <table><tr><th>Factura</th><th>Cliente</th><th>Venció</th><th class="n">Días</th><th class="n">Importe</th></tr>
+        <tr><td>A-2026-000287</td><td>Ferretería Ruiz S.L.</td><td>05/10/2026</td><td class="n warn">21</td><td class="n">2.140,00 €</td></tr>
+        <tr><td>A-2026-000294</td><td>Construcciones Ebro S.A.</td><td>12/10/2026</td><td class="n warn">14</td><td class="n">1.320,50 €</td></tr>
+        <tr><td>A-2026-000301</td><td>Suministros Gil</td><td>19/10/2026</td><td class="n warn">7</td><td class="n">749,50 €</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Stock bajo mínimos <span>7 →</span></h3>
+      <div class="row"><span>Tornillo M6 inox</span><span><b class="warn">40</b> / 200 ud</span></div>
+      <div class="row"><span>Brida 32 mm</span><span><b class="warn">12</b> / 50 ud</span></div>
+      <div class="row"><span>Cinta americana</span><span><b class="warn">3</b> / 24 rollos</span></div>
+      <div class="row"><span>Albaranes por contabilizar</span><b>4</b></div>
+    </div>
+    <div class="panel">
+      <h3>Incidencias abiertas <span>5 →</span></h3>
+      <div class="row"><span><i class="dot" style="background:#D23B2E"></i>Palé dañado en recepción ALB-0412</span></div>
+      <div class="row"><span><i class="dot" style="background:#F1C232"></i>Fichaje olvidado · M. Ortega</span></div>
+      <div class="row"><span><i class="dot" style="background:#9AA0A6"></i>Error de precio en tarifa B2B</span></div>
+      <div class="row"><span style="color:#5B6168">+2 más</span></div>
+    </div>
+  </section>
+</main>
+</body></html>

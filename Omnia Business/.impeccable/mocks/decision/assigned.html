@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Omnia · Inicio (placa de azulejo)</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cobalt:#1E3C8C;--cobalt-d:#17306F;--tile:#F5F7FB;--ink:#1A1E2C;--muted:#5B6275;--line:#DCE1EC;--ochre:#C9952B;--green:#2E7A57;--mang:#6B3E75;--red:#B42318;--amber:#B26A00;--glaze-tint:#E7ECF7}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font:14px/1.4 "Public Sans",system-ui,sans-serif;color:var(--ink);background:var(--tile);display:grid;grid-template-columns:248px 1fr}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+aside{background:var(--cobalt);color:#fff;padding:20px 16px;display:flex;flex-direction:column;gap:18px}
+.brand{font-weight:700;font-size:15px;letter-spacing:.02em;opacity:.85;padding:0 6px}
+.plaque{background:#FBFCFE;color:var(--cobalt);border-radius:10px;padding:5px}
+.plaque .f1{border:1.5px solid var(--ochre);border-radius:7px;padding:3px}
+.plaque .f2{border:1px solid var(--ochre);border-radius:5px;padding:12px 10px;text-align:center}
+.plaque small{display:block;font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:600}
+.plaque b{display:block;font-size:15px;letter-spacing:.12em;line-height:1.25;margin:4px 0 2px}
+.plaque span{font-size:12px;color:var(--muted)}
+.sibs{display:flex;flex-direction:column;gap:6px}
+.sibs a{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#DCE4F7;text-decoration:none;padding:6px 8px;border-radius:6px}
+.sibs a:hover{background:var(--cobalt-d)}
+.chip{width:14px;height:14px;border-radius:3px;border:1.5px solid rgba(255,255,255,.7)}
+nav{display:flex;flex-direction:column;gap:2px;border-top:1px solid rgba(255,255,255,.18);padding-top:14px}
+nav a{color:#E4EAF8;text-decoration:none;padding:9px 10px;border-radius:6px;font-weight:500}
+nav a.on{background:#fff;color:var(--cobalt);font-weight:600}
+nav a .n{float:right;font-size:12px;background:rgba(255,255,255,.18);border-radius:10px;padding:0 7px}
+nav a.on .n{background:var(--glaze-tint)}
+.foot{margin-top:auto;font-size:12px;color:#DCE4F7;padding:0 6px}
+main{display:flex;flex-direction:column;min-width:0}
+header{height:64px;background:var(--glaze-tint);border-bottom:3px solid var(--cobalt);display:flex;align-items:center;gap:16px;padding:0 28px}
+header h1{font-size:18px;font-weight:700}
+header .ctx{font-size:12.5px;color:var(--cobalt);font-weight:600;letter-spacing:.06em}
+header input{margin-left:auto;width:320px;height:36px;border:1px solid #C7D0E4;border-radius:6px;padding:0 12px;font:inherit;background:#fff}
+.tag{font-size:12px;font-weight:600;color:var(--amber);background:#FFF4E0;border:1px solid #F2D49B;border-radius:4px;padding:2px 7px}
+.date{font-size:13px;color:var(--muted)}
+.wrap{padding:20px 28px;display:flex;flex-direction:column;gap:16px}
+.next{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:8px;padding:12px 16px}
+.next .k{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--red)}
+.next p{font-weight:600}
+.next .sub{font-weight:400;color:var(--muted);font-size:13px}
+.btn{height:34px;padding:0 14px;border-radius:6px;font:600 13px "Public Sans",sans-serif;border:1px solid var(--cobalt);background:var(--cobalt);color:#fff}
+.btn.sec{background:#fff;color:var(--cobalt);border-color:#C7D0E4}
+.next .btn{margin-left:auto}
+.row{display:grid;gap:16px}
+.r4{grid-template-columns:repeat(4,1fr)}
+.r2{grid-template-columns:1.5fr 1fr}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h3{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;display:flex;justify-content:space-between}
+.big{font-size:26px;font-weight:700;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.meta{font-size:12.5px;color:var(--muted)}
+.bad{color:var(--red);font-weight:600}
+.bar{height:6px;background:#E9EDF5;border-radius:3px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--cobalt)}
+.vf{display:flex;gap:12px;margin-top:8px}
+.vf div{flex:1;border-radius:6px;padding:6px 8px;background:#F2F5FA}
+.vf b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.vf .r{background:#FDECEC;color:var(--red)}
+.vf .a{background:#FFF4E0;color:var(--amber)}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:6px 0;border-bottom:1px solid var(--line)}
+th.num{text-align:right}
+td{padding:8px 0;border-bottom:1px solid #EEF1F6;font-size:13.5px}
+.mini{width:120px;padding-left:14px}
+.mini .bar{margin:0}
+.mini .bar i{background:var(--red)}
+.list li{list-style:none;display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEF1F6;font-size:13.5px}
+.pill{font-size:12px;font-weight:700;border-radius:4px;padding:1px 6px}
+.pill.u{background:#FDECEC;color:var(--red)}
+.axis{position:relative;height:58px;margin-top:6px}
+.axis .ln{position:absolute;left:0;right:0;top:26px;border-top:2px solid var(--cobalt)}
+.axis .d{position:absolute;top:20px;width:1px;height:14px;background:#9AA6C4}
+.axis .lb{position:absolute;top:38px;font-size:12px;color:var(--muted);transform:translateX(-50%)}
+.axis .m{position:absolute;top:6px;transform:translateX(-50%);font-size:12px;font-weight:600;white-space:nowrap}
+.axis .m::after{content:"";display:block;width:10px;height:10px;border-radius:50%;background:var(--cobalt);margin:3px auto 0;border:2px solid #fff;box-shadow:0 0 0 1px var(--cobalt)}
+.axis .m.v::after{background:var(--red);box-shadow:0 0 0 1px var(--red)}
+.axis .today{position:absolute;top:14px;height:26px;border-left:2px dashed var(--ochre)}
+</style></head><body>
+<aside>
+  <div class="brand">Omnia</div>
+  <div class="plaque"><div class="f1"><div class="f2"><small>GRUPO ALBAR</small><b>DISTRIBUCIONES<br>ALBAR S.L.</b><span>B-28461930 · VeriFactu</span></div></div></div>
+  <div class="sibs">
+    <a href="#"><span class="chip" style="background:var(--green)"></span>Albar Logística S.L.</a>
+    <a href="#"><span class="chip" style="background:var(--mang)"></span>Talleres Albar S.A.</a>
+    <a href="#"><span class="chip" style="background:transparent;border-style:dashed"></span>Vista consolidada</a>
+  </div>
+  <nav>
+    <a class="on" href="#">Inicio</a><a href="#">Ventas</a><a href="#">Compras</a>
+    <a href="#">Almacén <span class="n">4</span></a><a href="#">Facturación <span class="n">3</span></a>
+    <a href="#">RRHH</a><a href="#">Incidencias <span class="n">5</span></a><a href="#">Ajustes</a>
+  </nav>
+  <div class="foot">Lucía Ferrer · Administración</div>
+</aside>
+<main>
+  <header><h1>Inicio</h1><span class="ctx">DISTRIBUCIONES ALBAR</span><span class="tag">Datos de ejemplo</span><input placeholder="Buscar factura, artículo, cliente…"><span class="date">Lunes, 26 oct 2026</span></header>
+  <div class="wrap">
+    <div class="next"><span class="k">SIGUIENTE ACCIÓN</span><div><p>Reenvía la factura A-2026-000118 rechazada por VeriFactu</p><span class="sub">Motivo AEAT: NIF del destinatario no identificado · Cliente Ferretería Ríos</span></div><button class="btn">Revisar y reenviar</button><button class="btn sec">Ver todas (3)</button></div>
+    <div class="row r4">
+      <div class="card"><h3>Pendiente de cobro <span>12 facturas</span></h3><div class="big">18.420,50 €</div><div class="meta"><span class="bad">3 vencidas · 4.210,00 €</span></div><div class="bar"><i style="width:23%;background:var(--red)"></i></div></div>
+      <div class="card"><h3>Cobrado octubre <span>69 %</span></h3><div class="big">31.880,00 €</div><div class="meta">de 46.300,00 € emitido</div><div class="bar"><i style="width:69%"></i></div></div>
+      <div class="card"><h3>VeriFactu · octubre</h3><div class="vf"><div><b>44</b>aceptadas</div><div class="a"><b>2</b>pendientes</div><div class="r"><b>1</b>rechazada</div></div></div>
+      <div class="card"><h3>Fichajes hoy <span>08:00–15:00</span></h3><div class="big">14 <span style="font-size:15px;color:var(--muted)">de 17</span></div><div class="meta"><span class="bad">2 sin fichar</span> · 1 de vacaciones</div><div class="bar"><i style="width:82%;background:var(--green)"></i></div></div>
+    </div>
+    <div class="row r2">
+      <div class="card"><h3>Stock bajo mínimos <span>7 artículos · Almacén Central</span></h3>
+        <table><tr><th>Artículo</th><th class="num">Existencias</th><th class="num">Mínimo</th><th class="mini">Cobertura</th><th></th></tr>
+          <tr><td>Tornillo M6 inox</td><td class="num">40 ud</td><td class="num">200 ud</td><td class="mini"><div class="bar"><i style="width:20%"></i></div></td><td class="num"><button class="btn sec" style="height:28px">Pedir</button></td></tr>
+          <tr><td>Brida 32 mm</td><td class="num">12 ud</td><td class="num">50 ud</td><td class="mini"><div class="bar"><i style="width:24%"></i></div></td><td class="num"><button class="btn sec" style="height:28px">Pedir</button></td></tr>
+          <tr><td>Cinta americana 48 mm</td><td class="num">3 rollos</td><td class="num">24 rollos</td><td class="mini"><div class="bar"><i style="width:12.5%"></i></div></td><td class="num"><button class="btn sec" style="height:28px">Pedir</button></td></tr>
+        </table></div>
+      <div class="card"><h3>Pendiente de ti</h3>
+        <ul class="list">
+          <li><span>Albaranes por contabilizar</span><b class="num">4</b></li>
+          <li><span><span class="pill u">URGENTE</span> Palé dañado en recepción ALB-0412</span><span class="meta">hace 40 min</span></li>
+          <li><span>Incidencias abiertas</span><b class="num">5</b></li>
+          <li><span>Solicitudes de vacaciones</span><b class="num">2</b></li>
+        </ul></div>
+    </div>
+    <div class="card"><h3>Próximos 14 días <span>vencimientos de cobro y pago</span></h3>
+      <div class="axis"><div class="ln"></div>
+        <div class="today" style="left:0%"></div>
+        <div class="m v" style="left:3%">−2.140 € vencida</div>
+        <div class="m" style="left:21%">+3.900 €</div>
+        <div class="m" style="left:43%">−6.200 € Proveedor Tornillería Norte</div>
+        <div class="m" style="left:71%">+5.480 €</div>
+        <div class="m" style="left:93%">+2.050 €</div>
+        <div class="lb" style="left:1%">26 oct</div><div class="lb" style="left:50%">2 nov</div><div class="lb" style="left:97%">8 nov</div>
+      </div></div>
+  </div>
+</main>
+</body></html>

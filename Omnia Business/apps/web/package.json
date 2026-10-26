@@ -1,0 +1,44 @@
+{
+  "name": "@omnia/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc -p .",
+    "e2e": "node e2e/flows.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@omnia/auth": "*",
+    "@omnia/core": "*",
+    "@omnia/db": "*",
+    "@omnia/hr": "*",
+    "@omnia/incidents": "*",
+    "@omnia/inventory": "*",
+    "@omnia/invoicing": "*",
+    "@omnia/organizations": "*",
+    "@omnia/parties": "*",
+    "@omnia/purchasing": "*",
+    "@omnia/sales": "*",
+    "@react-pdf/renderer": "^4.9.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tanstack/react-query": "^5.104.5",
+    "lucide-react": "^1.61.0",
+    "next": "^16.4.3",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "puppeteer-core": "^25.16.0"
+  }
+}

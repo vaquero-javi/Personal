@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+/* Archivador AZ: estantería de cartón gris, lomos de color, hojas blancas. */
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --color-carton: #e8eaed;
+  --color-shelf: #d5d8dc;
+  --color-shelf-edge: #bfc3c8;
+  --color-sheet: #ffffff;
+  --color-sheet-head: #f4f5f7;
+  --color-line: #dadde1;
+  --color-line-soft: #eef0f2;
+  --color-ink: #16181d;
+  --color-ink-2: #4a5058;
+  --color-ink-3: #5b6168;
+
+  --color-spine-red: #d23b2e;
+  --color-spine-blue: #1f6fb2;
+  --color-spine-yellow: #f1c232;
+  --color-spine-green: #3a8c4a;
+  /* Los colores de lomo solo identifican sociedades: raíl, pestaña activa y marca de cabecera. */
+
+  --color-danger: #b8291d;
+  --color-danger-soft: #fbe9e7;
+  --color-warning: #8a6100;
+  --color-warning-soft: #fdf6dd;
+  --color-warning-line: #e3b21f;
+  --color-ok: #2f7a3e;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-carton);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-ink) 16%, transparent);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  input {
+    caret-color: var(--color-ink);
+  }
+  * {
+    scrollbar-color: var(--color-shelf-edge) transparent;
+    scrollbar-width: thin;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

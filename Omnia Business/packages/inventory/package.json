@@ -1,0 +1,23 @@
+{
+  "name": "@omnia/inventory",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/domain/index.ts",
+    "./contracts-items": "./src/application/item-types.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@omnia/core": "*",
+    "@omnia/db": "*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@omnia/auth": "*"
+  }
+}

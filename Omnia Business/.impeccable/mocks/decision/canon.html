@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Omnia · Inicio (canon)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111827;background:#fff;display:grid;grid-template-columns:248px 1fr;font-variant-numeric:tabular-nums}
+aside{background:#F1F3F6;border-right:1px solid #E3E6EB;padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.brand{font-weight:700;font-size:16px;padding:4px 8px 14px;display:flex;align-items:center;gap:8px}
+.brand i{width:22px;height:22px;border-radius:6px;background:#2563EB;display:inline-block}
+.org{background:#fff;border:1px solid #E3E6EB;border-radius:8px;padding:9px 10px;margin-bottom:12px}
+.org b{display:block;font-size:13px}.org span{color:#6B7280;font-size:12px}
+.org .others{border-top:1px solid #EEF0F3;margin-top:8px;padding-top:6px;color:#6B7280;font-size:12px;line-height:1.7}
+nav a{display:block;padding:7px 10px;border-radius:6px;color:#374151;text-decoration:none;font-weight:500}
+nav a.on{background:#fff;color:#2563EB;box-shadow:0 1px 2px rgba(17,24,39,.06)}
+.foot{margin-top:auto;color:#6B7280;font-size:12px;padding:8px 10px}
+main{display:flex;flex-direction:column;min-width:0}
+header{height:56px;border-bottom:1px solid #E8EBEF;display:flex;align-items:center;gap:16px;padding:0 28px}
+.search{flex:0 0 380px;height:34px;border:1px solid #E3E6EB;border-radius:7px;background:#F9FAFB;color:#6B7280;display:flex;align-items:center;padding:0 12px}
+.search kbd{margin-left:auto;font:11px inherit;border:1px solid #E3E6EB;border-radius:4px;padding:0 5px;color:#6B7280}
+.tag{margin-left:auto;font-size:11px;font-weight:600;color:#92400E;background:#FEF3C7;border-radius:999px;padding:3px 9px}
+.av{width:30px;height:30px;border-radius:50%;background:#DBEAFE;color:#1D4ED8;font-weight:600;display:grid;place-items:center;font-size:12px}
+.content{padding:24px 28px;display:flex;flex-direction:column;gap:20px}
+.title{display:flex;align-items:flex-end;justify-content:space-between}
+h1{font-size:22px;font-weight:650;letter-spacing:-.01em}.sub{color:#6B7280}
+.btn{height:34px;padding:0 14px;border-radius:7px;font-weight:600;border:1px solid #E3E6EB;background:#fff;color:#111827;display:inline-flex;align-items:center}
+.btn.p{background:#2563EB;border-color:#2563EB;color:#fff;margin-left:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{border:1px solid #E8EBEF;border-radius:10px;padding:16px;background:#fff}
+.k small{color:#6B7280;font-weight:500}.k .v{font-size:24px;font-weight:650;margin:6px 0 4px;letter-spacing:-.01em}
+.k .m{font-size:12px;color:#6B7280}.bad{color:#DC2626;font-weight:600}.warn{color:#B45309;font-weight:600}.ok{color:#15803D;font-weight:600}
+.bar{height:6px;border-radius:3px;background:#EEF0F3;margin-top:10px;overflow:hidden}.bar i{display:block;height:100%;background:#2563EB}
+.row{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;flex:1}
+.ch h2,.tb h2{font-size:14px;font-weight:600;display:flex;justify-content:space-between}
+.ch h2 span,.tb h2 span{color:#6B7280;font-weight:500;font-size:12px}
+.plot{height:236px;margin-top:18px;display:grid;grid-template-columns:40px repeat(8,1fr);gap:0 14px;align-items:end;position:relative;border-bottom:1px solid #E3E6EB}
+.plot .y{align-self:stretch;display:flex;flex-direction:column;justify-content:space-between;color:#6B7280;font-size:11px;padding-bottom:2px}
+.plot b{display:block;background:#BFDBFE;border-radius:4px 4px 0 0}.plot b.c{background:#2563EB}
+.xl{display:grid;grid-template-columns:40px repeat(8,1fr);gap:0 14px;color:#6B7280;font-size:11px;margin-top:6px;text-align:center}
+.lg{display:flex;gap:16px;color:#6B7280;font-size:12px;margin-top:10px}.lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th{text-align:left;color:#6B7280;font-weight:500;font-size:12px;padding:7px 0;border-bottom:1px solid #E8EBEF}
+td{padding:9px 0;border-bottom:1px solid #F1F3F6}td.n,th.n{text-align:right}
+.pill{font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px}
+.pr{background:#FEE2E2;color:#B91C1C}.pa{background:#FEF3C7;color:#92400E}.pg{background:#DCFCE7;color:#166534}
+.alert{display:flex;align-items:center;gap:10px;border:1px solid #FECACA;background:#FEF2F2;border-radius:8px;padding:9px 12px;color:#7F1D1D}
+.alert b{color:#B91C1C}.alert a{margin-left:auto;color:#B91C1C;font-weight:600;text-decoration:none}
+</style></head><body>
+<aside>
+  <div class="brand"><i></i>Omnia</div>
+  <div class="org"><b>Distribuciones Albar S.L.</b><span>B-84213307 · Empresa activa ▾</span>
+    <div class="others">Albar Logística S.L.<br>Talleres Albar S.A.</div></div>
+  <nav><a class="on">Inicio</a><a>Ventas</a><a>Compras</a><a>Almacén</a><a>Facturación</a><a>RRHH</a><a>Incidencias</a><a>Ajustes</a></nav>
+  <div class="foot">Grupo Albar · 3 sociedades</div>
+</aside>
+<main>
+  <header><div class="search">Buscar facturas, artículos, clientes…<kbd>⌘K</kbd></div><span class="tag">Datos de ejemplo</span><div class="av">LF</div></header>
+  <div class="content">
+    <div class="title"><div><h1>Buenos días</h1><div class="sub">Lunes, 26 oct 2026 · Distribuciones Albar S.L.</div></div>
+      <div><a class="btn">Nuevo albarán</a><a class="btn p">Nueva factura</a></div></div>
+    <div class="alert"><b>Urgente</b>Palé dañado en recepción ALB-0412 · 1 de 5 incidencias abiertas<a>Ver incidencia →</a></div>
+    <div class="kpis">
+      <div class="card k"><small>Pendiente de cobro</small><div class="v">18.420,50 €</div><div class="m">12 facturas · <span class="bad">3 vencidas · 4.210,00 €</span></div></div>
+      <div class="card k"><small>Cobrado en octubre</small><div class="v">31.880,00 €</div><div class="m">de 46.300,00 € facturados · 69 %</div><div class="bar"><i style="width:69%"></i></div></div>
+      <div class="card k"><small>VeriFactu</small><div class="v">44 <span style="font-size:14px;color:#6B7280;font-weight:500">aceptadas</span></div><div class="m"><span class="warn">2 pendientes</span> · <span class="bad">1 rechazada</span></div></div>
+      <div class="card k"><small>Fichajes hoy</small><div class="v">14 <span style="font-size:14px;color:#6B7280;font-weight:500">de 17</span></div><div class="m"><span class="warn">2 sin fichar</span> · 1 vacaciones</div><div class="bar"><i style="width:82%;background:#16A34A"></i></div></div>
+    </div>
+    <div class="row">
+      <div class="card ch"><h2>Cobros por semana<span>Últimas 8 semanas</span></h2>
+        <div class="plot"><div class="y"><span>12 k</span><span>9 k</span><span>6 k</span><span>3 k</span><span>0</span></div>
+          <b style="height:48%"></b><b style="height:62%"></b><b style="height:41%"></b><b style="height:75%"></b><b style="height:58%"></b><b style="height:83%"></b><b style="height:66%"></b><b class="c" style="height:71%"></b></div>
+        <div class="xl"><span></span><span>S36</span><span>S37</span><span>S38</span><span>S39</span><span>S40</span><span>S41</span><span>S42</span><span>S43</span></div>
+        <div class="lg"><span><i style="background:#BFDBFE"></i>Semanas anteriores</span><span><i style="background:#2563EB"></i>Semana actual · 8.520,00 €</span></div>
+      </div>
+      <div class="card tb"><h2>Requiere atención<span>Ver todo</span></h2>
+        <table><tr><th>Elemento</th><th>Módulo</th><th class="n">Estado</th></tr>
+          <tr><td>Tornillo M6 inox · 40/200 ud</td><td>Almacén</td><td class="n"><span class="pill pr">Bajo mínimo</span></td></tr>
+          <tr><td>Brida 32 mm · 12/50 ud</td><td>Almacén</td><td class="n"><span class="pill pr">Bajo mínimo</span></td></tr>
+          <tr><td>Cinta americana · 3/24 rollos</td><td>Almacén</td><td class="n"><span class="pill pr">Bajo mínimo</span></td></tr>
+          <tr><td>Factura A-2026-000318</td><td>VeriFactu</td><td class="n"><span class="pill pr">Rechazada</span></td></tr>
+          <tr><td>4 albaranes por contabilizar</td><td>Compras</td><td class="n"><span class="pill pa">Pendiente</span></td></tr>
+          <tr><td>7 artículos bajo mínimos</td><td>Almacén</td><td class="n"><span class="pill pg">Pedir</span></td></tr>
+        </table></div>
+    </div>
+  </div>
+</main>
+</body></html>

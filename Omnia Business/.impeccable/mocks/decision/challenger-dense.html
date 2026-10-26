@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Omnia · Inicio (mosaico denso)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden;background:#fff;color:#111;font:12px/1.35 "Noto Sans JP","Hiragino Kaku Gothic ProN",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.r1{height:34px;display:flex;align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid #D9DCE1}
+.logo{font-weight:700;font-size:15px;letter-spacing:.02em}.logo b{color:#D7000F}
+select,input,button{font:inherit;color:#111;border:1px solid #D9DCE1;background:#fff;height:24px;padding:0 6px;border-radius:2px}
+input{width:320px}button.p{background:#D7000F;color:#fff;border-color:#D7000F;font-weight:500}
+.sp{flex:1}.tag{border:1px solid #D7000F;color:#D7000F;padding:1px 5px;font-size:11px}
+.me{color:#555}
+.r2{height:30px;display:flex;background:#F3F4F6;border-bottom:1px solid #D9DCE1;padding:0 8px}
+.r2 a{display:flex;align-items:center;padding:0 14px;color:#111;text-decoration:none;font-weight:500;border-right:1px solid #D9DCE1}
+.r2 a.on{background:#fff;color:#D7000F;box-shadow:inset 0 2px 0 #D7000F}
+.r2 .d{margin-left:auto;align-self:center;color:#555}
+.g{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:118px 210px 250px 1fr;gap:0;height:836px;border-left:1px solid #D9DCE1}
+.m{border-right:1px solid #D9DCE1;border-bottom:1px solid #D9DCE1;padding:0 8px 6px;overflow:hidden;position:relative}
+.m:hover{outline:1px solid #111;z-index:1}
+.t{display:inline-block;background:#D7000F;color:#fff;font-size:11px;font-weight:500;padding:1px 6px;margin-bottom:5px}
+.t.g2{background:#111}
+.h{display:flex;justify-content:space-between;align-items:flex-start}
+.h a{font-size:11px;color:#1a4fb4;text-decoration:none;margin-top:2px}
+.n{font-size:22px;font-weight:700;line-height:1.1;text-align:right}
+.n small{font-size:12px;font-weight:500}
+.s{color:#555;font-size:11px;text-align:right}
+.al{color:#D7000F;font-weight:700}
+.bar{height:6px;background:#F3F4F6;border:1px solid #D9DCE1;margin:4px 0}.bar i{display:block;height:100%;background:#111}
+table{width:100%;border-collapse:collapse}
+td,th{padding:2px 3px;border-bottom:1px solid #EDEFF2;white-space:nowrap;text-align:left;font-weight:400}
+th{color:#555;font-size:11px;background:#F3F4F6;font-weight:500}
+td.r,th.r{text-align:right}
+.b{display:inline-block;font-size:10px;padding:0 4px;border:1px solid;line-height:14px}
+.b.red{color:#D7000F;border-color:#D7000F}.b.blk{color:#111;border-color:#111}.b.gr{color:#777;border-color:#bbb}
+.c2{grid-column:span 2}.c3{grid-column:span 3}
+.ul li{list-style:none;display:flex;justify-content:space-between;border-bottom:1px solid #EDEFF2;padding:2px 0}
+</style></head><body>
+<div class="r1"><span class="logo">Omni<b>a</b></span>
+<select><option>Distribuciones Albar S.L.</option><option>Albar Logística S.L.</option><option>Talleres Albar S.A.</option></select>
+<input placeholder="Buscar factura, artículo, cliente, albarán…"><button class="p">+ Nuevo</button>
+<span class="sp"></span><span class="tag">Datos de ejemplo</span><span class="me">L. Ferrer · Administración</span></div>
+<nav class="r2"><a class="on">Inicio</a><a>Ventas</a><a>Compras</a><a>Almacén</a><a>Facturación</a><a>RRHH</a><a>Incidencias</a><a>Ajustes</a><span class="d">Lunes, 26 oct 2026 · 09:12</span></nav>
+<main class="g">
+<section class="m"><div class="h"><span class="t">Pendiente de cobro</span><a>Ver</a></div><div class="n">18.420,50 <small>€</small></div><div class="s">12 facturas · <span class="al">3 vencidas 4.210,00 €</span></div></section>
+<section class="m"><div class="h"><span class="t">Cobrado octubre</span><a>Ver</a></div><div class="n">31.880,00 <small>€</small></div><div class="bar"><i style="width:68.9%"></i></div><div class="s">de 46.300,00 € · 68,9 %</div></section>
+<section class="m"><div class="h"><span class="t">VeriFactu</span><a>Revisar</a></div><div class="n">44 <small>aceptadas</small></div><div class="s">2 pendientes · <span class="al">1 rechazada</span></div></section>
+<section class="m"><div class="h"><span class="t">Stock bajo mínimos</span><a>Ver</a></div><div class="n al">7 <small>artículos</small></div><div class="s">Almacén Central · 2 en Norte</div></section>
+<section class="m"><div class="h"><span class="t">Albaranes</span><a>Contabilizar</a></div><div class="n">4 <small>por contabilizar</small></div><div class="s">más antiguo: 22 oct</div></section>
+<section class="m"><div class="h"><span class="t">Fichajes hoy</span><a>Ver</a></div><div class="n">14 <small>de 17</small></div><div class="s"><span class="al">2 sin fichar</span> · 1 vacaciones</div></section>
+
+<section class="m c3"><div class="h"><span class="t">Facturas vencidas y próximas</span><a>Todas (12)</a></div>
+<table><tr><th>Nº</th><th>Cliente</th><th>Vence</th><th class="r">Importe</th><th>Estado</th></tr>
+<tr><td>A-2026-000318</td><td>Ferretería Ramos S.L.</td><td>05/10</td><td class="r">2.140,00 €</td><td><span class="b red">Vencida 21 d</span></td></tr>
+<tr><td>A-2026-000327</td><td>Construcciones Peñalba S.A.</td><td>12/10</td><td class="r">1.315,40 €</td><td><span class="b red">Vencida 14 d</span></td></tr>
+<tr><td>A-2026-000331</td><td>Talleres Ibáñez</td><td>19/10</td><td class="r">754,60 €</td><td><span class="b red">Vencida 7 d</span></td></tr>
+<tr><td>A-2026-000340</td><td>Suministros Levante S.L.</td><td>28/10</td><td class="r">3.980,00 €</td><td><span class="b blk">En 2 d</span></td></tr>
+<tr><td>A-2026-000342</td><td>Hnos. Calvo Reformas</td><td>30/10</td><td class="r">1.122,75 €</td><td><span class="b blk">En 4 d</span></td></tr>
+<tr><td>A-2026-000345</td><td>Instalaciones Duero</td><td>02/11</td><td class="r">2.406,30 €</td><td><span class="b gr">En 7 d</span></td></tr>
+<tr><td>A-2026-000349</td><td>Metalúrgica Soria S.L.</td><td>05/11</td><td class="r">1.890,00 €</td><td><span class="b gr">En 10 d</span></td></tr>
+</table></section>
+<section class="m c3"><div class="h"><span class="t">Stock bajo mínimos</span><a>Generar pedido</a></div>
+<table><tr><th>SKU</th><th>Artículo</th><th>Almacén</th><th class="r">Stock</th><th class="r">Mín.</th><th class="r">Cobertura</th></tr>
+<tr><td>T-M6-INX</td><td>Tornillo M6 inox</td><td>Central</td><td class="r al">40</td><td class="r">200 ud</td><td class="r">20 %</td></tr>
+<tr><td>BR-32</td><td>Brida 32 mm</td><td>Central</td><td class="r al">12</td><td class="r">50 ud</td><td class="r">24 %</td></tr>
+<tr><td>CA-50</td><td>Cinta americana 50 mm</td><td>Central</td><td class="r al">3</td><td class="r">24 rollos</td><td class="r">13 %</td></tr>
+<tr><td>TU-08</td><td>Tuerca M8 zincada</td><td>Norte</td><td class="r al">85</td><td class="r">300 ud</td><td class="r">28 %</td></tr>
+<tr><td>GU-NT</td><td>Guante nitrilo talla L</td><td>Central</td><td class="r al">6</td><td class="r">20 cajas</td><td class="r">30 %</td></tr>
+<tr><td>SI-300</td><td>Silicona neutra 300 ml</td><td>Norte</td><td class="r al">9</td><td class="r">36 ud</td><td class="r">25 %</td></tr>
+<tr><td>TA-6</td><td>Taco nylon 6 mm</td><td>Central</td><td class="r al">150</td><td class="r">500 ud</td><td class="r">30 %</td></tr>
+</table></section>
+
+<section class="m c2"><div class="h"><span class="t">Últimos albaranes</span><a>Ver todos</a></div>
+<table><tr><th>Nº</th><th>Proveedor</th><th>Recibido</th><th class="r">Líneas</th><th>Estado</th></tr>
+<tr><td>ALB-0412</td><td>Tornillería Navarra</td><td>26/10 08:40</td><td class="r">6</td><td><span class="b red">Incidencia</span></td></tr>
+<tr><td>ALB-0411</td><td>Embalajes Ebro S.L.</td><td>25/10</td><td class="r">3</td><td><span class="b blk">Borrador</span></td></tr>
+<tr><td>ALB-0410</td><td>Química Bética</td><td>24/10</td><td class="r">9</td><td><span class="b blk">Borrador</span></td></tr>
+<tr><td>ALB-0409</td><td>Ferrosur Distribución</td><td>22/10</td><td class="r">4</td><td><span class="b blk">Borrador</span></td></tr>
+<tr><td>ALB-0408</td><td>Tornillería Navarra</td><td>21/10</td><td class="r">12</td><td><span class="b gr">Contabilizado</span></td></tr>
+<tr><td>ALB-0407</td><td>Plásticos Turia</td><td>20/10</td><td class="r">5</td><td><span class="b gr">Contabilizado</span></td></tr>
+<tr><td>ALB-0406</td><td>Embalajes Ebro S.L.</td><td>17/10</td><td class="r">2</td><td><span class="b gr">Contabilizado</span></td></tr>
+<tr><td>ALB-0405</td><td>Ferrosur Distribución</td><td>16/10</td><td class="r">7</td><td><span class="b gr">Contabilizado</span></td></tr>
+</table></section>
+<section class="m c2"><div class="h"><span class="t">Incidencias abiertas</span><a>5 abiertas</a></div>
+<table><tr><th>Nº</th><th>Asunto</th><th>Prioridad</th><th>Asignada</th></tr>
+<tr><td>INC-118</td><td>Palé dañado en recepción ALB-0412</td><td><span class="b red">Urgente</span></td><td>M. Ortega</td></tr>
+<tr><td>INC-117</td><td>Cliente reclama abono A-2026-000301</td><td><span class="b blk">Alta</span></td><td>L. Ferrer</td></tr>
+<tr><td>INC-115</td><td>Fichaje olvidado 23/10</td><td><span class="b gr">Normal</span></td><td>RRHH</td></tr>
+<tr><td>INC-114</td><td>Diferencia inventario BR-32</td><td><span class="b gr">Normal</span></td><td>M. Ortega</td></tr>
+<tr><td>INC-112</td><td>Impresora etiquetas Norte</td><td><span class="b gr">Baja</span></td><td>—</td></tr>
+</table>
+<div class="h" style="margin-top:8px"><span class="t">VeriFactu · rechazada</span><a>Corregir</a></div>
+<ul class="ul"><li><span>A-2026-000344 · NIF destinatario no censado</span><span class="al">Rechazada</span></li><li><span>A-2026-000350 · enviada 09:02</span><span>Pendiente</span></li><li><span>A-2026-000351 · en cola</span><span>Pendiente</span></li></ul></section>
+<section class="m c2"><div class="h"><span class="t">Personal hoy</span><a>Fichajes</a></div>
+<table><tr><th>Empleado</th><th>Entrada</th><th>Estado</th></tr>
+<tr><td>A. Herrero</td><td>—</td><td><span class="b red">Sin fichar</span></td></tr>
+<tr><td>J. Molina</td><td>—</td><td><span class="b red">Sin fichar</span></td></tr>
+<tr><td>C. Vidal</td><td>—</td><td><span class="b gr">Vacaciones hasta 30/10</span></td></tr>
+<tr><td>M. Ortega</td><td>07:52</td><td><span class="b blk">Presente</span></td></tr>
+<tr><td>R. Sanz</td><td>07:58</td><td><span class="b blk">Presente</span></td></tr>
+<tr><td>P. Gil</td><td>08:03</td><td><span class="b blk">Pausa 09:05</span></td></tr>
+</table>
+<div class="h" style="margin-top:8px"><span class="t g2">Ausencias próximas</span><a>Calendario</a></div>
+<ul class="ul"><li><span>E. Navarro · vacaciones</span><span>02–06 nov</span></li><li><span>S. Prieto · permiso</span><span>04 nov</span></li></ul></section>
+</main></body></html>
