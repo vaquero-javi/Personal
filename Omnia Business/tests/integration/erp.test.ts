@@ -69,18 +69,18 @@ const itemBySku = async (sku: string) => (await services.warehouse.items(lucia, 
 describe('TPV', () => {
   it('emite un ticket F2 encadenado, descuenta stock y registra el cobro', async () => {
     const warehouseId = await centralWarehouse();
-    const before = await itemBySku('SL-300');
+    const before = await itemBySku('VIN-RIB');
     const ticket = await services.sales.posCheckout(lucia, {
       warehouseId,
       method: 'cash',
-      tendered: '20',
+      tendered: '100',
       lines: [{ itemId: before.id, quantity: '2' }],
     });
     expect(ticket.fullNumber).toMatch(/^T-\d{4}-000001$/);
-    expect(Number(ticket.total)).toBeCloseTo(2 * 4.95 * 1.21, 2);
-    expect(Number(ticket.change)).toBeCloseTo(20 - Number(ticket.total), 2);
+    expect(Number(ticket.total)).toBeCloseTo(2 * 6.6 * 1.21, 2);
+    expect(Number(ticket.change)).toBeCloseTo(100 - Number(ticket.total), 2);
 
-    const after = await itemBySku('SL-300');
+    const after = await itemBySku('VIN-RIB');
     expect(Number(after.onHand)).toBe(Number(before.onHand) - 2);
     const invoice = await services.invoicing.get(lucia, ticket.invoiceId);
     expect(invoice.status).toBe('paid');
@@ -90,11 +90,57 @@ describe('TPV', () => {
 
   it('no cobra si el efectivo no cubre el total, y no deja rastro', async () => {
     const warehouseId = await centralWarehouse();
-    const item = await itemBySku('GU-NI');
+    const item = await itemBySku('CAFE-1K');
     await expect(
       services.sales.posCheckout(lucia, { warehouseId, method: 'cash', tendered: '1', lines: [{ itemId: item.id, quantity: '1' }] }),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
-    expect(Number((await itemBySku('GU-NI')).onHand)).toBe(Number(item.onHand));
+    expect(Number((await itemBySku('CAFE-1K')).onHand)).toBe(Number(item.onHand));
+  });
+});
+
+describe('Formato de compra', () => {
+  it('convertir garrafas en litros multiplica el stock y reparte el coste', async () => {
+    const warehouseId = await centralWarehouse();
+    const garrafa = await itemBySku('ACE-5L');
+    await services.warehouse.convertStockUnit(lucia, { itemId: garrafa.id, newUnit: 'l', factor: '5' });
+    const litres = await itemBySku('ACE-5L');
+    expect(litres.unitOfMeasure).toBe('l');
+    expect(litres.purchaseUnit).toBe('garrafa');
+    expect(Number(litres.onHand)).toBe(Number(garrafa.onHand) * 5);
+    expect(Number(litres.avgUnitCost)).toBeCloseTo(Number(garrafa.avgUnitCost) / 5, 4);
+    await services.sales.posCheckout(lucia, { warehouseId, method: 'card', lines: [{ itemId: litres.id, quantity: '1' }] });
+    expect(Number((await itemBySku('ACE-5L')).onHand)).toBe(Number(litres.onHand) - 1);
+  });
+
+  it('un albarán en packs mete botellas en el stock', async () => {
+    const warehouseId = await centralWarehouse();
+    const water = await itemBySku('AGUA-50');
+    const [supplier] = await sql`select id from parties where is_supplier limit 1`;
+    const receipt = await services.receipts.create(lucia, {
+      warehouseId,
+      supplierId: supplier!.id,
+      supplierDeliveryNote: 'PACKS-24',
+      lines: [
+        { itemId: water.id, quantity: '2', unitCost: '4.80' }, // en packs (el formato del artículo)
+        { itemId: water.id, quantity: '5', unitCost: '0.20', packSize: '1' }, // sueltas
+      ],
+    });
+    await services.receipts.post(lucia, receipt.id);
+    expect(water.unitOfMeasure).toBe('ud');
+    expect(Number((await itemBySku('AGUA-50')).onHand)).toBe(Number(water.onHand) + 48 + 5);
+  });
+
+  it('rechaza una conversión que no es la del artículo', async () => {
+    const water = await itemBySku('AGUA-50');
+    const [supplier] = await sql`select id from parties where is_supplier limit 1`;
+    await expect(
+      services.receipts.create(lucia, {
+        warehouseId: await centralWarehouse(),
+        supplierId: supplier!.id,
+        supplierDeliveryNote: 'PACKS-12',
+        lines: [{ itemId: water.id, quantity: '1', unitCost: '1', packSize: '12' }],
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
   });
 });
 
@@ -102,11 +148,11 @@ describe('Pedidos de venta', () => {
   it('no se sirve sin existencias: la transacción entera se deshace', async () => {
     const warehouseId = await centralWarehouse();
     const customers = await sql`select id from parties where is_customer limit 1`;
-    const item = await itemBySku('CN-CU25');
+    const item = await itemBySku('VASO-20');
     const id = await services.sales.create(lucia, {
       customerId: customers[0]!.id,
       warehouseId,
-      lines: [{ itemId: item.id, description: item.name, quantity: '100000', unitPrice: '6.5', taxRate: '21' }],
+      lines: [{ itemId: item.id, description: item.name, quantity: '100000', unitPrice: '29.5', taxRate: '21' }],
     });
     await services.sales.confirm(lucia, id);
     await expect(services.sales.deliver(lucia, id)).rejects.toMatchObject({ code: 'INSUFFICIENT_STOCK' });

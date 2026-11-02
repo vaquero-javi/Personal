@@ -16,6 +16,7 @@ export default async function SettingsLayout({ children, params }: { children: R
           { href: 'miembros', label: 'Miembros' },
           { href: 'roles', label: 'Roles y permisos' },
           { href: 'campos', label: 'Campos personalizados' },
+          { href: 'tpv', label: 'TPV' },
         ]}
       />
       {children}

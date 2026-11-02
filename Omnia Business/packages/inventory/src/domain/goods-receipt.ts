@@ -12,6 +12,8 @@ export const GoodsReceiptLineInput = z.object({
   itemId: z.uuid('Elige el artículo'),
   quantity: decimalString({ scale: 4, sign: 'positive' }),
   unitCost: decimalString({ scale: 6, sign: 'non-negative' }),
+  /** Unidades de stock por unidad de la línea: el formato de compra (24) o 1. Vacío = formato de compra. */
+  packSize: decimalString({ scale: 4, sign: 'positive' }).optional(),
 });
 export type GoodsReceiptLineInput = z.infer<typeof GoodsReceiptLineInput>;
 

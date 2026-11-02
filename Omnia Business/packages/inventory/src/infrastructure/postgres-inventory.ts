@@ -79,10 +79,12 @@ function goodsReceiptRepository(tx: Tx): GoodsReceiptRepository {
         item_id: line.itemId,
         quantity: line.quantity,
         unit_cost: line.unitCost,
+        // Sin indicar, el trigger toma el formato de compra del artículo.
+        pack_size: line.packSize ?? null,
       }));
       await tx`
         insert into goods_receipt_lines
-        ${tx(lines, 'organization_id', 'receipt_id', 'line_no', 'item_id', 'quantity', 'unit_cost')}
+        ${tx(lines, 'organization_id', 'receipt_id', 'line_no', 'item_id', 'quantity', 'unit_cost', 'pack_size')}
       `;
       return toReceipt(header);
     },
@@ -103,8 +105,10 @@ function goodsReceiptRepository(tx: Tx): GoodsReceiptRepository {
     },
 
     async linesForPosting(receiptId) {
+      // El albarán va en formato de compra (packs); el stock, en su unidad.
       const rows = await tx<{ id: string; item_id: string; quantity: string; unit_cost: string }[]>`
-        select id, item_id, quantity, unit_cost
+        select id, item_id, (quantity * pack_size)::numeric(18, 4)::text as quantity,
+               round(unit_cost / pack_size, 6)::text as unit_cost
         from goods_receipt_lines
         where receipt_id = ${receiptId}
         order by line_no

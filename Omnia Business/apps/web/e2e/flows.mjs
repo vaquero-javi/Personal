@@ -77,18 +77,18 @@ async function step(name, fn) {
 await step('Nuevo artículo', async () => {
   await go(`${ORG}/almacen/articulos/nuevo`);
   await type('input[name=sku]', `E2E-${Date.now() % 100000}`);
-  await type('input[name=name]', 'Tuerca autoblocante M6 (prueba)');
+  await type('input[name=name]', 'Vermut rojo 1 l (prueba)');
   await clickButton('Crear artículo');
   await page.waitForFunction(() => /\/articulos\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
 });
 
 await step('Registrar y contabilizar albarán', async () => {
   await go(`${ORG}/almacen/albaranes/nuevo`);
-  await selectByLabel('select[name=supplierId]', 'Tornillería Norte');
+  await selectByLabel('select[name=supplierId]', 'Cervezas del Norte');
   await type('input[name=supplierDeliveryNote]', `TN-E2E-${Date.now() % 100000}`);
-  await selectByLabel('select[aria-label="Artículo de la línea 1"]', 'Brida metálica');
+  await selectByLabel('select[aria-label="Artículo de la línea 1"]', 'Agua mineral');
   await type('input[aria-label="Cantidad de la línea 1"]', '60');
-  await type('input[aria-label="Coste unitario de la línea 1"]', '0,22');
+  await type('input[aria-label="Coste unitario de la línea 1"]', '3,10');
   await clickButton('Guardar borrador');
   await page.waitForFunction(() => /\/albaranes\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
   await clickButton('Contabilizar entrada');
@@ -104,11 +104,11 @@ await step('Registrar albarán desde una foto', async () => {
   await clickButton('Leer albarán');
   await waitText('Datos leídos de la foto', 60000);
   const supplier = await page.$eval('select[name=supplierId]', (el) => el.selectedOptions[0]?.textContent);
-  if (supplier !== 'Tornillería Norte S.A.') throw new Error(`Proveedor leído: ${supplier}`);
+  if (supplier !== 'Cervezas del Norte S.A.') throw new Error(`Proveedor leído: ${supplier}`);
   // La línea sin artículo no se pierde: bloquea el guardado hasta elegirlo.
   await clickButton('Guardar borrador');
   await waitText('Línea 3: elige el artículo');
-  await selectByLabel('select[aria-label="Artículo de la línea 3"]', 'Brida metálica');
+  await selectByLabel('select[aria-label="Artículo de la línea 3"]', 'Agua mineral');
   await clickButton('Guardar borrador');
   await page.waitForFunction(() => /\/albaranes\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
   await waitText('TN-AL-2026-7781');
@@ -123,9 +123,9 @@ await step('Registrar albarán desde una foto', async () => {
 
 await step('Ajuste de stock', async () => {
   await go(`${ORG}/almacen/movimientos`);
-  await selectByLabel('select[name=itemId]', 'Cinta métrica');
-  await type('input[name=quantity]', '-1');
-  await type('input[name=note]', 'Rotura en estantería (prueba)');
+  await selectByLabel('select[name=itemId]', 'Vaso de caña');
+  await type('#adj-qty', '-1');
+  await type('input[name=note]', 'Rotura de vasos (prueba)');
   await clickButton('Registrar ajuste');
   await waitText('Ajuste registrado');
 });
@@ -141,8 +141,8 @@ await step('Cobro en TPV', async () => {
 let invoiceUrl = '';
 await step('Crear y emitir factura', async () => {
   await go(`${ORG}/facturacion/nueva`);
-  await selectByLabel('select[name=partyId]', 'Reformas Castilla');
-  await selectByLabel('select[aria-label="Artículo de la línea 1"]', 'Silicona');
+  await selectByLabel('select[name=partyId]', 'Cervecería Castilla');
+  await selectByLabel('select[aria-label="Artículo de la línea 1"]', 'Vino tinto');
   await type('input[aria-label="Cantidad de la línea 1"]', '12');
   await clickButton('Guardar borrador');
   await page.waitForFunction(() => /\/facturacion\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
@@ -153,7 +153,7 @@ await step('Crear y emitir factura', async () => {
 
 await step('Emitir factura desde el editor con retención y duplicarla', async () => {
   await go(`${ORG}/facturacion/nueva`);
-  await selectByLabel('select[name=partyId]', 'Reformas Castilla');
+  await selectByLabel('select[name=partyId]', 'Cervecería Castilla');
   await type('input[aria-label="Descripción de la línea 1"]', 'Asesoría técnica (prueba)');
   await type('input[aria-label="Cantidad de la línea 1"]', '10');
   await type('input[aria-label="Precio unitario de la línea 1"]', '100');
@@ -286,8 +286,8 @@ await step('Nuevo cliente', async () => {
 
 await step('Error de validación visible', async () => {
   await go(`${ORG}/almacen/movimientos`);
-  await selectByLabel('select[name=itemId]', 'Cinta métrica');
-  await type('input[name=quantity]', '-99999');
+  await selectByLabel('select[name=itemId]', 'Vaso de caña');
+  await type('#adj-qty', '-99999');
   await type('input[name=note]', 'Debe fallar');
   await clickButton('Registrar ajuste');
   await waitText('No hay existencias suficientes');

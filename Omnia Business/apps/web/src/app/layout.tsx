@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
+import { Splash } from '@/components/splash';
+import { splashGuardScript } from '@/components/splash-guard';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -12,8 +15,10 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body>
+        <Script id="splash-guard" strategy="beforeInteractive">{splashGuardScript}</Script>
+        <Splash />
         <Providers>{children}</Providers>
       </body>
     </html>

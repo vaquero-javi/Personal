@@ -115,3 +115,12 @@ export async function cancelReceipt(org: string, id: string, _: ActionState, _fo
     return 'Albarán anulado';
   });
 }
+
+export async function convertStockUnit(org: string, itemId: string, _: ActionState, formData: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'inventory.post');
+    await container().warehouse.convertStockUnit(ctx, { itemId, newUnit: formData.get('newUnit'), factor: formData.get('factor') });
+    revalidatePath(`/o/${org}`, 'layout');
+    return 'Unidad cambiada: existencias, coste, mínimos y escandallos convertidos';
+  });
+}

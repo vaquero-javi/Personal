@@ -14,24 +14,47 @@ const FILTERS = [
   { value: 'draft', label: 'Borradores' },
 ];
 
-export function InvoiceList({ invoices, base, direction, estado, q }: { invoices: InvoiceSummary[]; base: string; direction: 'issued' | 'received'; estado?: string | undefined; q?: string | undefined }) {
-  const href = (value?: string) => {
-    const p = new URLSearchParams({ ...(value ? { estado: value } : {}), ...(q ? { q } : {}) }).toString();
+const TYPES = [
+  { value: undefined, label: 'Todos los tipos' },
+  { value: 'facturas', label: 'Facturas' },
+  { value: 'rectificativas', label: 'Rectificativas' },
+  { value: 'tickets', label: 'Tickets TPV' },
+];
+
+const chipClass = 'rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white';
+
+export function InvoiceList({ invoices, base, direction, estado, tipo, q }: { invoices: InvoiceSummary[]; base: string; direction: 'issued' | 'received'; estado?: string | undefined; tipo?: string | undefined; q?: string | undefined }) {
+  const href = (next: { estado?: string | undefined; tipo?: string | undefined }) => {
+    const e = 'estado' in next ? next.estado : estado;
+    const t = 'tipo' in next ? next.tipo : tipo;
+    const p = new URLSearchParams({ ...(e ? { estado: e } : {}), ...(t ? { tipo: t } : {}), ...(q ? { q } : {}) }).toString();
     return p ? `${base}?${p}` : base;
   };
   const total = invoices.reduce((s, i) => s + Number(i.total) - Number(i.paidTotal), 0);
   return (
     <Cell>
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center">
-        <nav aria-label="Estado" className="flex flex-wrap gap-2 text-sm">
-          {FILTERS.filter((f) => direction === 'issued' || f.value !== 'draft').map((f) => (
-            <Link key={f.label} href={href(f.value)} aria-current={estado === f.value ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
-              {f.label}
-            </Link>
-          ))}
-        </nav>
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-start">
+        <div className="flex flex-col gap-2">
+          <nav aria-label="Estado" className="flex flex-wrap gap-2 text-sm">
+            {FILTERS.filter((f) => direction === 'issued' || f.value !== 'draft').map((f) => (
+              <Link key={f.label} href={href({ estado: f.value })} aria-current={estado === f.value ? 'true' : undefined} className={chipClass}>
+                {f.label}
+              </Link>
+            ))}
+          </nav>
+          {direction === 'issued' && (
+            <nav aria-label="Tipo" className="flex flex-wrap gap-2 text-sm">
+              {TYPES.map((t) => (
+                <Link key={t.label} href={href({ tipo: t.value })} aria-current={tipo === t.value ? 'true' : undefined} className={chipClass}>
+                  {t.label}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
         <form role="search" className="md:ml-auto md:w-72">
           {estado && <input type="hidden" name="estado" value={estado} />}
+          {tipo && <input type="hidden" name="tipo" value={tipo} />}
           <label htmlFor="q" className="sr-only">Buscar factura</label>
           <input id="q" name="q" type="search" defaultValue={q} placeholder="Número o tercero" className={inputClass} />
         </form>
@@ -58,7 +81,7 @@ export function InvoiceList({ invoices, base, direction, estado, q }: { invoices
                 <Tr key={i.id}>
                   <Td>
                     <RowLink href={`${base}/${i.id}`}>{i.fullNumber ?? 'Borrador'}</RowLink>
-                    {i.invoiceType !== 'F1' && <span className="block text-xs text-ink-3">{i.invoiceType === 'F2' ? 'Ticket' : 'Rectificativa'}</span>}
+                    {i.invoiceType !== 'F1' && <span className="block text-xs text-ink-3">{i.invoiceType === 'F2' ? 'Ticket' : i.invoiceType === 'F3' ? 'Sustitutiva de simplificadas' : 'Rectificativa'}</span>}
                   </Td>
                   <Td className="max-w-56 truncate">{i.partyName ?? 'Cliente de mostrador'}</Td>
                   <Td className="text-ink-2">{formatDate(i.issueDate)}</Td>

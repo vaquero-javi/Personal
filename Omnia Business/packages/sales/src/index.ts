@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DomainError, decimalString, optionalText, singleOrganization, type TenantContext } from '@omnia/core';
 import { asRow, asRows, withTenant, type Sql } from '@omnia/db';
 import { insertLines } from '@omnia/invoicing';
+import { postSaleConsumption } from '@omnia/recipes';
 
 export type SalesOrderStatus = 'draft' | 'confirmed' | 'delivered' | 'invoiced' | 'cancelled';
 
@@ -233,7 +234,7 @@ export function createSalesService(sql: Sql) {
 
     /**
      * Cobro de TPV, todo o nada: ticket F2 (serie simplificada del año) con su
-     * huella, salida de stock y cobro. Los precios se leen de la tarifa por
+     * huella, salida de stock (con escandallos) y cobro. Los precios se leen de la tarifa por
      * defecto en el servidor: el cliente solo envía artículos y cantidades.
      */
     async posCheckout(ctx: TenantContext, raw: unknown): Promise<{ invoiceId: string; fullNumber: string; total: string; change: string | null }> {
@@ -271,12 +272,8 @@ export function createSalesService(sql: Sql) {
         const [issued] = await tx<{ full_number: string; total: string }[]>`
           select full_number, total::text from app.issue_invoice(${inv!.id}, ${series.id}, current_date)`;
 
-        await tx`
-          insert into stock_movements (organization_id, warehouse_id, item_id, movement_type, quantity, source_type, source_id, source_line_id, note)
-          select ${orgId}, ${input.warehouseId}, l.item_id, 'sale', -l.quantity, 'invoice', ${inv!.id}, l.id, 'Venta TPV'
-          from invoice_lines l join inventory_items i on i.id = l.item_id
-          where l.invoice_id = ${inv!.id} and i.item_type = 'stockable'
-          order by l.item_id`;
+        // Artículos inventariables y, si tienen escandallo, sus ingredientes.
+        await postSaleConsumption(tx, { organizationId: orgId, warehouseId: input.warehouseId, invoiceId: inv!.id });
 
         await tx`
           insert into invoice_payments (organization_id, invoice_id, amount, method)

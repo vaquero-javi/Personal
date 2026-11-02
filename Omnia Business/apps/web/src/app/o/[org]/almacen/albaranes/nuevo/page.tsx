@@ -29,7 +29,16 @@ export default async function NewReceiptPage({ params }: { params: Promise<{ org
           warehouses={warehouses.map((w) => ({ value: w.id, label: w.name }))}
           items={items
             .filter((i) => i.isActive && i.itemType === 'stockable')
-            .map((i) => ({ id: i.id, sku: i.sku, name: i.name, unit: i.unitOfMeasure, suggested: Number(i.avgUnitCost) ? Number(i.avgUnitCost).toString() : '', taxRate: i.defaultTaxRate }))}
+            .map((i) => ({
+              id: i.id,
+              sku: i.sku,
+              name: i.name,
+              unit: i.unitOfMeasure,
+              // Coste por unidad de stock; la línea lo pasa a coste por caja si va en cajas.
+              suggested: Number(i.avgUnitCost) ? Number(i.avgUnitCost).toString() : '',
+              taxRate: i.defaultTaxRate,
+              ...(i.purchaseUnit ? { pack: { unit: i.purchaseUnit, size: i.purchasePackSize } } : {}),
+            }))}
           customFields={fields.filter((f) => f.entity === 'goods_receipt')}
         />
       </Cell>

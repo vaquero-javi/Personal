@@ -69,3 +69,13 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Pantalla de carga: oculta antes de pintar si ya se vio en la sesión (ver components/splash.tsx). */
+html[data-splash='off'] .splash {
+  display: none;
+}
+
+/* Pantalla de carga: oculta antes de pintar si ya se vio en la sesión (ver components/splash.tsx). */
+html[data-splash='off'] .splash {
+  display: none;
+}

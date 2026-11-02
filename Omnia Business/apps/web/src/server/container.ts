@@ -7,13 +7,18 @@ import { createGoodsReceiptService, createPostgresInventoryUnitOfWork, createWar
 import { createInvoicingService } from '@omnia/invoicing';
 import { createOrganizationsService } from '@omnia/organizations';
 import { createPartiesService } from '@omnia/parties';
+import { createPosService } from '@omnia/pos';
 import { createPurchasingService } from '@omnia/purchasing';
 import { createSalesService } from '@omnia/sales';
 
 // Composición de dependencias (único sitio que conoce las implementaciones).
-// Se cachea en globalThis para no abrir un pool nuevo en cada recarga de `next dev`.
+// El pool se cachea en globalThis para no abrir uno nuevo en cada recarga de
+// `next dev`; los servicios se recrean con el módulo, así que editar un paquete
+// no deja código viejo en memoria.
+const globalForSql = globalThis as unknown as { omniaSql?: Sql };
+
 function build() {
-  const sql: Sql = createSql();
+  const sql: Sql = (globalForSql.omniaSql ??= createSql());
   return {
     sql,
     verifyAccessToken: process.env.AUTH_MODE === 'dev' ? null : createAccessTokenVerifier(authConfigFromEnv()),
@@ -27,13 +32,14 @@ function build() {
     hr: createHrService(sql),
     payroll: createPayrollService(sql),
     incidents: createIncidentsService(sql),
+    pos: createPosService(sql),
   };
 }
 
-const globalForContainer = globalThis as unknown as { omniaContainer?: ReturnType<typeof build> };
+let services: ReturnType<typeof build> | undefined;
 
 export function container() {
-  return (globalForContainer.omniaContainer ??= build());
+  return (services ??= build());
 }
 
 export type Container = ReturnType<typeof build>;

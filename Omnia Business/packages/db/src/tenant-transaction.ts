@@ -60,6 +60,15 @@ export function withTenant<T>(sql: Sql, ctx: TenantContext, work: (tx: Tx) => Pr
   return runScoped(sql, ctx.userId, ctx.organizationIds, work, options);
 }
 
+/**
+ * Transacción sin usuario ni organización: la RLS no deja ver nada. Solo sirve
+ * para funciones SECURITY DEFINER que se autorizan por sí mismas, como las del
+ * terminal TPV, que se identifican con el hash del token del dispositivo.
+ */
+export function withoutUser<T>(sql: Sql, work: (tx: Tx) => Promise<T>) {
+  return runScoped(sql, '', [], work, { statementTimeout: '5s' });
+}
+
 /** Transacción sin organización activa: solo ve lo propio del usuario (membresías, perfil). */
 export function withUser<T>(sql: Sql, userId: string, work: (tx: Tx) => Promise<T>) {
   return runScoped(sql, userId, [], work, { statementTimeout: '5s' });

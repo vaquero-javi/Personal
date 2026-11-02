@@ -11,9 +11,11 @@ export interface ItemOption {
   sku: string;
   name: string;
   unit: string;
-  /** Precio de venta sugerido (tarifa) o coste sugerido (compras). */
+  /** Precio de venta sugerido (tarifa) o coste sugerido por unidad de stock (compras). */
   suggested?: string;
   taxRate: string;
+  /** Formato de compra: «caja» de 24 `unit`. */
+  pack?: { unit: string; size: string };
 }
 
 type Mode = 'cost' | 'price';
@@ -25,6 +27,8 @@ export interface LineDraft {
   unit: string; // unitCost (cost) o unitPrice (price)
   discountPct: string;
   taxRate: string;
+  /** La cantidad y el coste van en el formato de compra (cajas) y no en unidades. */
+  inPacks?: boolean;
   /** Texto leído de un documento escaneado, para cotejar la línea. */
   read?: string;
   match?: 'exact' | 'probable' | 'none';
@@ -38,6 +42,8 @@ interface Line extends LineDraft {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const num = (s: string) => Number(s.replace(',', '.')) || 0;
+/** Número con hasta 4 decimales, sin ceros sobrantes y con coma. */
+const trimNum = (n: number) => Number(n.toFixed(4)).toString().replace('.', ',');
 
 /**
  * Editor de líneas. `cost`: artículo, cantidad y coste (albaranes y pedidos a
@@ -52,6 +58,7 @@ export function LineItems({
   initial = [],
   name = 'lines',
   showTotals = true,
+  packs = false,
   onChange,
 }: {
   items: ItemOption[];
@@ -61,12 +68,19 @@ export function LineItems({
   name?: string;
   /** false cuando la pantalla pinta sus propios totales (p. ej. con retención). */
   showTotals?: boolean;
+  /** Albaranes: cada línea elige si va en formato de compra (cajas) o en unidades, y se convierte sola. */
+  packs?: boolean;
   /** Para vistas previas en vivo. */
   onChange?: (lines: LineDraft[]) => void;
 }) {
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
   const blank = (key: number): Line => ({ key, itemId: '', description: '', quantity: '1', unit: '', discountPct: '0', taxRate: '21' });
-  const [lines, setLines] = useState<Line[]>(() => (initial.length ? initial.map((l, i) => ({ ...l, key: i, readItemId: l.itemId })) : [blank(0)]));
+  const packOf = (itemId: string) => (packs ? byId.get(itemId)?.pack : undefined);
+  const [lines, setLines] = useState<Line[]>(() =>
+    initial.length
+      ? initial.map((l, i) => ({ ...l, inPacks: l.inPacks ?? Boolean(packOf(l.itemId)), key: i, readItemId: l.itemId }))
+      : [blank(0)],
+  );
   const [nextKey, setNextKey] = useState(initial.length || 1);
 
   useEffect(() => onChange?.(lines), [lines, onChange]);
@@ -74,7 +88,17 @@ export function LineItems({
   const update = (key: number, patch: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const pick = (key: number, itemId: string) => {
     const item = byId.get(itemId);
-    update(key, item ? { itemId, description: item.name, unit: item.suggested ?? '', taxRate: item.taxRate } : { itemId: '' });
+    const pack = packOf(itemId);
+    // Con formato de compra, la línea empieza en cajas y el coste sugerido es por caja.
+    const suggested = item?.suggested && pack ? trimNum(num(item.suggested) * num(pack.size)) : (item?.suggested ?? '');
+    update(key, item ? { itemId, description: item.name, unit: suggested, taxRate: item.taxRate, inPacks: Boolean(pack) } : { itemId: '' });
+  };
+  /** Cambia la línea entre cajas y unidades: el coste se reparte o se agrupa. */
+  const togglePacks = (l: Line, inPacks: boolean) => {
+    const pack = packOf(l.itemId);
+    if (!pack || inPacks === Boolean(l.inPacks)) return;
+    const cost = num(l.unit);
+    update(l.key, { inPacks, unit: l.unit === '' ? '' : trimNum(inPacks ? cost * num(pack.size) : cost / num(pack.size)) });
   };
 
   const payload = lines
@@ -83,7 +107,12 @@ export function LineItems({
     .filter((l) => l.itemId || l.read || (allowFreeText && l.description.trim()))
     .map((l) =>
       mode === 'cost'
-        ? { itemId: l.itemId, quantity: l.quantity.replace(',', '.'), unitCost: l.unit.replace(',', '.') }
+        ? {
+            itemId: l.itemId,
+            quantity: l.quantity.replace(',', '.'),
+            unitCost: l.unit.replace(',', '.'),
+            ...(packOf(l.itemId) ? { packSize: l.inPacks ? packOf(l.itemId)!.size : '1' } : {}),
+          }
         : {
             itemId: l.itemId || undefined,
             description: l.description,
@@ -118,7 +147,7 @@ export function LineItems({
         <div role="row" className={`hidden gap-3 bg-sheet-head px-4 py-2 text-xs font-semibold text-ink-3 md:grid md:px-5 ${cols}`}>
           <span role="columnheader">Artículo{allowFreeText ? ' o concepto' : ''}</span>
           <span role="columnheader" className="text-right">Cantidad</span>
-          <span role="columnheader" className="text-right">{mode === 'cost' ? 'Coste ud.' : 'Precio ud.'}</span>
+          <span role="columnheader" className="text-right">{mode === 'cost' ? (packs ? 'Coste' : 'Coste ud.') : 'Precio ud.'}</span>
           {mode === 'price' && <span role="columnheader" className="text-right">Dto. %</span>}
           {mode === 'price' && <span role="columnheader" className="text-right">IVA %</span>}
           <span role="columnheader" className="text-right">Importe</span>
@@ -127,6 +156,7 @@ export function LineItems({
         {lines.map((l, index) => {
           const amount = round2(num(l.quantity) * num(l.unit) * (1 - (mode === 'price' ? num(l.discountPct) : 0) / 100));
           const item = byId.get(l.itemId);
+          const pack = packOf(l.itemId);
           const n = index + 1;
           return (
             <div key={l.key} role="row" className={`grid grid-cols-2 items-start gap-x-3 gap-y-2 border-b border-line-soft px-4 py-3 md:gap-y-0 md:px-5 md:py-1.5 ${cols}`}>
@@ -156,13 +186,30 @@ export function LineItems({
                   />
                 )}
               </div>
-              <label role="cell" className="flex flex-col gap-1">
-                <span className={mobileLabel}>Cantidad{item ? ` (${item.unit})` : ''}</span>
+              <div role="cell" className="flex flex-col gap-1">
+                <span className={mobileLabel}>Cantidad{item ? ` (${l.inPacks && pack ? pack.unit : item.unit})` : ''}</span>
                 <input aria-label={`Cantidad de la línea ${n}`} inputMode="decimal" value={l.quantity} onChange={(e) => update(l.key, { quantity: e.target.value })} className={`${inputClass} text-right`} />
-                {item && <span className="hidden text-right text-xs text-ink-3 md:block">{item.unit}</span>}
-              </label>
+                {item && pack ? (
+                  <>
+                    <select
+                      aria-label={`Unidad de la línea ${n}`}
+                      value={l.inPacks ? 'pack' : 'unit'}
+                      onChange={(e) => togglePacks(l, e.target.value === 'pack')}
+                      className="h-7 rounded border border-line bg-sheet px-1 text-xs"
+                    >
+                      <option value="pack">{pack.unit} de {trimNum(num(pack.size))}</option>
+                      <option value="unit">{item.unit}</option>
+                    </select>
+                    {l.inPacks && num(l.quantity) > 0 && (
+                      <span className="text-right text-xs font-medium text-ok">= {trimNum(num(l.quantity) * num(pack.size))} {item.unit}</span>
+                    )}
+                  </>
+                ) : (
+                  item && <span className="hidden text-right text-xs text-ink-3 md:block">{item.unit}</span>
+                )}
+              </div>
               <label role="cell" className="flex flex-col gap-1">
-                <span className={mobileLabel}>{mode === 'cost' ? 'Coste ud.' : 'Precio ud.'}</span>
+                <span className={mobileLabel}>{mode === 'cost' ? (l.inPacks && pack ? `Coste por ${pack.unit}` : 'Coste ud.') : 'Precio ud.'}</span>
                 <input
                   aria-label={`${mode === 'cost' ? 'Coste' : 'Precio'} unitario de la línea ${n}`}
                   inputMode="decimal"

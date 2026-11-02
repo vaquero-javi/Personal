@@ -4,8 +4,9 @@
 //   npm run db:dev      arranca (aplica migraciones pendientes; siembra si está vacía)
 //   npm run db:reset    borra los datos y vuelve a sembrar
 //
-// La app se conecta con DATABASE_URL=postgres://postgres@127.0.0.1:54329/postgres
-// y DATABASE_POOL_MAX=1 (PGlite atiende una conexión a la vez).
+// El backoffice (apps/web) y el TPV (apps/tpv) se conectan con
+// DATABASE_URL=postgres://postgres@127.0.0.1:54329/postgres y DATABASE_POOL_MAX=1:
+// PGlite ejecuta una consulta a la vez y el servidor las encola por conexión.
 
 import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -47,7 +48,7 @@ if (rows[0].n === 0) {
   console.log('Datos de ejemplo sembrados.');
 }
 
-const server = new PGLiteSocketServer({ db, port, host: '127.0.0.1' });
+const server = new PGLiteSocketServer({ db, port, host: '127.0.0.1', maxConnections: 4 });
 await server.start();
 console.log(`Postgres local listo en postgres://postgres@127.0.0.1:${port}/postgres`);
 

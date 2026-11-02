@@ -44,7 +44,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ org: s
                     <Link href={`/o/${org}/almacen/articulos/${l.itemId}`} className="font-medium underline-offset-2 hover:underline">{l.itemName}</Link>
                     <span className="block text-xs text-ink-3">{l.sku}</span>
                   </Td>
-                  <Td align="right">{formatQty(l.quantity)} <span className="text-ink-3">{l.unitOfMeasure}</span></Td>
+                  <Td align="right">
+                    {formatQty(l.quantity)} <span className="text-ink-3">{l.purchaseUnit ?? l.unitOfMeasure}</span>
+                    {l.purchaseUnit && <span className="block text-xs text-ink-3">= {formatQty(Number(l.quantity) * Number(l.packSize))} {l.unitOfMeasure}</span>}
+                  </Td>
                   <Td align="right">{formatEuro(l.unitCost)}</Td>
                   <Td align="right">{formatEuro(Number(l.quantity) * Number(l.unitCost))}</Td>
                 </Tr>

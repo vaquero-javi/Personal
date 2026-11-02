@@ -62,7 +62,14 @@ export default async function MovementsPage({ params }: { params: Promise<{ org:
           {can('inventory.post') ? (
             <AdjustmentForm
               action={adjustStock.bind(null, org)}
-              items={items.filter((i) => i.itemType === 'stockable').map((i) => ({ value: i.id, label: `${i.sku} · ${i.name}` }))}
+              items={items
+                .filter((i) => i.itemType === 'stockable')
+                .map((i) => ({
+                  value: i.id,
+                  label: `${i.sku} · ${i.name}`,
+                  unit: i.unitOfMeasure,
+                  ...(i.purchaseUnit ? { pack: { unit: i.purchaseUnit, size: i.purchasePackSize } } : {}),
+                }))}
               warehouses={warehouses.map((w) => ({ value: w.id, label: w.name }))}
             />
           ) : (

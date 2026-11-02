@@ -1,11 +1,13 @@
 import { Cell, EmptyState, PageHeader, Ruled } from '@/components/ui/layout';
+import { ActionForm, TextField } from '@/components/ui/form';
+import { SubmitButton } from '@/components/ui/button';
 import { Table, Td, Th, Tr } from '@/components/ui/table';
 import { ItemForm } from '@/features/inventory/item-form';
 import { formatDateTime, formatEuro, formatQty } from '@/lib/format';
 import { itemType, movementType } from '@/lib/labels';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
-import { saveItem } from '../../actions';
+import { convertStockUnit, saveItem } from '../../actions';
 
 export default async function ItemPage({ params }: { params: Promise<{ org: string; id: string }> }) {
   const { org, id } = await params;
@@ -48,7 +50,28 @@ export default async function ItemPage({ params }: { params: Promise<{ org: stri
               ))}
             </ul>
           )}
+          {item.itemType === 'stockable' && item.purchaseUnit && (
+            <p className="mt-3 text-sm text-ink-3">
+              Se compra en {item.purchaseUnit} de {formatQty(item.purchasePackSize)} {item.unitOfMeasure}.
+            </p>
+          )}
         </Cell>
+        {item.itemType === 'stockable' && can('inventory.post') && (
+          <Cell title="Cambiar unidad de stock" className="lg:col-span-2">
+            <ActionForm action={convertStockUnit.bind(null, org, item.id)} className="flex flex-col gap-3" resetOnSuccess>
+              <p className="text-sm text-ink-2">
+                Para llevar el stock en una unidad más pequeña, por ejemplo botellas en vez de packs. Se convierten las existencias de todos los almacenes, el coste medio, los mínimos y los escandallos, y «{item.unitOfMeasure}» queda como formato de compra. Revisa después el precio de venta si lo vendías por {item.unitOfMeasure}.
+              </p>
+              <div className="grid gap-3 md:grid-cols-[minmax(0,12rem)_minmax(0,14rem)_auto] md:items-end">
+                <TextField label="Nueva unidad" name="newUnit" required placeholder="ud, botella, l…" />
+                <TextField label={`Cuántas hay en cada ${item.unitOfMeasure}`} name="factor" inputMode="decimal" required placeholder="24" />
+                <div>
+                  <SubmitButton variant="secondary">Convertir existencias</SubmitButton>
+                </div>
+              </div>
+            </ActionForm>
+          </Cell>
+        )}
       </Ruled>
       <Cell title="Últimos movimientos">
         {movements.length === 0 ? (

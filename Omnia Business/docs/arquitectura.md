@@ -10,6 +10,7 @@ ERP/CRM modular y multiempresa. Este documento explica las decisiones; el códig
 | JWT y organización activa | `packages/auth/src/` |
 | Módulo de ejemplo (albaranes) | `packages/inventory/src/` |
 | API y caché del cliente | `apps/web/src/` |
+| TPV de hostelería (app aparte) | `apps/tpv/` · `packages/pos/` · `packages/recipes/` · migración `0012_pos` |
 
 ---
 
@@ -167,7 +168,9 @@ Estas tablas tienen políticas escritas a mano:
 2. Bloquea la **serie** con `FOR UPDATE` para obtener una numeración correlativa sin huecos.
 3. Bloquea el **emisor** con `FOR NO KEY UPDATE`: hay una sola cadena de huellas por NIF, y este bloqueo no frena las comprobaciones de FK del resto de tablas.
 4. Suma las líneas (redondeo por línea en columnas generadas).
-5. Calcula la huella SHA-256 encadenada a la factura anterior y marca `fiscal_status = 'pending'`.
+5. Calcula la huella SHA-256 encadenada a la factura anterior y marca `fiscal_status = 'pending'`. La «anterior» es la de mayor `fiscal_chain_seq`, un número de secuencia que se toma con el emisor bloqueado; `fiscal_record_at` va truncado al segundo y no sirve para ordenar.
+
+Quedan fuera del sistema fiscal (`fiscal_status = 'not_applicable'`) las facturas de una sociedad sin régimen y, si en Ajustes › TPV se apaga «Tickets con VeriFactu» (`settings.pos_tickets_verifactu`), los tickets que cobra el TPV. Llevan su propia cadena de huellas, separada de la registrada.
 
 Un *worker* (pendiente) envía las facturas `pending` a la AEAT, o las firma con XAdES para TicketBAI, y guarda la respuesta en `fiscal_response`.
 
@@ -252,9 +255,77 @@ La integración usa PGlite (Postgres embebido) expuesto por socket, así que no 
 |---|---|
 | Huella VeriFactu, registros de anulación, envío a la AEAT, firma TicketBAI | Esqueleto en BD; falta validar contra la especificación y escribir el worker. |
 | Pedidos de compra, pagos a proveedores, costes | Sin tablas. Al crearlas, añadir `purchase_order_id` (FK compuesta) a `goods_receipts`. Los pagos de facturas recibidas ya existen (`invoice_payments`). |
-| TPV y ventas B2B | Hay tarifas y movimientos `sale`; falta el documento de venta. |
+| TPV y ventas B2B | Ventas B2B con pedidos; TPV de hostelería en `apps/tpv` (ver §9). |
 | Turnos | Sin tabla. Vacaciones y permisos sí (`leave_requests`; falta impedir solapes con `btree_gist`). |
 | Stock negativo por empresa | Hoy está prohibido siempre. Se haría configurable con `organizations.settings`. |
 | Realtime | `postgres_changes` de Supabase no conoce `app.org_ids`: usar *broadcast* desde el backend. |
 | Volumen | Particionar `stock_movements` y `audit_log` por fecha cuando superen unos 50 M de filas. |
 | Pantallas | Ninguna todavía: `PRODUCT.md` está listo para diseñarlas con `/impeccable`. |
+
+---
+
+## 9. TPV de hostelería
+
+`apps/tpv` es una segunda app Next.js (puerto 3200) para la tablet de la barra. Comparte base de datos y paquetes de dominio con el backoffice: no hay sincronización entre sistemas, así que el stock, la numeración de tickets y la cadena VeriFactu son únicos.
+
+| Pieza | Dónde |
+|---|---|
+| Esquema, RLS y funciones | `supabase/migrations/20261028000012_pos.sql` |
+| Terminales, PIN, sala, cuentas, cobro y caja | `packages/pos/src/index.ts` |
+| Importes del ticket (aritmética idéntica a `invoice_lines`) | `packages/pos/src/pricing.ts` (+ tests) |
+| Escandallos, costes y descuento de ingredientes | `packages/recipes/src/index.ts` (lo usan las dos apps) |
+| Sesión del terminal y del turno | `apps/tpv/src/server/session.ts` |
+| Ajustes (terminales, PIN, mesas, categorías, stock negativo) | `apps/web/src/app/o/[org]/ajustes/tpv/` |
+
+### Acceso: dispositivo + persona
+
+1. **Vincular el terminal.** Un encargado lo crea en el backoffice y obtiene un código de 8 caracteres (30 min, un solo uso). La tablet lo canjea (`app.pos_pair_terminal`) por un token aleatorio de 256 bits que guarda en una cookie `httpOnly`; en la base solo queda su SHA-256. Desvincular invalida el token al momento.
+2. **Entrar con PIN.** Con un terminal válido se listan las personas cuyo rol tiene `pos.use`. El PIN (4–6 cifras) se guarda con scrypt y sal en `pos_staff_pins`, tabla sin `GRANT` para `app_user`: solo se lee a través de funciones `SECURITY DEFINER` que exigen el token del terminal. Cinco fallos seguidos lo bloquean cinco minutos.
+3. **Turno.** Tras el PIN, una cookie firmada con HMAC (`POS_SESSION_SECRET`) dice quién usa el terminal (12 h como máximo, bloqueo por inactividad). En cada petición se vuelve a resolver el terminal y la membresía, y la transacción corre como ese usuario: **la RLS es la misma que en el backoffice**.
+
+El PIN de un propietario solo lo cambia otro propietario: sin esa regla, un encargado podría ponerse en su lugar en la tablet.
+
+### Permisos y roles
+
+| Permiso | Quién | Qué |
+|---|---|---|
+| `pos.use` | Camarero | Mesas, comandas, envío a cocina, pre-ticket y cobro |
+| `pos.manage` | Encargado, Administración | Además: abrir y cerrar caja, retiradas, descuentos, quitar lo enviado a cocina, anular cuentas con consumiciones, carta, escandallos, recuentos, terminales y PIN |
+
+El rol Camarero lleva también `invoicing.write/issue` e `inventory.post`, porque la RLS de facturas y movimientos de stock los exige para emitir el ticket y descontar existencias. Esos permisos le dejarían crear facturas en el backoffice si tuviera cuenta allí; en la práctica, el camarero solo entra en la tablet con su PIN.
+
+Las reglas que protegen la caja viven en triggers, no en la interfaz: las líneas solo cambian con la cuenta abierta, el precio y el artículo de una línea no se reescriben, y una cuenta o una caja cerrada es inmutable.
+
+### Cuentas y cobro
+
+- La línea de una cuenta la identifica el terminal con un UUID y se envía como «cantidad = N». Reintentar tras un corte no duplica nada. El cliente nunca manda precios: los lee el servidor de la carta (`app.pos_menu`).
+- `checkout` hace todo en una transacción: ticket F2 en la serie simplificada del año (`app.issue_invoice`, con su huella), salida de stock con escandallos, cobro en la caja abierta del terminal y cierre de la cuenta. Cobrar dos veces la misma cuenta devuelve el mismo ticket.
+- **Redondeo.** `invoice_lines` redondea base y cuota por línea. Con IVA del 10 %, agrupar consumiciones puede descuadrar la carta: 2 gin-tonics de 8 € agrupados darían 16,01 €. `buildTicketLines` agrupa lo que cuadra y separa en unidades lo que no. El navegador usa el mismo módulo, así que el total que ve el camarero es el que se emite (el cobro comprueba que coinciden).
+
+### Escandallos y stock
+
+`recipe_lines` vincula un producto de carta con sus ingredientes (artículos inventariables), en la unidad de cada ingrediente. Al cobrar, `postSaleConsumption` descuenta los ingredientes de los productos con escandallo (sumados por ticket) y el propio artículo en los productos de unidad. El coste es el coste medio ponderado que mantiene el libro de stock con cada albarán.
+
+**Stock negativo** (`organizations.settings.allow_negative_stock`, Ajustes › TPV): en una barra no se puede dejar de cobrar porque el inventario no cuadre. Sustituye a la `CHECK on_hand >= 0`, que pasa a comprobar el trigger del libro (el único que escribe `stock_levels`). Sin el ajuste, todo funciona como antes.
+
+### Formato de compra
+
+El stock se lleva siempre en la unidad en que se vende o se gasta (ud, l, kg). Cada artículo puede tener un formato de compra (`purchase_unit`, `purchase_pack_size`: «caja» de 24). Al crear el artículo se deduce del nombre («Agua 50 cl (caja 24)», «24x33cl»; `apps/web/src/lib/pack-detect.ts`).
+
+- **Albaranes**: cada línea va en cajas o en unidades (`goods_receipt_lines.pack_size`, congelado al crearla; el trigger solo admite 1 o el formato del artículo). Al contabilizar entran `cantidad × pack_size` unidades a `coste ÷ pack_size`.
+- **Ajustes y recuentos**: el formulario (backoffice) y el recuento de la TPV («3 cajas y 5 sueltas») convierten a unidades antes de enviar.
+- **Artículos antiguos en cajas**: `app.convert_stock_unit` pasa existencias, coste medio, mínimos y escandallos a la unidad nueva en una transacción. Cambiar la unidad a mano con movimientos está bloqueado.
+
+### Caja
+
+Una caja abierta por terminal (índice único). Al abrirla se registra el fondo; las retiradas y entradas quedan en `cash_movements`, que solo admite altas. El cierre (`app.close_cash_session`) **calcula lo esperado en la base de datos** (fondo + efectivo + entradas − retiradas), guarda el conteo por billetes y monedas, la diferencia y el reporte Z congelado, y rechaza el cierre si quedan cuentas abiertas. Mientras la caja está abierta, `app.cash_session_summary` da el reporte X en vivo.
+
+### Pendiente
+
+| Tema | Estado |
+|---|---|
+| Modo sin conexión | Hay reintentos idempotentes ante cortes breves. Para cobrar sin red hace falta una cola local y una serie de tickets por terminal (numerar sin consultar al servidor). |
+| Dividir cuenta y pagos mixtos | Un ticket por cuenta y un solo medio de pago. |
+| Cocina | «Enviar a cocina» marca las líneas; falta la impresora de comandas o la pantalla de cocina. |
+| Impresora de tickets | Se imprime con el diálogo del navegador (formato 80 mm). Para ESC/POS directo hace falta un puente local o Capacitor. |
+| Tiempo real | Las mesas se refrescan cada 5 s entre terminales. |

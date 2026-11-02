@@ -21,6 +21,9 @@ export interface Item {
   name: string;
   itemType: 'stockable' | 'consumable' | 'service';
   unitOfMeasure: string;
+  /** Formato de compra: «pack» de `purchasePackSize` unidades de stock. Null = se compra en la unidad de stock. */
+  purchaseUnit: string | null;
+  purchasePackSize: string;
   defaultTaxRate: string;
   isActive: boolean;
   customFields: Record<string, unknown>;
@@ -92,7 +95,19 @@ export interface ReceiptDetail extends ReceiptSummary {
   postedByName: string | null;
   /** Foto o PDF del albarán en papel; el contenido se sirve aparte. */
   document: { fileName: string; contentType: string; byteSize: number } | null;
-  lines: { id: string; lineNo: number; itemId: string; sku: string; itemName: string; unitOfMeasure: string; quantity: string; unitCost: string }[];
+  lines: {
+    id: string;
+    lineNo: number;
+    itemId: string;
+    sku: string;
+    itemName: string;
+    unitOfMeasure: string;
+    /** Formato en que se registró la línea (null: la unidad de stock) y unidades de stock por formato. */
+    purchaseUnit: string | null;
+    packSize: string;
+    quantity: string;
+    unitCost: string;
+  }[];
 }
 
 export const ItemInput = z.object({
@@ -101,9 +116,17 @@ export const ItemInput = z.object({
   name: requiredText(200),
   itemType: z.enum(['stockable', 'consumable', 'service']),
   unitOfMeasure: requiredText(20),
+  purchaseUnit: optionalText(20),
+  purchasePackSize: z.preprocess((v) => (v === '' || v === undefined ? '1' : v), decimalString({ scale: 4, sign: 'positive' })),
   defaultTaxRate: decimalString({ scale: 2, sign: 'non-negative' }),
   isActive: z.boolean().default(true),
   customFields: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const ConvertUnitInput = z.object({
+  itemId: z.uuid(),
+  newUnit: requiredText(20, 'Indica la nueva unidad'),
+  factor: decimalString({ scale: 4, sign: 'positive' }),
 });
 
 export const WarehouseInput = z.object({ code: requiredText(10), name: requiredText(80) });
@@ -137,7 +160,7 @@ export function createWarehouseService(sql: Sql) {
       const term = search?.trim() ? `%${search.trim()}%` : null;
       return withTenant(sql, ctx, async (tx) =>
         asRows<ItemSummary>(await tx`
-          select i.id, i.sku, i.barcode, i.name, i.item_type, i.unit_of_measure, i.default_tax_rate::text, i.is_active, i.custom_fields,
+          select i.id, i.sku, i.barcode, i.name, i.item_type, i.unit_of_measure, i.purchase_unit, i.purchase_pack_size::text, i.default_tax_rate::text, i.is_active, i.custom_fields,
                  coalesce(sum(sl.on_hand), 0)::text as on_hand,
                  coalesce(sum(sl.min_quantity), 0)::text as min_quantity,
                  coalesce(bool_or(sl.on_hand <= sl.min_quantity and sl.min_quantity > 0), false) as below_minimum,
@@ -155,7 +178,7 @@ export function createWarehouseService(sql: Sql) {
       const itemId = z.uuid().parse(id);
       return withTenant(sql, ctx, async (tx) => {
         const item = asRow<Item>(await tx`
-          select id, sku, barcode, name, item_type, unit_of_measure, default_tax_rate::text, is_active, custom_fields
+          select id, sku, barcode, name, item_type, unit_of_measure, purchase_unit, purchase_pack_size::text, default_tax_rate::text, is_active, custom_fields
           from inventory_items where id = ${itemId}`);
         if (!item) throw new DomainError('NOT_FOUND', 'Artículo no encontrado');
         const levels = asRows<StockLevel>(await tx`
@@ -183,22 +206,40 @@ export function createWarehouseService(sql: Sql) {
             where organization_id = ${orgId} and entity = 'inventory_item'`
         ).map((d) => CustomFieldDefinition.parse({ key: d.key, dataType: d.data_type, isRequired: d.is_required, options: d.options }));
         input.customFields = parseCustomFields(definitions, input.customFields);
+        // Sin formato de compra (o con el mismo nombre que la unidad) se compra en la unidad de stock.
+        const purchaseUnit = input.purchaseUnit && input.purchaseUnit !== input.unitOfMeasure ? input.purchaseUnit : null;
+        const purchasePackSize = purchaseUnit ? input.purchasePackSize : '1';
+        if (purchaseUnit && Number(purchasePackSize) === 1) {
+          throw new DomainError('VALIDATION', 'Indica cuántas unidades trae cada formato de compra');
+        }
         if (id) {
           const rows = await tx`
             update inventory_items set sku = ${input.sku}, barcode = ${input.barcode ?? null}, name = ${input.name},
               item_type = ${input.itemType}, unit_of_measure = ${input.unitOfMeasure}, default_tax_rate = ${input.defaultTaxRate},
+              purchase_unit = ${purchaseUnit}, purchase_pack_size = ${purchasePackSize},
               is_active = ${input.isActive}, custom_fields = ${tx.json(input.customFields as never)}
             where id = ${z.uuid().parse(id)} returning id`;
           if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Artículo no encontrado');
           return id;
         }
         const [row] = await tx<{ id: string }[]>`
-          insert into inventory_items (organization_id, sku, barcode, name, item_type, unit_of_measure, default_tax_rate, is_active, custom_fields)
+          insert into inventory_items (organization_id, sku, barcode, name, item_type, unit_of_measure, purchase_unit, purchase_pack_size,
+                                       default_tax_rate, is_active, custom_fields)
           values (${orgId}, ${input.sku}, ${input.barcode ?? null}, ${input.name}, ${input.itemType}, ${input.unitOfMeasure},
-                  ${input.defaultTaxRate}, ${input.isActive}, ${tx.json(input.customFields as never)})
+                  ${purchaseUnit}, ${purchasePackSize}, ${input.defaultTaxRate}, ${input.isActive}, ${tx.json(input.customFields as never)})
           returning id`;
         return row!.id;
       });
+    },
+
+    /**
+     * Pasa las existencias a otra unidad (4 packs → 96 ud): stock, coste,
+     * mínimos y escandallos en una transacción. La unidad antigua queda como
+     * formato de compra.
+     */
+    async convertStockUnit(ctx: TenantContext, raw: unknown) {
+      const input = ConvertUnitInput.parse(raw);
+      await withTenant(sql, ctx, (tx) => tx`select app.convert_stock_unit(${input.itemId}, ${input.newUnit}, ${input.factor})`);
     },
 
     async warehouses(ctx: TenantContext): Promise<Warehouse[]> {
@@ -308,7 +349,9 @@ export function createWarehouseService(sql: Sql) {
           where gr.id = ${receiptId}`);
         if (!header) throw new DomainError('NOT_FOUND', 'Albarán no encontrado');
         header.lines = asRows(await tx`
-          select l.id, l.line_no, l.item_id, i.sku, i.name as item_name, i.unit_of_measure, l.quantity::text, l.unit_cost::text
+          select l.id, l.line_no, l.item_id, i.sku, i.name as item_name, i.unit_of_measure,
+                 case when l.pack_size <> 1 then coalesce(i.purchase_unit, 'formato') end as purchase_unit, l.pack_size::text,
+                 l.quantity::text, l.unit_cost::text
           from goods_receipt_lines l join inventory_items i on i.id = l.item_id
           where l.receipt_id = ${receiptId} order by l.line_no`);
         const [doc] = await tx<{ file_name: string; content_type: string; byte_size: number }[]>`

@@ -49,7 +49,7 @@ export function ReceiptForm({
         <TextField label="Nº de albarán del proveedor" name="supplierDeliveryNote" required defaultValue={initial.supplierDeliveryNote ?? ''} />
       </div>
       <div>
-        <LineItems items={items} mode="cost" initial={initial.lines ?? []} />
+        <LineItems items={items} mode="cost" initial={initial.lines ?? []} packs />
         <LineErrors />
       </div>
       <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">

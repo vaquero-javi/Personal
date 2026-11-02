@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { container } from '@/server/container';
 import { devSignIn } from '@/server/session-actions';
@@ -17,7 +18,8 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
       <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-12 md:items-center">
         <div className="w-full max-w-sm rounded-lg border border-shelf-edge bg-sheet">
           <div className="border-b border-line px-5 py-4">
-            <h1 className="text-lg font-bold">Entrar en Omnia</h1>
+            <Image src="/brand/logo.png" alt="" width={56} height={56} priority className="mb-2 -ml-1" />
+          <h1 className="text-lg font-bold">Entrar en Omnia</h1>
             <p className="mt-1 text-sm text-ink-3">Gestión de todas tus sociedades en un solo sitio.</p>
           </div>
           <SignIn oauthError={error === 'oauth'} />
@@ -41,6 +43,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
     <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-12 md:items-center">
       <div className="w-full max-w-lg rounded-lg border border-shelf-edge bg-sheet">
         <div className="border-b border-line px-5 py-4">
+          <Image src="/brand/logo.png" alt="" width={56} height={56} priority className="mb-2 -ml-1" />
           <h1 className="text-lg font-bold">Entrar en Omnia</h1>
           <p className="mt-1 text-sm text-ink-3">
             Entorno de desarrollo: elige con qué persona de ejemplo quieres entrar. Cada una tiene un rol distinto en cada sociedad.
