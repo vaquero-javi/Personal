@@ -10,6 +10,7 @@ import { createPartiesService } from '@omnia/parties';
 import { createPosService } from '@omnia/pos';
 import { createPurchasingService } from '@omnia/purchasing';
 import { createSalesService } from '@omnia/sales';
+import { createTasksService } from '@omnia/tasks';
 
 // Composición de dependencias (único sitio que conoce las implementaciones).
 // El pool se cachea en globalThis para no abrir uno nuevo en cada recarga de
@@ -32,6 +33,7 @@ function build() {
     hr: createHrService(sql),
     payroll: createPayrollService(sql),
     incidents: createIncidentsService(sql),
+    tasks: createTasksService(sql),
     pos: createPosService(sql),
   };
 }

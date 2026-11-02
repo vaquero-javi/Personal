@@ -172,6 +172,46 @@ describe('Cuenta y cobro', () => {
     await pos.cancelTab(carmen, tabId, 'Invitación anulada');
   });
 
+  it('dividir el ticket cobra solo lo elegido y deja el resto en la mesa', async () => {
+    const table = await freeTable();
+    const tabId = await pos.openTab(marta, terminal, { tableId: table.id, guests: 2 });
+    const canas = randomUUID();
+    const gin = randomUUID();
+    await pos.setLineQuantity(marta, terminal, { lineId: canas, tabId, itemId: (await product('Caña')).itemId, quantity: 3 });
+    await pos.setLineQuantity(marta, terminal, { lineId: gin, tabId, itemId: (await product('Gin-tonic')).itemId, quantity: 1 });
+    await pos.sendToKitchen(marta, tabId);
+    const before = await pos.tab(marta, tabId);
+
+    // La camarera divide aunque ya esté en cocina: no se quita nada, se cobra aparte.
+    const splitId = randomUUID();
+    const items = [{ lineId: canas, quantity: 1 }, { lineId: gin, quantity: 1 }];
+    const paid = await pos.checkoutSplit(marta, terminal, { tabId, splitId, items, method: 'card' });
+    expect(paid.tabId).toBe(splitId);
+
+    const rest = await pos.tab(marta, tabId);
+    expect(rest.status).toBe('open');
+    expect(rest.table?.id).toBe(table.id);
+    expect(rest.lines.map((l) => [l.id, Number(l.quantity)])).toEqual([[canas, 2]]);
+    expect((Number(paid.total) + Number(rest.totals.total)).toFixed(2)).toBe(before.totals.total);
+    expect((await pos.ticket(marta, paid.invoiceId)).tableName).toBe(table.name);
+
+    // Reintento tras un corte: mismo ticket, nada más se mueve.
+    const again = await pos.checkoutSplit(marta, terminal, { tabId, splitId, items, method: 'card' });
+    expect(again.invoiceId).toBe(paid.invoiceId);
+    expect((await pos.tab(marta, tabId)).lines.map((l) => Number(l.quantity))).toEqual([2]);
+
+    // Más unidades de las que hay: no se divide ni se cobra nada.
+    await expect(
+      pos.checkoutSplit(marta, terminal, { tabId, splitId: randomUUID(), items: [{ lineId: canas, quantity: 5 }], method: 'card' }),
+    ).rejects.toMatchObject({ code: 'INVALID_STATE' });
+    expect((await pos.tab(marta, tabId)).lines.map((l) => Number(l.quantity))).toEqual([2]);
+
+    // Fuera de la división, quitar lo enviado a cocina sigue siendo cosa de encargado.
+    await expect(pos.setLineQuantity(marta, terminal, { lineId: canas, tabId, itemId: (await product('Caña')).itemId, quantity: 1 })).rejects.toMatchObject({ code: 'INVALID_STATE' });
+
+    await pos.checkout(marta, terminal, { tabId, method: 'cash' });
+  });
+
   it('el precio lo pone la carta, no el terminal', async () => {
     const tabId = await pos.openTab(marta, terminal, { label: 'Precio', guests: 1 });
     await expect(

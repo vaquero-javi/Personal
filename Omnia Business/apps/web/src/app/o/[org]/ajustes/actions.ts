@@ -97,6 +97,15 @@ export async function revokePosTerminal(org: string, terminalId: string, _: Acti
   });
 }
 
+export async function deletePosTerminal(org: string, terminalId: string, _: ActionState, _fd: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'pos.manage');
+    await container().pos.deleteTerminal(ctx, terminalId);
+    revalidate(org);
+    return 'Terminal borrado';
+  });
+}
+
 export async function setStaffPin(org: string, userId: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
     const { ctx } = await requirePermission(org, 'pos.manage');

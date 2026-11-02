@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { spineClasses, type SpineColor } from './spines';
+import { spineCss, type SpineColor } from './spines';
 
 /** Navegación de módulos como separadores de archivador; el activo lleva el color del lomo. */
 export function DividerTabs({
@@ -27,10 +27,11 @@ export function DividerTabs({
               <Link
                 href={`/o/${orgSlug}${module.slug ? `/${module.slug}` : ''}`}
                 aria-current={active ? 'page' : undefined}
+                style={active ? { borderTopColor: spineCss(spine) } : undefined}
                 className={[
                   'relative flex h-9 items-center rounded-t-lg border border-b-0 px-[18px] text-sm transition-colors duration-150',
                   active
-                    ? `z-10 border-shelf-edge border-t-[3px] bg-sheet font-bold text-ink ${spineClasses[spine].tabTop}`
+                    ? 'z-10 border-shelf-edge border-t-[3px] bg-sheet font-bold text-ink'
                     : 'border-shelf-edge bg-shelf font-medium text-ink-2 hover:bg-[#dfe2e5] hover:text-ink',
                 ].join(' ')}
               >

@@ -13,7 +13,8 @@ import { asRow, asRows, withTenant, withUser, type Sql } from '@omnia/db';
 // Tipos
 // ---------------------------------------------------------------------------
 
-export type SpineColor = 'red' | 'blue' | 'yellow' | 'green';
+/** Uno de los cuatro colores de la casa o uno elegido en hexadecimal (#rrggbb). */
+export type SpineColor = 'red' | 'blue' | 'yellow' | 'green' | `#${string}`;
 
 export interface Membership {
   organizationId: string;
@@ -94,7 +95,10 @@ export const UpdateOrganizationInput = z.object({
   tradeName: optionalText(200),
   taxId: requiredText(20),
   fiscalRegime: FiscalRegime,
-  spineColor: z.enum(['red', 'blue', 'yellow', 'green']),
+  spineColor: z.union([
+    z.enum(['red', 'blue', 'yellow', 'green']),
+    z.string().trim().toLowerCase().regex(/^#[0-9a-f]{6}$/, 'Color no válido'),
+  ]),
   addressLine: optionalText(200),
   postalCode: optionalText(10),
   city: optionalText(100),

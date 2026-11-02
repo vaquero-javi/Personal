@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Delete, LockKeyhole, Unlink } from 'lucide-react';
 import type { PosStaffMember } from '@omnia/pos/types';
+import { BrandLoop } from '@/components/brand-loop';
 import { Button, Modal, Notice } from '@/components/ui';
 import { formatTime, initials } from '@/lib/format';
 import { unlock, unpairTerminal } from '@/server/actions';
@@ -109,6 +110,10 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
               })}
             </ul>
           )}
+        </div>
+        {/* La marca, centrada en el hueco gris bajo el personal. */}
+        <div aria-hidden className="flex flex-1 items-center justify-center">
+          <BrandLoop className="w-[min(70%,28rem)]" />
         </div>
       </section>
 

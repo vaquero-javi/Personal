@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { Layers, Plus } from 'lucide-react';
-import { spineClasses, type ShelfOrg, type SpineColor } from './spines';
+import { spineCss, type ShelfOrg, type SpineColor } from './spines';
 
 export type { ShelfOrg, SpineColor };
 
@@ -52,6 +52,7 @@ export function SpineRail({ organizations }: { organizations: ShelfOrg[] }) {
             aria-current={active ? 'page' : undefined}
             aria-label={organization.legalName}
             title={organization.legalName}
+            style={{ backgroundColor: spineCss(organization.spine) }}
             className={[
               'group relative flex shrink-0 justify-center rounded-t-[4px] rounded-b-[2px] transition-[transform,width,box-shadow] duration-200 ease-out-expo',
               'shadow-[inset_-6px_0_0_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.2)]',
@@ -59,7 +60,6 @@ export function SpineRail({ organizations }: { organizations: ShelfOrg[] }) {
               'h-11 min-w-24 flex-1 items-center px-1.5 md:min-w-0 md:flex-none',
               // Escritorio: lomos de pie.
               'md:w-16 md:items-start md:px-0 md:pt-4',
-              spineClasses[organization.spine].bg,
               active
                 ? 'translate-y-0 md:h-[clamp(236px,calc((100dvh-6rem)/var(--spines)+2rem),262px)] md:w-[104px] md:-translate-x-1.5 md:translate-y-0 md:shadow-[inset_-8px_0_0_rgba(0,0,0,0.14),4px_3px_10px_rgba(0,0,0,0.25)]'
                 : 'translate-y-1.5 hover:translate-y-0.5 md:h-[clamp(160px,calc((100dvh-6rem)/var(--spines)-1.5rem),262px)] md:translate-y-0 md:hover:translate-x-1',

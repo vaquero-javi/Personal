@@ -19,6 +19,7 @@ import {
   setPosTicketsVerifactu,
   setStaffPin,
   revokePosTerminal,
+  deletePosTerminal,
 } from '../actions';
 
 export const metadata = { title: 'TPV · Ajustes · Omnia' };
@@ -120,7 +121,12 @@ export default async function PosSettingsPage({ params }: { params: Promise<{ or
                         <PairingCodeButton generate={newPosPairingCode.bind(null, org, t.id)} label={t.pairedAt && !t.revokedAt ? 'Vincular otra tablet' : 'Nuevo código'} />
                         {!t.revokedAt && t.pairedAt && (
                           <ActionForm action={revokePosTerminal.bind(null, org, t.id)}>
-                            <SubmitButton variant="secondary" className="h-8 px-3 text-danger">Desvincular</SubmitButton>
+                            <SubmitButton variant="caution" className="h-8 px-3">Desvincular</SubmitButton>
+                          </ActionForm>
+                        )}
+                        {(t.revokedAt || !t.pairedAt) && !t.cashOpen && (
+                          <ActionForm action={deletePosTerminal.bind(null, org, t.id)} confirm={`¿Borrar el terminal «${t.name}»? Sus cajas y tickets anteriores se conservan.`}>
+                            <SubmitButton variant="destructive" className="h-8 px-3">Borrar terminal</SubmitButton>
                           </ActionForm>
                         )}
                       </div>

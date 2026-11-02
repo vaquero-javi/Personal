@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Banknote, CreditCard, Delete } from 'lucide-react';
+import { Banknote, CreditCard, Delete, Split } from 'lucide-react';
 import type { CheckoutResult } from '@omnia/pos/types';
 import { Button } from '@/components/ui';
 import { formatEuro } from '@/lib/format';
@@ -18,17 +18,23 @@ const toCents = (text: string) => {
   return Number(int || '0') * 100 + Number(frac.padEnd(2, '0').slice(0, 2));
 };
 
+type Pay = (input: { method: 'cash' | 'card'; tendered?: string }) => ReturnType<typeof checkout>;
+
 /**
  * Cobro rápido: tarjeta en dos toques; efectivo con billetes rápidos o
- * teclado y el cambio calculado al momento.
+ * teclado y el cambio calculado al momento. Con `pay` cobra otra cosa que la
+ * cuenta entera (una parte dividida); con `onSplit` ofrece dividirla.
  */
-export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onError }: {
+export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onError, pay: payWith, onSplit, label = 'Total' }: {
   tabId: string;
   total: string;
   tax: string;
   disabledReason: string | null;
   onPaid: (r: CheckoutResult) => void;
   onError: (m: string) => void;
+  pay?: Pay;
+  onSplit?: () => void;
+  label?: string;
 }) {
   const [method, setMethod] = useState<'card' | 'cash' | null>(null);
   const [tendered, setTendered] = useState('');
@@ -55,7 +61,8 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
       // El cobro es idempotente por cuenta: ante un corte se reintenta sin riesgo de cobrar dos veces.
       for (let attempt = 0; attempt < 4; attempt++) {
         try {
-          const result = await checkout({ tabId, method: method!, ...(amount ? { tendered: amount } : {}) });
+          const input = { method: method!, ...(amount ? { tendered: amount } : {}) };
+          const result = await (payWith ? payWith(input) : checkout({ tabId, ...input }));
           if (result.ok) {
             setMethod(null);
             setTendered('');
@@ -74,7 +81,7 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
     <div className="border-t-2 border-ink bg-sheet">
       <div className="flex items-end justify-between px-4 pt-3">
         <div>
-          <p className="text-xs font-semibold text-ink-3">Total</p>
+          <p className="text-xs font-semibold text-ink-3">{label}</p>
           <p className="text-xs text-ink-3">IVA incluido ({formatEuro(tax)})</p>
         </div>
         <p className="text-4xl font-bold">{formatEuro(total)}</p>
@@ -82,13 +89,18 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
 
       {disabledReason && <p className="px-4 pt-2 text-right text-sm font-semibold text-warning">{disabledReason}</p>}
 
-      <div className="grid grid-cols-2 gap-3 p-3">
+      <div className={`grid gap-3 p-3 ${onSplit ? 'grid-cols-3' : 'grid-cols-2'}`}>
         <Button size="xl" variant={method === 'card' ? 'primary' : 'secondary'} disabled={!!disabledReason || pending} onClick={() => setMethod(method === 'card' ? null : 'card')} aria-pressed={method === 'card'}>
           <CreditCard className="size-6" aria-hidden /> Tarjeta
         </Button>
         <Button size="xl" variant={method === 'cash' ? 'primary' : 'secondary'} disabled={!!disabledReason || pending} onClick={() => setMethod(method === 'cash' ? null : 'cash')} aria-pressed={method === 'cash'}>
           <Banknote className="size-6" aria-hidden /> Efectivo
         </Button>
+        {onSplit && (
+          <Button size="xl" disabled={!!disabledReason || pending} onClick={onSplit}>
+            <Split className="size-6" aria-hidden /> Dividir ticket
+          </Button>
+        )}
       </div>
 
       {method === 'cash' && (

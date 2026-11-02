@@ -32,7 +32,7 @@ export function Button({
 }
 
 /** Diálogo modal nativo (foco atrapado, Esc para cerrar). */
-export function Modal({ open, onClose, title, children, wide = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }) {
+export function Modal({ open, onClose, title, children, wide = false }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean | 'xl' }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -48,7 +48,7 @@ export function Modal({ open, onClose, title, children, wide = false }: { open: 
         e.preventDefault();
         onClose();
       }}
-      className={`m-auto w-[calc(100%-2rem)] rounded-xl border border-shelf-edge bg-sheet p-0 text-ink ${wide ? 'max-w-3xl' : 'max-w-md'}`}
+      className={`m-auto w-[calc(100%-2rem)] rounded-xl border border-shelf-edge bg-sheet p-0 text-ink ${wide === 'xl' ? 'max-w-6xl' : wide ? 'max-w-3xl' : 'max-w-md'}`}
     >
       {open && (
         <div className="flex max-h-[85dvh] flex-col">

@@ -10,7 +10,7 @@ export const metadata = { title: 'Roles y permisos · Omnia' };
 
 const MODULE_LABEL: Record<string, string> = {
   org: 'Sociedad', members: 'Miembros', roles: 'Roles', audit: 'Auditoría', parties: 'Clientes y proveedores', inventory: 'Almacén',
-  invoicing: 'Facturación', purchasing: 'Compras', sales: 'Ventas', hr: 'RRHH', incidents: 'Incidencias',
+  invoicing: 'Facturación', purchasing: 'Compras', sales: 'Ventas', hr: 'RRHH', incidents: 'Incidencias', tasks: 'Tareas',
 };
 
 function PermissionGrid({ catalog, selected, disabled }: { catalog: Permission[]; selected: string[]; disabled?: boolean }) {

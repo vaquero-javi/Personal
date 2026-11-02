@@ -1,18 +1,22 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { BrandLoop } from './brand-loop';
 import { SPLASH_SEEN_KEY } from './splash-guard';
 
-/** Si el vídeo no arranca (autoplay bloqueado, red lenta), la pantalla se quita igual. */
-const MAX_MS = 8000;
+/** Una vuelta de la animación de marca (ver .brand-loop-* en globals.css). */
+const LOOP_MS = 6300;
 
 /**
- * Pantalla de carga con el vídeo de marca. Se pinta en el HTML del servidor
+ * Pantalla de carga con la animación de marca. Se pinta en el HTML del servidor
  * para tapar la app desde el primer fotograma; el script de `layout.tsx`
  * la oculta antes de pintar si ya se vio en esta sesión. Un toque la salta.
+ * En Vincular no sale: esa pantalla ya lleva la animación de fondo.
  */
 export function Splash() {
-  const [phase, setPhase] = useState<'on' | 'leaving' | 'off'>('on');
+  const skip = usePathname().startsWith('/vincular');
+  const [phase, setPhase] = useState<'on' | 'leaving' | 'off'>(skip ? 'off' : 'on');
 
   const finish = useCallback(() => {
     sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
@@ -20,10 +24,11 @@ export function Splash() {
   }, []);
 
   useEffect(() => {
+    if (skip) return void sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
     if (document.documentElement.dataset.splash === 'off') return setPhase('off');
-    const t = setTimeout(finish, MAX_MS);
+    const t = setTimeout(finish, LOOP_MS);
     return () => clearTimeout(t);
-  }, [finish]);
+  }, [finish, skip]);
 
   if (phase === 'off') return null;
   return (
@@ -33,7 +38,8 @@ export function Splash() {
       onTransitionEnd={() => setPhase('off')}
       className={`splash fixed inset-0 z-[100] flex items-center justify-center bg-white transition-opacity duration-300 ${phase === 'leaving' ? 'pointer-events-none opacity-0' : ''}`}
     >
-      <video src="/brand/loading.mp4" autoPlay muted playsInline preload="auto" onEnded={finish} onError={finish} className="size-full object-contain" />
+      {/* Mismo tamaño que tenía el vídeo (1430×892, a pantalla completa). */}
+      <BrandLoop className="w-[min(22.4vw,35.9vh)]" />
     </div>
   );
 }

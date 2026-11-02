@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 //   npm run db:test
 const dir = process.argv[2] ?? fileURLToPath(new URL('../migrations', import.meta.url));
 const files = ['20261025000001_tenancy_rbac.sql', '20261025000002_parties_inventory.sql',
-  '20261025000003_invoicing.sql', '20261025000004_hr_incidents.sql', '20261025000006_purchasing_sales_hr.sql', '20261025000007_session_queries.sql', '20261025000008_invoice_editor.sql', '20261025000009_invoice_document.sql', '20261025000010_goods_receipt_documents.sql', '20261025000011_payslips.sql', '20261028000012_pos.sql', '20261028000013_purchase_formats.sql', '20261028000014_receipt_pack_choice.sql', '20261028000015_pos_unpair.sql', '20261028000016_pos_tickets_verifactu.sql', '20261028000017_fiscal_chain_order.sql'];
+  '20261025000003_invoicing.sql', '20261025000004_hr_incidents.sql', '20261025000006_purchasing_sales_hr.sql', '20261025000007_session_queries.sql', '20261025000008_invoice_editor.sql', '20261025000009_invoice_document.sql', '20261025000010_goods_receipt_documents.sql', '20261025000011_payslips.sql', '20261028000012_pos.sql', '20261028000013_purchase_formats.sql', '20261028000014_receipt_pack_choice.sql', '20261028000015_pos_unpair.sql', '20261028000016_pos_tickets_verifactu.sql', '20261028000017_fiscal_chain_order.sql', '20261028000018_pos_terminal_delete.sql', '20261028000019_pos_split_tab.sql', '20261028000020_tasks.sql', '20261028000021_custom_spine_color.sql'];
 const db = new PGlite();
 for (const f of files) {
   try { await db.exec(readFileSync(`${dir}/${f}`, 'utf8')); console.log('OK migración', f); }
@@ -190,6 +190,15 @@ ok('el terminal se resuelve por su token sin sesión de usuario', (await q(`sele
 ok('la camarera aparece en el personal del terminal', (await q(`select user_id from app.pos_terminal_staff('hash-del-token')`)).some((r) => r.user_id === U3));
 ok('el empleado sin TPV no aparece', !(await q(`select user_id from app.pos_terminal_staff('hash-del-token')`)).some((r) => r.user_id === U2));
 ok('un token desconocido no desvincula nada', (await q(`select app.pos_unpair_terminal('otro') as id`))[0].id === null);
+
+await as(U1, [A]);
+const [{ id: TERM_OLD }] = await q(`insert into pos_terminals (organization_id, name, warehouse_id) values ($1,'Terraza',$2) returning id`, [A, W]);
+await q(`update pos_terminals set deleted_at = now() where id = $1`, [TERM_OLD]);
+ok('un terminal borrado libera su nombre', (await q(`insert into pos_terminals (organization_id, name, warehouse_id) values ($1,'Terraza',$2) returning id`, [A, W])).length === 1);
+await expectError('dos terminales vivos no comparten nombre', `insert into pos_terminals (organization_id, name, warehouse_id) values ($1,'Terraza',$2)`, [A, W], /unique|duplicate/);
+await db.exec('reset role');
+await q(`select set_config('app.user_id', '', false), set_config('app.org_ids', '', false)`);
+await db.exec('set role app_user');
 
 await as(U3, [A]);
 ok('la camarera no ve terminales', (await q(`select id from pos_terminals`)).length === 0);

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { LogOut, Search } from 'lucide-react';
 import { DividerTabs } from '@/components/shell/divider-tabs';
-import { spineClasses } from '@/components/shell/spines';
+import { spineCss } from '@/components/shell/spines';
 import { formatLongDate, initials } from '@/lib/format';
 import { me, requireOrg } from '@/server/session';
 import { signOut } from '@/server/session-actions';
@@ -15,6 +15,7 @@ const MODULES = [
   { slug: 'facturacion', label: 'Facturación', permission: 'invoicing.read' },
   { slug: 'rrhh', label: 'RRHH', permission: null },
   { slug: 'incidencias', label: 'Incidencias', permission: null },
+  { slug: 'tareas', label: 'Tareas', permission: null },
   { slug: 'ajustes', label: 'Ajustes', permission: 'members.read' },
 ] as const;
 
@@ -28,7 +29,7 @@ export default async function OrganizationLayout({ children, params }: { childre
       <header className="flex flex-wrap items-center gap-x-3.5 gap-y-2 md:h-10 md:flex-nowrap">
         <h1 className="order-1 flex min-w-0 basis-[calc(100%-6rem)] items-center gap-2 text-lg font-bold md:order-none md:basis-auto md:text-xl">
           <span className="truncate">{org.legalName}</span>
-          <span aria-hidden className={`size-2.5 shrink-0 rounded-[2px] ${spineClasses[org.spineColor].dot}`} />
+          <span aria-hidden className="size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: spineCss(org.spineColor) }} />
         </h1>
         <p className="order-3 text-ink-3 md:order-none">{formatLongDate(new Date())}</p>
 

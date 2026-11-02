@@ -40,6 +40,7 @@ export function ActionForm({
   onSuccess,
   resetOnSuccess = false,
   errorPlacement = 'top',
+  confirm,
 }: {
   action: FormAction;
   children: ReactNode;
@@ -49,6 +50,8 @@ export function ActionForm({
   resetOnSuccess?: boolean;
   /** `manual`: el error lo pinta <FormError/> (p. ej. junto a los botones). */
   errorPlacement?: 'top' | 'manual';
+  /** Pregunta antes de enviar (acciones que no se deshacen). */
+  confirm?: string;
 }) {
   const [state, formAction, pending] = useActionState(async (prev: ActionState, formData: FormData) => {
     const result = await action(prev, formData);
@@ -64,6 +67,7 @@ export function ActionForm({
       action={formAction}
       onSubmit={(event) => {
         event.preventDefault();
+        if (confirm && !window.confirm(confirm)) return;
         const formData = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
         startTransition(() => formAction(formData));
       }}

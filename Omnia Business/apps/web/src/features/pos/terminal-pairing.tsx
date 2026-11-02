@@ -71,7 +71,7 @@ export function PairingCodeButton({ generate, label = 'Nuevo código' }: { gener
     <div className="flex flex-col gap-2">
       <div>
         <Button
-          variant="secondary"
+          variant="info"
           className="h-8 px-3"
           disabled={pending}
           onClick={() =>

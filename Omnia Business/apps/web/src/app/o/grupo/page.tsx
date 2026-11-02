@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Notice } from '@/components/ui/form';
-import { spineClasses } from '@/components/shell/spines';
+import { spineCss } from '@/components/shell/spines';
 import { formatEuro, formatLongDate } from '@/lib/format';
 import { groupFigures } from '@/server/queries/group';
 import { myMemberships, requireUserId } from '@/server/session';
@@ -61,7 +61,7 @@ export default async function GroupPage() {
                   <tr key={f.organizationId} className="hover:bg-sheet-head">
                     <th scope="row" className="border-b border-line-soft px-2 py-2.5 text-left font-medium">
                       <span className="flex items-center gap-2">
-                        <span aria-hidden className={`h-5 w-2 rounded-sm ${spineClasses[m.spineColor].bg}`} />
+                        <span aria-hidden className="h-5 w-2 rounded-sm" style={{ backgroundColor: spineCss(m.spineColor) }} />
                         <Link href={`/o/${m.slug}`} className="underline-offset-2 hover:underline">{m.legalName}</Link>
                       </span>
                     </th>

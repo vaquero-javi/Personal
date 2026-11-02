@@ -152,6 +152,22 @@ export async function checkout(input: { tabId: string; method: 'cash' | 'card'; 
   });
 }
 
+/** Cobra solo las unidades elegidas; el resto sigue en la cuenta. */
+export async function checkoutSplit(input: {
+  tabId: string;
+  splitId: string;
+  items: { lineId: string; quantity: number }[];
+  method: 'cash' | 'card';
+  tendered?: string;
+}): Promise<Result<CheckoutResult>> {
+  return run(async () => {
+    const { ctx, terminal } = await shiftFor();
+    const result = await container().pos.checkoutSplit(ctx, terminal, input);
+    refresh();
+    return result;
+  });
+}
+
 // ------------------------------------------------------------- caja
 
 export async function openCash(openingFloat: string): Promise<Result> {

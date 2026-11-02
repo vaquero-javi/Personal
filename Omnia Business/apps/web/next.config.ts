@@ -4,7 +4,7 @@ const config: NextConfig = {
   // Los paquetes internos se publican como TypeScript fuente.
   transpilePackages: [
     '@omnia/core', '@omnia/db', '@omnia/auth', '@omnia/inventory', '@omnia/organizations', '@omnia/parties',
-    '@omnia/purchasing', '@omnia/sales', '@omnia/invoicing', '@omnia/hr', '@omnia/incidents', '@omnia/recipes', '@omnia/pos',
+    '@omnia/purchasing', '@omnia/sales', '@omnia/invoicing', '@omnia/hr', '@omnia/incidents', '@omnia/tasks', '@omnia/recipes', '@omnia/pos',
   ],
   serverExternalPackages: ['postgres', '@react-pdf/renderer'],
   devIndicators: false,

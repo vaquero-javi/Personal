@@ -10,6 +10,7 @@ import { elapsed, formatEuro, formatQty, formatTime } from '@/lib/format';
 import { cancelTab, moveTab, precheck, sendToKitchen, setGuests, setLineDiscount, setLineNote } from '@/server/actions';
 import { CheckoutPanel } from './checkout-panel';
 import { ProductPicker } from './product-picker';
+import { SplitDialog } from './split-dialog';
 import { lineTotals, useTabLines, type LocalLine } from './use-tab-lines';
 
 export function TabScreen({ tab, categories, products, freeTables, cashOpen, manager, allowNegativeStock }: {
@@ -31,9 +32,13 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
   const [moving, setMoving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paid, setPaid] = useState<CheckoutResult | null>(null);
+  const [splitting, setSplitting] = useState(false);
+  // Cobro de una parte: la cuenta sigue abierta con el resto.
+  const partial = paid !== null && paid.tabId !== tab.id;
   const closed = tab.status === 'paid';
   const unsent = lines.filter((l) => !l.sentAt).length;
   const title = tab.table ? tab.table.name : (tab.label ?? `Cuenta ${tab.number}`);
+  const checkoutBlocked = !cashOpen ? 'Caja cerrada: un encargado debe abrirla' : lines.length === 0 ? 'La cuenta está vacía' : pending > 0 ? 'Guardando…' : null;
 
   const act = (work: () => Promise<{ ok: boolean; error?: string; message?: string }>, done?: () => void) =>
     start(async () => {
@@ -177,11 +182,10 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
             tabId={tab.id}
             total={totals.total}
             tax={totals.tax}
-            disabledReason={
-              !cashOpen ? 'Caja cerrada: un encargado debe abrirla' : lines.length === 0 ? 'La cuenta está vacía' : pending > 0 ? 'Guardando…' : null
-            }
+            disabledReason={checkoutBlocked}
             onPaid={setPaid}
             onError={onError}
+            onSplit={() => setSplitting(true)}
           />
         </section>
 
@@ -229,7 +233,20 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
         busy={busy}
       />
 
-      <Modal open={paid !== null} onClose={() => router.push('/mesas')} title="Cobrado">
+      <SplitDialog
+        open={splitting}
+        onClose={() => setSplitting(false)}
+        tabId={tab.id}
+        lines={lines}
+        disabledReason={checkoutBlocked}
+        onPaid={(r) => {
+          setSplitting(false);
+          setPaid(r);
+        }}
+        onError={onError}
+      />
+
+      <Modal open={paid !== null} onClose={() => (partial ? setPaid(null) : router.push('/mesas'))} title={partial ? 'Parte cobrada' : 'Cobrado'}>
         {paid && (
           <div className="flex flex-col gap-5 text-center">
             <div>
@@ -246,7 +263,11 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
               <Button size="lg" onClick={() => router.push(`/imprimir/ticket/${paid.invoiceId}`)}>
                 <Printer className="size-5" aria-hidden /> Imprimir ticket
               </Button>
-              <Button size="lg" variant="primary" onClick={() => router.push('/mesas')}>Volver a mesas</Button>
+              {partial ? (
+                <Button size="lg" variant="primary" onClick={() => setPaid(null)}>Seguir con la cuenta</Button>
+              ) : (
+                <Button size="lg" variant="primary" onClick={() => router.push('/mesas')}>Volver a mesas</Button>
+              )}
             </div>
           </div>
         )}

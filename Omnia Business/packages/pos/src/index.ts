@@ -264,6 +264,11 @@ const CheckoutInput = z.object({
   tendered: z.preprocess((v) => (v === '' || v === null ? undefined : v), Money.optional()),
 });
 
+const SplitCheckoutInput = CheckoutInput.extend({
+  splitId: z.uuid(),
+  items: z.array(z.object({ lineId: z.uuid(), quantity: z.number().int().min(1).max(999) })).min(1, 'Elige al menos un producto').max(200),
+});
+
 const CashMovementInput = z.object({
   kind: z.enum(['withdrawal', 'deposit']),
   amount: decimalString({ scale: 2, sign: 'positive' }),
@@ -416,6 +421,7 @@ export function createPosService(sql: Sql) {
           select t.id, t.name, t.warehouse_id, w.name as warehouse_name, t.paired_at, t.last_seen_at, t.revoked_at, t.pairing_expires_at,
                  exists (select 1 from cash_sessions s where s.terminal_id = t.id and s.status = 'open') as cash_open
           from pos_terminals t join warehouses w on w.id = t.warehouse_id
+          where t.deleted_at is null
           order by t.name`),
       );
     },
@@ -440,7 +446,7 @@ export function createPosService(sql: Sql) {
         const [row] = await tx<{ pairing_expires_at: Date }[]>`
           update pos_terminals set pairing_code_hash = ${sha256(normalizePairingCode(code))},
                  pairing_expires_at = now() + ${`${PAIRING_MINUTES} minutes`}::interval
-          where id = ${z.uuid().parse(terminalId)} returning pairing_expires_at`;
+          where id = ${z.uuid().parse(terminalId)} and deleted_at is null returning pairing_expires_at`;
         if (!row) throw new DomainError('NOT_FOUND', 'Terminal no encontrado');
         return { code, expiresAt: row.pairing_expires_at };
       });
@@ -452,6 +458,20 @@ export function createPosService(sql: Sql) {
           update pos_terminals set revoked_at = now(), pairing_code_hash = null, pairing_expires_at = null
           where id = ${z.uuid().parse(terminalId)} and revoked_at is null returning id`;
         if (rows.length === 0) throw new DomainError('INVALID_STATE', 'El terminal ya estaba desvinculado');
+      });
+    },
+
+    /** Borra un terminal sin tablet vinculada. Lógico: sus cajas y cuentas siguen apuntando a él. */
+    async deleteTerminal(ctx: TenantContext, terminalId: string) {
+      await withTenant(sql, ctx, async (tx) => {
+        const rows = await tx`
+          update pos_terminals set deleted_at = now(), revoked_at = coalesce(revoked_at, now()),
+                 pairing_code_hash = null, pairing_expires_at = null
+          where id = ${z.uuid().parse(terminalId)} and deleted_at is null
+            and (revoked_at is not null or paired_at is null)
+            and not exists (select 1 from cash_sessions s where s.terminal_id = pos_terminals.id and s.status = 'open')
+          returning id`;
+        if (rows.length === 0) throw new DomainError('INVALID_STATE', 'Solo se borra un terminal sin tablet vinculada y con la caja cerrada');
       });
     },
 
@@ -774,66 +794,24 @@ export function createPosService(sql: Sql) {
       });
     },
 
-    /**
-     * Cobro, todo o nada: ticket F2 con su huella, salida de stock (con
-     * escandallos), cobro en la caja del terminal y cierre de la cuenta.
-     * Cobrar dos veces la misma cuenta devuelve el mismo ticket.
-     */
     async checkout(ctx: TenantContext, terminal: PosTerminal, raw: unknown): Promise<CheckoutResult> {
       const input = CheckoutInput.parse(raw);
       const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, (tx) => payTab(tx, orgId, terminal, input));
+    },
+
+    /**
+     * Cobra solo una parte de la cuenta: las unidades elegidas pasan a una cuenta
+     * nueva (splitId, generado por el terminal) que se cobra en la misma
+     * transacción. Si el cobro falla no se divide nada; reintentar con el mismo
+     * splitId devuelve el mismo ticket.
+     */
+    async checkoutSplit(ctx: TenantContext, terminal: PosTerminal, raw: unknown): Promise<CheckoutResult> {
+      const input = SplitCheckoutInput.parse(raw);
+      const orgId = singleOrganization(ctx);
       return withTenant(sql, ctx, async (tx) => {
-        const [tab] = await tx<{ status: TabStatus; invoice_id: string | null }[]>`
-          select status, invoice_id from pos_tabs where id = ${input.tabId} for update`;
-        if (!tab) throw new DomainError('NOT_FOUND', 'Cuenta no encontrada');
-        if (tab.status === 'paid') {
-          const [done] = await tx<{ full_number: string; total: string; method: 'cash' | 'card' }[]>`
-            select i.full_number, i.total::text, (select method from invoice_payments where invoice_id = i.id limit 1) as method
-            from invoices i where i.id = ${tab.invoice_id}`;
-          return { tabId: input.tabId, invoiceId: tab.invoice_id!, fullNumber: done!.full_number, total: done!.total, method: done!.method, change: null };
-        }
-        if (tab.status === 'cancelled') throw new DomainError('INVALID_STATE', 'La cuenta está anulada');
-
-        const [session] = await tx<{ id: string }[]>`
-          select id from cash_sessions where terminal_id = ${terminal.terminalId} and status = 'open'`;
-        if (!session) throw new DomainError('VALIDATION', 'La caja de este terminal está cerrada: un encargado debe abrirla');
-
-        const lines = buildTicketLines(await openTabLines(tx, [input.tabId]));
-        if (lines.length === 0) throw new DomainError('VALIDATION', 'La cuenta está vacía');
-        const expected = sumAmounts(lines).total;
-        if (input.method === 'cash' && input.tendered !== undefined && Number(input.tendered) < Number(expected)) {
-          throw new DomainError('VALIDATION', 'El efectivo entregado no cubre el total');
-        }
-
-        const [series] = await tx<{ id: string }[]>`
-          select id from invoice_series
-          where invoice_kind = 'simplified' and is_active and fiscal_year = extract(year from current_date)::int
-          order by code limit 1`;
-        if (!series) throw new DomainError('VALIDATION', 'Falta una serie de tickets (simplificadas) para este año en Facturación › Series');
-
-        const [inv] = await tx<{ id: string }[]>`
-          insert into invoices (organization_id, direction, party_id, invoice_type, due_date)
-          values (${orgId}, 'issued', null, 'F2', current_date) returning id`;
-        await insertLines(tx, orgId, inv!.id, lines.map((l) => ({ itemId: l.itemId, description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, discountPct: l.discountPct, taxRate: l.taxRate })));
-        const [issued] = await tx<{ full_number: string; total: string }[]>`
-          select full_number, total::text from app.issue_invoice(${inv!.id}, ${series.id}, current_date, true)`;
-        if (issued!.total !== expected) {
-          // Nunca debería ocurrir: pricing.ts replica la aritmética de invoice_lines.
-          throw new Error(`Descuadre entre la cuenta (${expected}) y el ticket (${issued!.total})`);
-        }
-
-        await postSaleConsumption(tx, { organizationId: orgId, warehouseId: terminal.warehouseId, invoiceId: inv!.id });
-
-        await tx`
-          insert into invoice_payments (organization_id, invoice_id, amount, method, cash_session_id)
-          values (${orgId}, ${inv!.id}, ${issued!.total}, ${input.method}, ${session.id})`;
-        await tx`
-          update pos_tabs set status = 'paid', invoice_id = ${inv!.id}, cash_session_id = ${session.id},
-                 closed_at = now(), closed_by = app.current_user_id()
-          where id = ${input.tabId}`;
-
-        const change = input.method === 'cash' && input.tendered !== undefined ? (Number(input.tendered) - Number(issued!.total)).toFixed(2) : null;
-        return { tabId: input.tabId, invoiceId: inv!.id, fullNumber: issued!.full_number, total: issued!.total, method: input.method, change };
+        await tx`select app.pos_split_tab(${input.tabId}, ${input.splitId}, ${tx.json(input.items)})`;
+        return payTab(tx, orgId, terminal, { tabId: input.splitId, method: input.method, tendered: input.tendered });
       });
     },
 
@@ -845,7 +823,7 @@ export function createPosService(sql: Sql) {
                  coalesce(i.issuer_snapshot, '{}'::jsonb) as issuer,
                  (o.fiscal_regime = 'verifactu' and i.fiscal_status <> 'not_applicable') as verifactu,
                  (select method from invoice_payments p where p.invoice_id = i.id limit 1) as method,
-                 pt.name as table_name, coalesce(u.full_name, u.email) as waiter_name
+                 coalesce(pt.name, t.label) as table_name, coalesce(u.full_name, u.email) as waiter_name
           from invoices i
           join organizations o on o.id = i.organization_id
           left join pos_tabs t on t.invoice_id = i.id
@@ -937,6 +915,65 @@ export function createPosService(sql: Sql) {
       });
     },
   };
+}
+
+/**
+ * Cobro, todo o nada: ticket F2 con su huella, salida de stock (con
+ * escandallos), cobro en la caja del terminal y cierre de la cuenta.
+ * Cobrar dos veces la misma cuenta devuelve el mismo ticket.
+ */
+async function payTab(tx: Tx, orgId: string, terminal: PosTerminal, input: z.infer<typeof CheckoutInput>): Promise<CheckoutResult> {
+  const [tab] = await tx<{ status: TabStatus; invoice_id: string | null }[]>`
+    select status, invoice_id from pos_tabs where id = ${input.tabId} for update`;
+  if (!tab) throw new DomainError('NOT_FOUND', 'Cuenta no encontrada');
+  if (tab.status === 'paid') {
+    const [done] = await tx<{ full_number: string; total: string; method: 'cash' | 'card' }[]>`
+      select i.full_number, i.total::text, (select method from invoice_payments where invoice_id = i.id limit 1) as method
+      from invoices i where i.id = ${tab.invoice_id}`;
+    return { tabId: input.tabId, invoiceId: tab.invoice_id!, fullNumber: done!.full_number, total: done!.total, method: done!.method, change: null };
+  }
+  if (tab.status === 'cancelled') throw new DomainError('INVALID_STATE', 'La cuenta está anulada');
+
+  const [session] = await tx<{ id: string }[]>`
+    select id from cash_sessions where terminal_id = ${terminal.terminalId} and status = 'open'`;
+  if (!session) throw new DomainError('VALIDATION', 'La caja de este terminal está cerrada: un encargado debe abrirla');
+
+  const lines = buildTicketLines(await openTabLines(tx, [input.tabId]));
+  if (lines.length === 0) throw new DomainError('VALIDATION', 'La cuenta está vacía');
+  const expected = sumAmounts(lines).total;
+  if (input.method === 'cash' && input.tendered !== undefined && Number(input.tendered) < Number(expected)) {
+    throw new DomainError('VALIDATION', 'El efectivo entregado no cubre el total');
+  }
+
+  const [series] = await tx<{ id: string }[]>`
+    select id from invoice_series
+    where invoice_kind = 'simplified' and is_active and fiscal_year = extract(year from current_date)::int
+    order by code limit 1`;
+  if (!series) throw new DomainError('VALIDATION', 'Falta una serie de tickets (simplificadas) para este año en Facturación › Series');
+
+  const [inv] = await tx<{ id: string }[]>`
+    insert into invoices (organization_id, direction, party_id, invoice_type, due_date)
+    values (${orgId}, 'issued', null, 'F2', current_date) returning id`;
+  await insertLines(tx, orgId, inv!.id, lines.map((l) => ({ itemId: l.itemId, description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, discountPct: l.discountPct, taxRate: l.taxRate })));
+  const [issued] = await tx<{ full_number: string; total: string }[]>`
+    select full_number, total::text from app.issue_invoice(${inv!.id}, ${series.id}, current_date, true)`;
+  if (issued!.total !== expected) {
+    // Nunca debería ocurrir: pricing.ts replica la aritmética de invoice_lines.
+    throw new Error(`Descuadre entre la cuenta (${expected}) y el ticket (${issued!.total})`);
+  }
+
+  await postSaleConsumption(tx, { organizationId: orgId, warehouseId: terminal.warehouseId, invoiceId: inv!.id });
+
+  await tx`
+    insert into invoice_payments (organization_id, invoice_id, amount, method, cash_session_id)
+    values (${orgId}, ${inv!.id}, ${issued!.total}, ${input.method}, ${session.id})`;
+  await tx`
+    update pos_tabs set status = 'paid', invoice_id = ${inv!.id}, cash_session_id = ${session.id},
+           closed_at = now(), closed_by = app.current_user_id()
+    where id = ${input.tabId}`;
+
+  const change = input.method === 'cash' && input.tendered !== undefined ? (Number(input.tendered) - Number(issued!.total)).toFixed(2) : null;
+  return { tabId: input.tabId, invoiceId: inv!.id, fullNumber: issued!.full_number, total: issued!.total, method: input.method, change };
 }
 
 async function loadSession(tx: Tx, id: string): Promise<CashSession> {

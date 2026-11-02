@@ -87,3 +87,42 @@
 html[data-splash='off'] .splash {
   display: none;
 }
+
+/* Aros de marca en bucle (components/brand-loop.tsx). 6,3 s como el vídeo:
+   quietos hasta 3 s, se separan hasta tocarse a 4,25 s y vuelven a 6 s. */
+.brand-loop-left,
+.brand-loop-right,
+.brand-loop-text {
+  animation: 6.3s infinite;
+}
+.brand-loop-left {
+  animation-name: brand-loop-left;
+}
+.brand-loop-right {
+  animation-name: brand-loop-right;
+}
+.brand-loop-text {
+  animation-name: brand-loop-text;
+}
+@keyframes brand-loop-left {
+  0%, 47.6% { transform: translateX(0); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  67.5% { transform: translateX(-32px); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  95.2%, 100% { transform: translateX(0); }
+}
+@keyframes brand-loop-right {
+  0%, 47.6% { transform: translateX(0); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  67.5% { transform: translateX(32px); animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  95.2%, 100% { transform: translateX(0); }
+}
+@keyframes brand-loop-text {
+  0%, 47.6% { opacity: 1; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  67.5% { opacity: 0; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); }
+  95.2%, 100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-loop-left,
+  .brand-loop-right,
+  .brand-loop-text {
+    animation: none;
+  }
+}

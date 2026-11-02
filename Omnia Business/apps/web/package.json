@@ -17,6 +17,7 @@
     "@omnia/db": "*",
     "@omnia/hr": "*",
     "@omnia/incidents": "*",
+    "@omnia/tasks": "*",
     "@omnia/inventory": "*",
     "@omnia/invoicing": "*",
     "@omnia/organizations": "*",

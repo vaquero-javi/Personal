@@ -65,6 +65,12 @@ export const incidentPriority: StatusMap = {
   low: ['Baja', 'muted'],
 };
 
+export const taskStatus: StatusMap = {
+  pending: ['Pendiente', 'warning'],
+  in_progress: ['En curso', 'info'],
+  done: ['Hecha', 'ok'],
+};
+
 export const leaveStatus: StatusMap = {
   requested: ['Pendiente', 'warning'],
   approved: ['Aprobada', 'ok'],

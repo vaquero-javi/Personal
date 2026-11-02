@@ -1,7 +1,7 @@
 import { Cell, PageHeader } from '@/components/ui/layout';
 import { ActionForm, SelectField, TextField } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
-import { spineClasses } from '@/components/shell/spines';
+import { SpineColorPicker } from '@/features/organizations/spine-color-picker';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
 import { updateOrganization } from './actions';
@@ -16,12 +16,6 @@ const REGIMES = [
   { value: 'sii', label: 'SII (grandes empresas)' },
   { value: 'none', label: 'Sin sistema de facturación verificable' },
 ];
-const COLORS = [
-  { value: 'red', label: 'Rojo' },
-  { value: 'blue', label: 'Azul' },
-  { value: 'yellow', label: 'Amarillo' },
-  { value: 'green', label: 'Verde' },
-] as const;
 
 export default async function SettingsPage({ params }: { params: Promise<{ org: string }> }) {
   const { org: slug } = await params;
@@ -56,15 +50,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ org: 
             </fieldset>
             <fieldset className="flex flex-col gap-1.5">
               <legend className="mb-1.5 text-xs font-semibold text-ink-3">Color del lomo</legend>
-              <div className="flex flex-wrap gap-4">
-                {COLORS.map((c) => (
-                  <label key={c.value} className="flex cursor-pointer items-center gap-2 text-sm">
-                    <input type="radio" name="spineColor" value={c.value} defaultChecked={org.spineColor === c.value} className="peer sr-only" />
-                    <span aria-hidden className={`size-6 rounded ring-offset-2 peer-checked:ring-2 peer-checked:ring-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink ${spineClasses[c.value].bg}`} />
-                    {c.label}
-                  </label>
-                ))}
-              </div>
+              <SpineColorPicker name="spineColor" defaultValue={org.spineColor} />
             </fieldset>
             <p className="text-sm text-ink-3">
               Dirección en la app: <code>/o/{org.slug}</code>

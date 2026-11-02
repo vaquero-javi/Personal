@@ -1,6 +1,7 @@
 // Compartido entre servidor y cliente (no es un módulo 'use client').
 
-export type SpineColor = 'red' | 'blue' | 'yellow' | 'green';
+/** Uno de los cuatro colores de la casa o uno elegido en hexadecimal (#rrggbb). */
+export type SpineColor = 'red' | 'blue' | 'yellow' | 'green' | `#${string}`;
 
 export interface ShelfOrg {
   id: string;
@@ -10,10 +11,16 @@ export interface ShelfOrg {
   spine: SpineColor;
 }
 
-/** Clases por color de lomo. Literales completos para que Tailwind los detecte. */
-export const spineClasses: Record<SpineColor, { bg: string; tabTop: string; dot: string }> = {
-  red: { bg: 'bg-spine-red', tabTop: 'border-t-spine-red', dot: 'bg-spine-red' },
-  blue: { bg: 'bg-spine-blue', tabTop: 'border-t-spine-blue', dot: 'bg-spine-blue' },
-  yellow: { bg: 'bg-spine-yellow', tabTop: 'border-t-spine-yellow', dot: 'bg-spine-yellow' },
-  green: { bg: 'bg-spine-green', tabTop: 'border-t-spine-green', dot: 'bg-spine-green' },
+/** Los colores de la casa (los mismos que --color-spine-* en globals.css). */
+export const SPINE_PRESETS = [
+  { value: 'red', label: 'Rojo', hex: '#d23b2e' },
+  { value: 'blue', label: 'Azul', hex: '#1f6fb2' },
+  { value: 'yellow', label: 'Amarillo', hex: '#f1c232' },
+  { value: 'green', label: 'Verde', hex: '#3a8c4a' },
+] as const;
+
+/** Color CSS de un lomo: los de la casa, por su token; los elegidos, tal cual. */
+export const spineCss = (spine: SpineColor) => {
+  const preset = SPINE_PRESETS.find((p) => p.value === spine);
+  return preset ? `var(--color-spine-${preset.value}, ${preset.hex})` : spine;
 };
