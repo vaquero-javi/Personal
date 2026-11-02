@@ -16,6 +16,7 @@ const MODULES = [
   { slug: 'rrhh', label: 'RRHH', permission: null },
   { slug: 'incidencias', label: 'Incidencias', permission: null },
   { slug: 'tareas', label: 'Tareas', permission: null },
+  { slug: 'estadisticas', label: 'Estadísticas', permission: 'stats.read' },
   { slug: 'ajustes', label: 'Ajustes', permission: 'members.read' },
 ] as const;
 

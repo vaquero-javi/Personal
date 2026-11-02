@@ -10,6 +10,7 @@ import { createPartiesService } from '@omnia/parties';
 import { createPosService } from '@omnia/pos';
 import { createPurchasingService } from '@omnia/purchasing';
 import { createSalesService } from '@omnia/sales';
+import { createStatsService } from '@omnia/stats';
 import { createTasksService } from '@omnia/tasks';
 
 // Composición de dependencias (único sitio que conoce las implementaciones).
@@ -34,6 +35,7 @@ function build() {
     payroll: createPayrollService(sql),
     incidents: createIncidentsService(sql),
     tasks: createTasksService(sql),
+    stats: createStatsService(sql),
     pos: createPosService(sql),
   };
 }

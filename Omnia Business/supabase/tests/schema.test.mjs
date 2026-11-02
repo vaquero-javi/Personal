@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 //   npm run db:test
 const dir = process.argv[2] ?? fileURLToPath(new URL('../migrations', import.meta.url));
 const files = ['20261025000001_tenancy_rbac.sql', '20261025000002_parties_inventory.sql',
-  '20261025000003_invoicing.sql', '20261025000004_hr_incidents.sql', '20261025000006_purchasing_sales_hr.sql', '20261025000007_session_queries.sql', '20261025000008_invoice_editor.sql', '20261025000009_invoice_document.sql', '20261025000010_goods_receipt_documents.sql', '20261025000011_payslips.sql', '20261028000012_pos.sql', '20261028000013_purchase_formats.sql', '20261028000014_receipt_pack_choice.sql', '20261028000015_pos_unpair.sql', '20261028000016_pos_tickets_verifactu.sql', '20261028000017_fiscal_chain_order.sql', '20261028000018_pos_terminal_delete.sql', '20261028000019_pos_split_tab.sql', '20261028000020_tasks.sql', '20261028000021_custom_spine_color.sql'];
+  '20261025000003_invoicing.sql', '20261025000004_hr_incidents.sql', '20261025000006_purchasing_sales_hr.sql', '20261025000007_session_queries.sql', '20261025000008_invoice_editor.sql', '20261025000009_invoice_document.sql', '20261025000010_goods_receipt_documents.sql', '20261025000011_payslips.sql', '20261028000012_pos.sql', '20261028000013_purchase_formats.sql', '20261028000014_receipt_pack_choice.sql', '20261028000015_pos_unpair.sql', '20261028000016_pos_tickets_verifactu.sql', '20261028000017_fiscal_chain_order.sql', '20261028000018_pos_terminal_delete.sql', '20261028000019_pos_split_tab.sql', '20261028000020_tasks.sql', '20261028000021_custom_spine_color.sql', '20261028000022_stats.sql'];
 const db = new PGlite();
 for (const f of files) {
   try { await db.exec(readFileSync(`${dir}/${f}`, 'utf8')); console.log('OK migración', f); }
