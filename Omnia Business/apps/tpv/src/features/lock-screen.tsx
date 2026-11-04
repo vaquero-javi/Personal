@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Delete, LockKeyhole, Unlink } from 'lucide-react';
+import { Clock, Delete, LockKeyhole, Unlink } from 'lucide-react';
 import type { PosStaffMember } from '@omnia/pos/types';
 import { BrandLoop } from '@/components/brand-loop';
 import { Button, Modal, Notice } from '@/components/ui';
 import { formatTime, initials } from '@/lib/format';
 import { unlock, unpairTerminal } from '@/server/actions';
+import { ClockDialog } from './clock-dialog';
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'] as const;
 
@@ -20,6 +21,7 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
   const [now, setNow] = useState<Date | null>(null);
   const [confirmUnpair, setConfirmUnpair] = useState(false);
   const [unpairing, startUnpair] = useTransition();
+  const [clocking, setClocking] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -51,7 +53,7 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
 
   // Teclado físico (tablet con teclado o pruebas en escritorio).
   useEffect(() => {
-    if (!selected || confirmUnpair) return;
+    if (!selected || confirmUnpair || clocking) return;
     const onKey = (e: KeyboardEvent) => {
       if (/^\d$/.test(e.key)) press(e.key as (typeof KEYS)[number]);
       else if (e.key === 'Backspace') press('del');
@@ -70,9 +72,14 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
             <p className="text-sm font-semibold text-ink-3">{terminalName}</p>
             <h1 className="text-2xl font-bold">{orgName}</h1>
           </div>
-          <p className="text-3xl font-bold tabular-nums" suppressHydrationWarning>
-            {now ? formatTime(now) : ''}
-          </p>
+          <div className="flex items-center gap-4">
+            <Button size="lg" variant="primary" onClick={() => setClocking(true)}>
+              <Clock className="size-5" aria-hidden /> Fichar con tarjeta
+            </Button>
+            <p className="text-3xl font-bold tabular-nums" suppressHydrationWarning>
+              {now ? formatTime(now) : ''}
+            </p>
+          </div>
         </header>
         <div>
           <h2 className="mb-3 text-sm font-bold">¿Quién eres?</h2>
@@ -160,6 +167,8 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
           Desvincular este terminal
         </Button>
       </section>
+
+      <ClockDialog open={clocking} onClose={() => setClocking(false)} />
 
       <Modal open={confirmUnpair} onClose={() => !unpairing && setConfirmUnpair(false)} title="¿Seguro que quieres desvincular?">
         <p className="text-sm text-ink-2">

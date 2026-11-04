@@ -385,6 +385,19 @@ Backoffice (staff_cards.manage)         Móvil del empleado              TPV (po
 
 El cliente nunca manda el porcentaje: lo fija `staff_discount_policies` (por rol, con una general de respaldo).
 
+### Decisión de producto (noviembre de 2026)
+
+Las tarjetas se emiten como **estándar: QR fijo y definitivo** (internamente `wallet = 'apple'`), una por persona; reemitir revoca la anterior. El empleado la enseña desde *Ajustes › Tarjetas de empleado* en el móvil (tarjeta de cristal; al tocarla, a pantalla completa). Como una foto del QR también valdría, la política pide por defecto el **PIN del titular** en el TPV. No se ofrece guardarla en Apple/Google Wallet; la generación de pases oficiales (.pkpass, Google Wallet con QR dinámico, web service de Apple, cola de avisos) sigue implementada y probada en el servidor, sin uso en la interfaz.
+
+### Fichar con la tarjeta (migración `0025_card_clock`)
+
+La misma tarjeta sirve para el registro de jornada. En la **pantalla de bloqueo del TPV** el botón *Fichar con tarjeta* abre: escanear → «Marta Ortega · Estás fuera de turno» → *Fichar entrada* (o *salida* / *pausa*, según su estado) → **PIN del titular, siempre** → «Entrada registrada · 22:03».
+
+- No hace falta turno abierto: la tablet se identifica con su token y la persona con tarjeta + PIN (`app.pos_card_lookup`, `app.pos_card_clock`, DEFINER). Con un QR fijo, una foto bastaría para fichar por otro; el PIN lo impide.
+- Fichaje en `time_entries` con `source = 'kiosk'`, `created_by` = titular y `device_info` (terminal, tarjeta, `card+pin`). Inmutable como todos; se corrige con un fichaje manual de RRHH. En *RRHH › Registro* aparece como «(tarjeta)».
+- Estado = último fichaje de las **últimas 16 horas**, no del día: un turno de noche (22:00 → 04:00) se cierra bien. Una entrada olvidada de hace más de 16 h no bloquea fichar hoy (la corrige RRHH).
+- Puede fichar cualquiera con tarjeta, PIN y permiso `hr.time.self` (todos los roles base), aunque no use el TPV.
+
 ### Antifraude
 
 | Amenaza | Defensa |

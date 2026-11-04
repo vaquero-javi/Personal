@@ -68,6 +68,7 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
                           <li key={e.id} title={e.correctionReason ?? undefined}>
                             <span className="text-ink-3">{entryType[e.entryType]}</span> <b>{formatTime(e.occurredAt)}</b>
                             {e.source === 'manual' && <span className="text-warning"> (manual)</span>}
+                            {e.source === 'kiosk' && <span className="text-ink-3" title="Fichado con la tarjeta de empleado y su PIN en la tablet del TPV"> (tarjeta)</span>}
                           </li>
                         ))}
                       </ul>

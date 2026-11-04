@@ -88,12 +88,25 @@ export function StaffCardDialog({ open, tabId, onClose, onApplied }: { open: boo
 
 // ------------------------------------------------------------------ 1. QR
 
-function ScanStep({ busy, onCode }: { busy: boolean; onCode: (qr: string) => void }) {
+/**
+ * Por qué no se puede abrir la cámara aquí (null si se puede). La cámara del
+ * navegador solo funciona en HTTPS o en localhost: abrir el TPV por la IP de la
+ * red local (http://192.168…) la bloquea.
+ */
+function cameraBlockedReason(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (!window.isSecureContext) return 'La cámara solo funciona si el TPV se abre con una dirección segura (https). Mientras, usa el lector de códigos.';
+  if (!navigator.mediaDevices?.getUserMedia) return 'Este navegador no deja usar la cámara. Usa el lector de códigos.';
+  return null;
+}
+
+export function ScanStep({ busy, onCode }: { busy: boolean; onCode: (qr: string) => void }) {
   const [value, setValue] = useState('');
   const [camera, setCamera] = useState(false);
+  const [blocked, setBlocked] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  const canUseCamera = typeof window !== 'undefined' && 'BarcodeDetector' in window && !!navigator.mediaDevices;
 
+  useEffect(() => setBlocked(cameraBlockedReason()), []);
   // La pistola «teclea» en el campo con foco: se mantiene enfocado.
   useEffect(() => {
     if (!camera) input.current?.focus();
@@ -110,11 +123,20 @@ function ScanStep({ busy, onCode }: { busy: boolean; onCode: (qr: string) => voi
           onCancel={() => setCamera(false)}
         />
       ) : (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-shelf-edge bg-sheet-head p-6 text-center">
-          <ScanLine className="size-10 text-ink-2" aria-hidden />
-          <p className="font-semibold">Escanea el QR de la tarjeta</p>
-          <p className="text-sm text-ink-3">Con el lector de códigos, o con la cámara de la tablet.</p>
-        </div>
+        // Todo el recuadro abre la cámara.
+        <button
+          type="button"
+          disabled={busy || blocked !== null}
+          onClick={() => setCamera(true)}
+          className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-shelf-edge bg-sheet-head p-6 text-center transition-colors enabled:hover:border-ink enabled:hover:bg-line-soft disabled:cursor-default"
+        >
+          <span className="flex items-center gap-3 text-ink-2">
+            <ScanLine className="size-10" aria-hidden />
+            {!blocked && <Camera className="size-8" aria-hidden />}
+          </span>
+          <span className="font-semibold">{blocked ? 'Escanea el QR con el lector de códigos' : 'Toca aquí para escanear con la cámara'}</span>
+          <span className="text-sm text-ink-3">{blocked ?? 'O pásalo por el lector de códigos: se lee solo.'}</span>
+        </button>
       )}
 
       <form
@@ -139,19 +161,17 @@ function ScanStep({ busy, onCode }: { busy: boolean; onCode: (qr: string) => voi
         />
         <Button type="submit" variant="primary" disabled={busy || !value.trim()}>{busy ? 'Validando…' : 'Validar'}</Button>
       </form>
-
-      {canUseCamera && !camera && (
-        <Button size="lg" onClick={() => setCamera(true)} disabled={busy}>
-          <Camera className="size-5" aria-hidden /> Usar la cámara
-        </Button>
-      )}
     </div>
   );
 }
 
-interface DetectedBarcode { rawValue: string }
-interface BarcodeDetectorLike { detect(source: HTMLVideoElement): Promise<DetectedBarcode[]> }
+interface BarcodeDetectorLike { detect(source: CanvasImageSource): Promise<{ rawValue: string }[]> }
 
+/**
+ * Cámara trasera con lectura continua. Usa el lector integrado del navegador si
+ * lo tiene (Chrome en Android y Mac) y, si no (Safari en iPad/iPhone, Firefox…),
+ * jsQR sobre los fotogramas del vídeo. Se cargan bajo demanda.
+ */
 function CameraScanner({ onCode, onCancel }: { onCode: (qr: string) => void; onCancel: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -161,34 +181,56 @@ function CameraScanner({ onCode, onCancel }: { onCode: (qr: string) => void; onC
 
   useEffect(() => {
     let stream: MediaStream | undefined;
-    let raf = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
-    const Detector = (window as unknown as { BarcodeDetector: new (o: { formats: string[] }) => BarcodeDetectorLike }).BarcodeDetector;
-    const detector = new Detector({ formats: ['qr_code'] });
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
     (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
         if (stopped || !video.current) return;
         video.current.srcObject = stream;
         await video.current.play();
-        const loop = async () => {
-          if (stopped || !video.current) return;
+
+        const Native = (window as unknown as { BarcodeDetector?: new (o: { formats: string[] }) => BarcodeDetectorLike }).BarcodeDetector;
+        const native = Native ? new Native({ formats: ['qr_code'] }) : null;
+        const jsQR = native ? null : (await import('jsqr')).default;
+
+        const scan = async () => {
+          const v = video.current;
+          if (stopped || !v) return;
           try {
-            const [code] = await detector.detect(video.current);
-            if (code?.rawValue) return found.current(code.rawValue);
+            let value: string | undefined;
+            if (native) {
+              value = (await native.detect(v))[0]?.rawValue;
+            } else if (jsQR && ctx && v.videoWidth) {
+              // Fotograma reducido: jsQR va de sobra a ~640 px y así no calienta la tablet.
+              const scale = Math.min(1, 640 / v.videoWidth);
+              canvas.width = Math.round(v.videoWidth * scale);
+              canvas.height = Math.round(v.videoHeight * scale);
+              ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+              const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              value = jsQR(frame.data, frame.width, frame.height, { inversionAttempts: 'dontInvert' })?.data;
+            }
+            if (value) return found.current(value);
           } catch {
             // Fotograma sin código: se sigue mirando.
           }
-          raf = requestAnimationFrame(loop);
+          timer = setTimeout(scan, 120);
         };
-        raf = requestAnimationFrame(loop);
-      } catch {
-        setError('No se puede usar la cámara. Revisa el permiso del navegador o usa el lector.');
+        void scan();
+      } catch (e) {
+        const denied = e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+        setError(denied
+          ? 'No hay permiso para usar la cámara. Actívalo en los ajustes del navegador para esta página, o usa el lector de códigos.'
+          : 'No se encuentra ninguna cámara. Usa el lector de códigos.');
       }
     })();
+
     return () => {
       stopped = true;
-      cancelAnimationFrame(raf);
+      clearTimeout(timer);
       stream?.getTracks().forEach((t) => t.stop());
     };
   }, []);
@@ -201,9 +243,10 @@ function CameraScanner({ onCode, onCancel }: { onCode: (qr: string) => void; onC
         <div className="relative overflow-hidden rounded-xl bg-black">
           <video ref={video} muted playsInline className="aspect-square w-full object-cover" />
           <div aria-hidden className="pointer-events-none absolute inset-[18%] rounded-2xl border-4 border-white/80" />
+          <p className="absolute inset-x-0 bottom-3 text-center text-sm font-semibold text-white drop-shadow">Centra el QR de la tarjeta en el recuadro</p>
         </div>
       )}
-      <Button onClick={onCancel}>Cancelar cámara</Button>
+      <Button onClick={onCancel}>{error ? 'Volver' : 'Cancelar cámara'}</Button>
     </div>
   );
 }
@@ -212,7 +255,7 @@ function CameraScanner({ onCode, onCancel }: { onCode: (qr: string) => void; onC
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'] as const;
 
-function PinStep({ holder, busy, onPin, onBack }: { holder: { name: string; role: string }; busy: boolean; onPin: (pin: string) => void; onBack: () => void }) {
+export function PinStep({ holder, busy, onPin, onBack, prompt = 'Que teclee su PIN de Omnia', okLabel = 'Aceptar' }: { holder: { name: string; role: string }; busy: boolean; onPin: (pin: string) => void; onBack: () => void; prompt?: string; okLabel?: string }) {
   const [pin, setPin] = useState('');
   const press = (key: (typeof KEYS)[number]) => {
     if (busy) return;
@@ -238,7 +281,7 @@ function PinStep({ holder, busy, onPin, onBack }: { holder: { name: string; role
   return (
     <div className="flex flex-col gap-4">
       <div className="text-center">
-        <p className="text-sm text-ink-3">Que teclee su PIN de Omnia</p>
+        <p className="text-sm text-ink-3">{prompt}</p>
         <p className="text-xl font-bold">{holder.name}</p>
         <p className="text-sm text-ink-3">{holder.role}</p>
       </div>
@@ -259,7 +302,7 @@ function PinStep({ holder, busy, onPin, onBack }: { holder: { name: string; role
               k === 'ok' ? 'bg-ink text-base text-white' : 'border border-shelf-edge bg-sheet hover:bg-sheet-head active:bg-line-soft'
             }`}
           >
-            {k === 'del' ? <Delete className="size-6" aria-hidden /> : k === 'ok' ? (busy ? '…' : 'Aceptar') : k}
+            {k === 'del' ? <Delete className="size-6" aria-hidden /> : k === 'ok' ? (busy ? '…' : okLabel) : k}
           </button>
         ))}
       </div>

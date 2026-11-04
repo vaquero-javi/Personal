@@ -1,20 +1,18 @@
 import { Badge, Cell, EmptyState, PageHeader, Ruled } from '@/components/ui/layout';
 import { Table, Td, Th, Tr } from '@/components/ui/table';
-import { ActionForm, CheckboxField, SelectField, TextField } from '@/components/ui/form';
+import { ActionForm, CheckboxField, TextField } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import { StaffCard } from '@/features/staff-cards/staff-card';
-import { WalletButtons } from '@/features/staff-cards/wallet-buttons';
 import { formatDate } from '@/lib/format';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
-import { googleWalletLink, issueStaffCard, myCardQr, revokeStaffCard, saveStaffPolicy } from '../actions';
+import { issueStaffCard, myCardQr, revokeStaffCard, saveStaffPolicy } from '../actions';
 
 export const metadata = { title: 'Tarjetas de empleado · Ajustes · Omnia' };
 
-const WALLETS = [
-  { value: 'apple', label: 'Apple Wallet (iPhone)' },
-  { value: 'google', label: 'Google Wallet (Android)' },
-];
+// La tarjeta estándar tiene un QR fijo y definitivo (internamente `apple`). Las de
+// QR dinámico (`google`) son de una prueba anterior y conviene reemitirlas.
+const isLegacy = (w: 'apple' | 'google') => w === 'google';
 
 const pct = (v: string | null) => (v ? `${Number(v).toLocaleString('es-ES')} %` : '—');
 
@@ -23,7 +21,6 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
   const { ctx, can } = await requireOrg(org);
   const manage = can('staff_cards.manage');
   const service = container().staffCards;
-  const wallets = service.walletsAvailable();
   const [mine, policies, team, roles] = await Promise.all([
     service.myCards(ctx),
     manage ? service.policies(ctx) : Promise.resolve([]),
@@ -37,29 +34,28 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
     <>
       <PageHeader
         title="Tarjetas de empleado"
-        description="Un QR personal para el descuento de empleado en el TPV. Se guarda en Apple o Google Wallet, o se enseña desde esta pantalla en el móvil."
+        description="Un QR personal y permanente para el descuento de empleado en el TPV. El empleado la enseña desde esta pantalla en su móvil."
       />
       <Ruled cols="xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Cell title="Tu tarjeta" className="xl:col-span-2">
           {mine.length === 0 ? (
             <EmptyState title="Todavía no tienes tarjeta de empleado">
-              La emite un responsable desde esta misma pantalla. Cuando la tengas aparecerá aquí, lista para enseñarla en el TPV o guardarla en tu wallet.
+              La emite un responsable desde esta misma pantalla. Cuando la tengas aparecerá aquí, lista para enseñarla en el TPV.
             </EmptyState>
           ) : (
             <div className="grid gap-6 lg:grid-cols-2">
               {mine.map((card) => (
                 <div key={card.id} className="flex flex-col gap-3">
                   <StaffCard card={card} loadQr={myCardQr.bind(null, org, card.id)} />
-                  <WalletButtons
-                    wallet={card.wallet}
-                    appleHref={`/o/${org}/ajustes/tarjetas/${card.id}/apple`}
-                    appleReady={wallets.apple}
-                    googleReady={wallets.google}
-                    googleLink={googleWalletLink.bind(null, org, card.id)}
-                  />
-                  <p className="text-xs text-ink-3">
-                    En el TPV te pedirán tu PIN de Omnia. No compartas capturas: cada uso queda registrado con tu nombre.
-                  </p>
+                  {isLegacy(card.wallet) ? (
+                    <p className="text-xs font-medium text-warning">
+                      Esta tarjeta es de una prueba anterior (su QR cambia cada 30 segundos). Pide a un responsable que te emita la definitiva.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-ink-3">
+                      Este QR es tuyo y no cambia: sirve para todos tus descuentos. Toca la tarjeta para verla a pantalla completa y enséñala en el TPV; te pedirán tu PIN de Omnia. No la compartas: cada uso queda registrado con tu nombre.
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -100,7 +96,7 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
                 })}
               </ul>
               <p className="mt-3 text-sm text-ink-3">
-                Con Apple Wallet el QR no cambia, así que una captura de pantalla funcionaría: deja «Pedir el PIN» activado. En Google Wallet el QR cambia cada 30 segundos y Android bloquea las capturas.
+                El QR de cada tarjeta es fijo, así que una foto o una captura también serviría: deja «Pedir el PIN» activado para que haga falta el titular delante. Si una tarjeta se filtra, reemítela.
               </p>
             </Cell>
 
@@ -111,8 +107,8 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
                     <Th>Persona</Th>
                     <Th>Rol</Th>
                     <Th>Le corresponde</Th>
-                    <Th>Tarjetas activas</Th>
-                    <Th>Emitir</Th>
+                    <Th>Tarjeta</Th>
+                    <Th />
                   </tr>
                 </thead>
                 <tbody>
@@ -128,9 +124,9 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
                           <ul className="flex flex-col gap-2">
                             {m.cards.map((c) => (
                               <li key={c.id} className="flex flex-wrap items-center gap-2">
-                                <Badge tone="ok">{c.wallet === 'apple' ? 'Apple' : 'Google'}</Badge>
+                                {isLegacy(c.wallet) ? <Badge tone="warning">QR dinámico · reemítela</Badge> : <Badge tone="ok">Activa</Badge>}
                                 <span className="text-xs text-ink-3">desde {formatDate(c.issuedAt.slice(0, 10))}</span>
-                                <ActionForm action={revokeStaffCard.bind(null, org, c.id)} confirm={`¿Revocar la tarjeta ${c.wallet === 'apple' ? 'de Apple' : 'de Google'} de ${m.name}? Deja de valer en el TPV al momento y su pase queda anulado.`}>
+                                <ActionForm action={revokeStaffCard.bind(null, org, c.id)} confirm={`¿Revocar la tarjeta de ${m.name}? Deja de valer en el TPV al momento y su pase queda anulado.`}>
                                   <SubmitButton variant="caution" className="h-7 px-2 text-xs">Revocar</SubmitButton>
                                 </ActionForm>
                               </li>
@@ -139,10 +135,12 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
                         )}
                       </Td>
                       <Td>
-                        <ActionForm action={issueStaffCard.bind(null, org, m.userId)} className="flex items-end gap-2">
-                          <SelectField label="Wallet" name="wallet" options={WALLETS} defaultValue="apple" className="w-48" />
-                          <SubmitButton variant="secondary" className="h-[34px]">
-                            {m.cards.length > 0 ? 'Emitir otra' : 'Emitir'}
+                        <ActionForm
+                          action={issueStaffCard.bind(null, org, m.userId)}
+                          {...(m.cards.length > 0 ? { confirm: `¿Emitir una tarjeta nueva para ${m.name}? La actual dejará de valer.` } : {})}
+                        >
+                          <SubmitButton variant="secondary" className="h-8 px-3">
+                            {m.cards.length > 0 ? 'Reemitir' : 'Emitir tarjeta'}
                           </SubmitButton>
                         </ActionForm>
                       </Td>
@@ -151,7 +149,7 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
                 </tbody>
               </Table>
               <p className="mt-3 text-sm text-ink-3">
-                Emitir otra en el mismo wallet revoca la anterior. Al dar de baja a alguien en Miembros, sus tarjetas se revocan solas.
+                Cada persona tiene una sola tarjeta y su QR es definitivo. Reemítela solo si se pierde o se filtra: la anterior deja de valer al momento. Al dar de baja a alguien en Miembros, sus tarjetas se revocan solas.
               </p>
             </Cell>
           </>

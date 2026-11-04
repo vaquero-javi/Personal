@@ -134,6 +134,18 @@ describe('emisión', () => {
     expect(await reason(cards.issue(marta, { userId: DEMO_USERS.marta.id, wallet: 'apple' }))).toBe('FORBIDDEN');
   });
 
+  it('una tarjeta por persona: emitir otra revoca la anterior aunque sea de otro tipo', async () => {
+    const carmenId = DEMO_USERS.carmen.id;
+    const first = (await cards.issue(lucia, { userId: carmenId, wallet: 'google' })).cardId;
+    const second = (await cards.issue(lucia, { userId: carmenId })).cardId; // por defecto, la estándar (QR fijo)
+    const { rows } = await db.query<{ id: string; status: string; wallet: string }>(
+      'select id, status, wallet from employee_cards where user_id = $1 order by issued_at', [carmenId]);
+    expect(rows).toEqual([
+      { id: first, status: 'revoked', wallet: 'google' },
+      { id: second, status: 'active', wallet: 'apple' },
+    ]);
+  });
+
   it('la base no deja leer el secreto ni al responsable', async () => {
     const { rows } = await db.query<{ ok: boolean }>(`select has_column_privilege('app_user', 'public.employee_cards', 'secret_enc', 'select') as ok`);
     expect(rows[0]!.ok).toBe(false);
@@ -267,5 +279,62 @@ describe('web service de Apple Wallet', () => {
     const { rows } = await db.query<{ tokens: string[] }>(
       `select push_tokens tokens from app.wallet_updates_claim(100) where card_id = $1`, [card]);
     expect(rows[0]?.tokens).toEqual(['push-1']);
+  });
+});
+
+describe('fichar con la tarjeta en la tablet', () => {
+  let card: string;
+  const qrFor = async (cardId: string) => {
+    const { rows } = await db.query<{ secret_enc: Uint8Array; wallet: string }>('select secret_enc, wallet from employee_cards where id = $1', [cardId]);
+    return `OMN1:${cardId}:${box.open(Buffer.from(rows[0]!.secret_enc)).toString('base64url')}`;
+  };
+
+  it('entrada: tarjeta + PIN, origen «kiosk» y a nombre del titular', async () => {
+    card = (await cards.issue(lucia, { userId: DEMO_USERS.marta.id })).cardId;
+    const qr = await qrFor(card);
+    expect(await cards.clockLookup(token, qr)).toMatchObject({ holder: { role: 'Camarero' }, state: 'out', actions: ['clock_in'], hasPin: true });
+    expect(await reason(cards.clock(token, { qr, entryType: 'clock_in', pin: '9999' }))).toBe('PIN_WRONG');
+
+    const done = await cards.clock(token, { qr, entryType: 'clock_in', pin: DEMO_PINS.marta });
+    expect(done).toMatchObject({ entryType: 'clock_in', occurredAt: expect.any(Date) });
+    const { rows } = await db.query<{ source: string; created_by: string; method: string }>(
+      `select source, created_by, device_info->>'method' as method from time_entries where user_id = $1 order by recorded_at desc limit 1`, [DEMO_USERS.marta.id]);
+    expect(rows[0]).toEqual({ source: 'kiosk', created_by: DEMO_USERS.marta.id, method: 'card+pin' });
+  });
+
+  it('respeta la secuencia: dentro ofrece salida o pausa, y no deja fichar la entrada dos veces', async () => {
+    const qr = await qrFor(card);
+    expect(await cards.clockLookup(token, qr)).toMatchObject({ state: 'working', actions: ['clock_out', 'break_start'] });
+    expect(await reason(cards.clock(token, { qr, entryType: 'clock_in', pin: DEMO_PINS.marta }))).toBe('WRONG_SEQUENCE');
+    await cards.clock(token, { qr, entryType: 'break_start', pin: DEMO_PINS.marta });
+    expect(await cards.clockLookup(token, qr)).toMatchObject({ state: 'on_break', actions: ['break_end', 'clock_out'] });
+    await cards.clock(token, { qr, entryType: 'clock_out', pin: DEMO_PINS.marta });
+    expect(await cards.clockLookup(token, qr)).toMatchObject({ state: 'out' });
+  });
+
+  it('turno de noche: una entrada de hace 7 horas (antes de medianoche) sigue abierta', async () => {
+    const carmenCard = (await cards.issue(lucia, { userId: DEMO_USERS.carmen.id })).cardId;
+    await db.query(
+      `insert into time_entries (organization_id, user_id, entry_type, occurred_at, source, created_by)
+       values ($1, $2, 'clock_in', now() - interval '7 hours', 'kiosk', $2)`, [barId, DEMO_USERS.carmen.id]);
+    const qr = await qrFor(carmenCard);
+    expect(await cards.clockLookup(token, qr)).toMatchObject({ state: 'working' });
+    expect(await cards.clock(token, { qr, entryType: 'clock_out', pin: DEMO_PINS.carmen })).toMatchObject({ entryType: 'clock_out' });
+  });
+
+  it('una entrada olvidada de hace más de 16 horas no bloquea fichar hoy', async () => {
+    await db.query(
+      `insert into time_entries (organization_id, user_id, entry_type, occurred_at, source, created_by)
+       values ($1, $2, 'clock_in', now() - interval '20 hours', 'kiosk', $2)`, [barId, DEMO_USERS.lucia.id]);
+    const luciaCard = (await cards.issue(lucia, { userId: DEMO_USERS.lucia.id })).cardId;
+    expect(await cards.clockLookup(token, await qrFor(luciaCard))).toMatchObject({ state: 'out', actions: ['clock_in'] });
+  });
+
+  it('tarjeta revocada, QR ajeno o terminal sin vincular: no ficha', async () => {
+    const qr = await qrFor(card);
+    expect(await reason(cards.clockLookup('token-que-no-existe', qr))).toBe('CARD_UNKNOWN');
+    expect(await reason(cards.clockLookup(token, `OMN1:${card}:${'x'.repeat(43)}`))).toBe('CARD_INVALID');
+    await cards.revoke(lucia, card, { reason: 'Prueba de fichaje' });
+    expect(await reason(cards.clock(token, { qr, entryType: 'clock_in', pin: DEMO_PINS.marta }))).toBe('CARD_REVOKED');
   });
 });

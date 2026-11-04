@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DomainError } from '@omnia/core';
 import type { CheckoutResult } from '@omnia/pos';
+import type { ClockEntryType, ClockLookup } from '@omnia/staff-cards';
 import { container } from './container';
 import { run, type Result } from './actions-runtime';
 import {
@@ -62,6 +63,24 @@ export async function unlock(userId: string, pin: string): Promise<Result> {
 export async function lock() {
   (await cookies()).delete(OPERATOR_COOKIE);
   redirect('/');
+}
+
+// ------------------------------------------------------------- fichar con la tarjeta (sin turno)
+
+/** Quién es y cómo está su jornada. Solo hace falta el terminal vinculado. */
+export async function clockLookup(qr: string): Promise<Result<ClockLookup>> {
+  return run(async () => {
+    await requireTerminal();
+    return container().staffCards.clockLookup(await terminalToken(), qr);
+  });
+}
+
+/** Registra el fichaje con la tarjeta y el PIN del titular. */
+export async function clockRegister(input: { qr: string; entryType: ClockEntryType; pin: string }): Promise<Result<{ entryType: ClockEntryType; occurredAt: Date; holderName: string }>> {
+  return run(async () => {
+    await requireTerminal();
+    return container().staffCards.clock(await terminalToken(), input);
+  });
 }
 
 // ------------------------------------------------------------- cuentas

@@ -209,12 +209,12 @@ export async function saveStaffPolicy(org: string, roleId: string | null, _: Act
   });
 }
 
-export async function issueStaffCard(org: string, userId: string, _: ActionState, formData: FormData) {
+export async function issueStaffCard(org: string, userId: string, _: ActionState, _fd: FormData) {
   return runAction(async () => {
     const { ctx } = await requirePermission(org, 'staff_cards.manage');
-    await container().staffCards.issue(ctx, { userId, wallet: formData.get('wallet') });
+    await container().staffCards.issue(ctx, { userId, wallet: 'apple' }); // tarjeta estándar: QR fijo y definitivo
     revalidate(org);
-    return 'Tarjeta emitida: la persona ya la ve en «Mi tarjeta»';
+    return 'Tarjeta emitida: la persona ya la ve en «Tu tarjeta»';
   });
 }
 

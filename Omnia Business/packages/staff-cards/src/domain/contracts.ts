@@ -4,7 +4,11 @@ import { z } from 'zod';
 
 export const IssueCardInput = z.object({
   userId: z.uuid(),
-  wallet: z.enum(['apple', 'google']),
+  /**
+   * apple = QR fijo y permanente: la tarjeta estándar (el mismo QR para todos los descuentos del empleado).
+   * google = QR dinámico (TOTP 30 s): solo para el pase oficial de Google Wallet, hoy sin usar.
+   */
+  wallet: z.enum(['apple', 'google']).default('apple'),
 });
 
 export const RevokeCardInput = z.object({
@@ -24,6 +28,13 @@ export const PolicyInput = z.object({
   isActive: z.boolean().default(true),
 });
 export type PolicyInput = z.output<typeof PolicyInput>;
+
+/** Fichar con la tarjeta en la tablet: el QR, qué se ficha y el PIN del titular (obligatorio). */
+export const ClockWithCardInput = z.object({
+  qr: z.string().trim().min(10).max(200),
+  entryType: z.enum(['clock_in', 'clock_out', 'break_start', 'break_end']),
+  pin: z.string().regex(/^\d{4,6}$/, 'El PIN tiene de 4 a 6 cifras'),
+});
 
 /** POST /api/v1/discounts/validate-qr (TPV). */
 export const ValidateQrInput = z.object({

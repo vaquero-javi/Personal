@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { DomainError, isDomainError, logger, singleOrganization, type TenantContext } from '@omnia/core';
 import { asRow, asRows, withTenant, withoutUser, type Sql, type Tx } from '@omnia/db';
 import {
+  ClockWithCardInput,
   IssueCardInput,
   PolicyInput,
   QR_PREFIX,
@@ -63,6 +64,40 @@ export interface TeamMember {
   cards: { id: string; wallet: Wallet; issuedAt: string }[];
   /** % que le corresponde por su rol (o la política general); null si no tiene descuento. */
   discountPct: string | null;
+}
+
+export type ClockEntryType = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
+
+/** Lo que ve el empleado en la tablet tras escanear su tarjeta para fichar. */
+export interface ClockLookup {
+  holder: { name: string; role: string };
+  state: 'out' | 'working' | 'on_break';
+  lastEntryAt: Date | null;
+  /** Acciones posibles ahora, la primera es la sugerida. */
+  actions: ClockEntryType[];
+  hasPin: boolean;
+}
+
+const CLOCK_ACTIONS: Record<ClockLookup['state'], ClockEntryType[]> = {
+  out: ['clock_in'],
+  working: ['clock_out', 'break_start'],
+  on_break: ['break_end', 'clock_out'],
+};
+
+interface TerminalCardRow {
+  cardId: string;
+  organizationId: string;
+  userId: string;
+  wallet: Wallet;
+  status: 'active' | 'revoked';
+  secretEnc: Buffer;
+  holderName: string;
+  roleName: string;
+  memberActive: boolean;
+  canClock: boolean;
+  hasPin: boolean;
+  clockState: ClockLookup['state'];
+  lastEntryAt: Date | null;
 }
 
 export interface MyCard {
@@ -126,6 +161,22 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
     return deps.google;
   };
 
+  /** Tarjeta leída en un terminal, con el QR ya verificado. */
+  async function terminalCard(terminalToken: string, rawQr: unknown): Promise<{ row: TerminalCardRow; step: number | null }> {
+    if (!terminalToken) throw new DomainError('UNAUTHENTICATED', 'Este terminal no está vinculado');
+    const scanned = parseQr(z.string().trim().min(10).max(200).parse(rawQr));
+    const row = asRow<TerminalCardRow>(await withoutUser(sql, (tx) => tx`
+      select card_id, organization_id, user_id, wallet, status, secret_enc, holder_name, role_name,
+             member_active, can_clock, has_pin, clock_state, last_entry_at
+      from app.pos_card_lookup(${sha256(terminalToken)}, ${scanned.cardId})`));
+    if (!row) throw reject('Tarjeta no reconocida en este local', 'CARD_UNKNOWN', 'VALIDATION');
+    const verdict = verifyCode(row.wallet, box.open(row.secretEnc), scanned.code);
+    if (!verdict.ok) throw reject('Tarjeta no válida', 'CARD_INVALID', 'VALIDATION');
+    if (row.status !== 'active') throw reject('Tarjeta revocada', 'CARD_REVOKED');
+    if (!row.memberActive) throw reject('El titular ya no está activo en la empresa', 'HOLDER_INACTIVE');
+    return { row, step: verdict.step };
+  }
+
   return {
     // ------------------------------------------------------------ backoffice
 
@@ -172,8 +223,14 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
     },
 
     /**
-     * Emite una tarjeta. Si la persona ya tenía una viva en ese wallet, se revoca
-     * en la misma transacción (un QR filtrado deja de valer al reemitir).
+     * Emite una tarjeta. Una persona tiene como mucho una tarjeta viva: las
+     * anteriores (de cualquier tipo) se revocan en la misma transacción, así que
+     * un QR filtrado deja de valer al reemitir.
+     *
+     * Por defecto es la tarjeta estándar (`wallet: 'apple'`): un QR fijo que es el
+     * definitivo del empleado hasta que se revoque o se reemita. Como una captura
+     * también valdría, la política pide por defecto el PIN del titular en el TPV.
+     * `google` (QR dinámico, TOTP de 30 s) queda para el pase oficial de Google Wallet.
      */
     async issue(ctx: TenantContext, raw: unknown): Promise<{ cardId: string; wallet: Wallet }> {
       const input = IssueCardInput.parse(raw);
@@ -181,7 +238,7 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
       const cardId = await withTenant(sql, ctx, async (tx) => {
         await tx`
           update employee_cards set status = 'revoked', revoke_reason = 'Sustituida por una tarjeta nueva'
-          where organization_id = ${orgId} and user_id = ${input.userId} and wallet = ${input.wallet} and status = 'active'`;
+          where organization_id = ${orgId} and user_id = ${input.userId} and status = 'active'`;
         const id = randomUUID();
         // El id se fija aquí porque el token de Apple se deriva de él.
         await tx`
@@ -353,6 +410,43 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
 
     async removeFromTab(ctx: TenantContext, tabId: string) {
       await withTenant(sql, ctx, (tx) => tx`select app.pos_remove_staff_card(${z.uuid().parse(tabId)})`);
+    },
+
+    // ------------------------------------------------------------ fichar en la tablet (sin turno abierto)
+
+    /**
+     * El empleado escanea su tarjeta en la pantalla de bloqueo del TPV: quién es,
+     * cómo está su jornada y qué puede fichar. No registra nada.
+     */
+    async clockLookup(terminalToken: string, rawQr: unknown): Promise<ClockLookup> {
+      const card = await terminalCard(terminalToken, rawQr);
+      if (!card.row.canClock) throw reject('Tu puesto no tiene el registro de jornada activado', 'CANNOT_CLOCK', 'FORBIDDEN');
+      if (!card.row.hasPin) {
+        throw reject('Para fichar con la tarjeta necesitas un PIN: pídeselo a un encargado (Ajustes › TPV)', 'PIN_MISSING', 'FORBIDDEN');
+      }
+      return {
+        holder: { name: card.row.holderName, role: card.row.roleName },
+        state: card.row.clockState,
+        lastEntryAt: card.row.lastEntryAt,
+        actions: CLOCK_ACTIONS[card.row.clockState],
+        hasPin: card.row.hasPin,
+      };
+    },
+
+    /** Registra el fichaje: tarjeta + PIN del titular, siempre. */
+    async clock(terminalToken: string, raw: unknown): Promise<{ entryType: ClockEntryType; occurredAt: Date; holderName: string }> {
+      const input = ClockWithCardInput.parse(raw);
+      const card = await terminalCard(terminalToken, input.qr);
+      const pin = await deps.verifyHolderPin(terminalToken, card.row.userId, input.pin);
+      if (!pin.ok) {
+        if (pin.reason === 'locked') throw reject('PIN bloqueado por demasiados intentos: espera unos minutos', 'PIN_LOCKED', 'FORBIDDEN');
+        if (pin.reason === 'no_pin') throw reject('No tienes PIN: pídeselo a un encargado (Ajustes › TPV)', 'PIN_MISSING', 'FORBIDDEN');
+        throw reject('PIN incorrecto', 'PIN_WRONG', 'FORBIDDEN');
+      }
+      const [row] = await withoutUser(sql, (tx) => tx<{ r: { entryType: ClockEntryType; occurredAt: string; holderName: string } }[]>`
+        select app.pos_card_clock(${sha256(terminalToken)}, ${card.row.cardId}, ${input.entryType}, true, ${card.step}) as r`);
+      logger.info('card clock', { cardId: card.row.cardId, entryType: input.entryType });
+      return { ...row!.r, occurredAt: new Date(row!.r.occurredAt) };
     },
 
     // ------------------------------------------------------------ web service de Apple (sin sesión)
