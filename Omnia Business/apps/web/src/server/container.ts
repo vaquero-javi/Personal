@@ -12,6 +12,16 @@ import { createPurchasingService } from '@omnia/purchasing';
 import { createSalesService } from '@omnia/sales';
 import { createStatsService } from '@omnia/stats';
 import { createTasksService } from '@omnia/tasks';
+import {
+  appleConfigFromEnv,
+  createGoogleWalletClient,
+  createSecretBox,
+  createStaffCardService,
+  googleConfigFromEnv,
+  type StaffCardService,
+} from '@omnia/staff-cards';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Composición de dependencias (único sitio que conoce las implementaciones).
 // El pool se cachea en globalThis para no abrir uno nuevo en cada recarga de
@@ -37,7 +47,26 @@ function build() {
     tasks: createTasksService(sql),
     stats: createStatsService(sql),
     pos: createPosService(sql),
+    /** Tarjetas de empleado: perezoso, solo exige STAFF_CARD_SECRET_KEY al usarse. */
+    get staffCards(): StaffCardService {
+      return (staffCards ??= buildStaffCards(sql));
+    },
   };
+}
+
+let staffCards: StaffCardService | undefined;
+
+function buildStaffCards(sql: Sql): StaffCardService {
+  const apple = appleConfigFromEnv();
+  const google = googleConfigFromEnv();
+  const logo = readFileSync(join(process.cwd(), 'public/brand/logo.png'));
+  return createStaffCardService(sql, {
+    box: createSecretBox(),
+    // El backoffice no valida QR (eso es del TPV, que comprueba el PIN en su terminal).
+    verifyHolderPin: async () => ({ ok: false, reason: 'no_pin' }),
+    apple: apple ? { config: apple, images: { 'icon.png': logo, 'icon@2x.png': logo, 'logo.png': logo, 'logo@2x.png': logo } } : null,
+    google: google ? { config: google, client: createGoogleWalletClient(google) } : null,
+  });
 }
 
 let services: ReturnType<typeof build> | undefined;

@@ -124,6 +124,8 @@ export interface TabDetail extends Omit<TabSummary, 'total' | 'items' | 'unsent'
   invoiceId: string | null;
   lines: TabLine[];
   totals: LineAmounts;
+  /** Tarjeta de empleado aplicada a la cuenta (el % lo fija la política del titular). */
+  staffDiscount: { percent: string; holderName: string } | null;
 }
 
 export interface CheckoutResult {
@@ -679,10 +681,13 @@ export function createPosService(sql: Sql) {
     async tab(ctx: TenantContext, tabId: string): Promise<TabDetail> {
       const id = z.uuid().parse(tabId);
       return withTenant(sql, ctx, async (tx) => {
-        const tab = asRow<TabDetail & { tableId: string | null; tableName: string | null; tableArea: string | null }>(await tx`
+        const tab = asRow<Omit<TabDetail, 'staffDiscount'> & { tableId: string | null; tableName: string | null; tableArea: string | null; staffPct: string | null; staffHolder: string | null }>(await tx`
           select t.id, t.number::int, t.status, t.label, t.waiter_id, coalesce(u.full_name, u.email) as waiter_name, t.guests,
-                 t.opened_at, t.precheck_at, t.invoice_id, t.table_id, pt.name as table_name, pt.area as table_area
+                 t.opened_at, t.precheck_at, t.invoice_id, t.table_id, pt.name as table_name, pt.area as table_area,
+                 t.staff_discount_pct::text as staff_pct, coalesce(h.full_name, h.email) as staff_holder
           from pos_tabs t join users u on u.id = t.waiter_id left join pos_tables pt on pt.id = t.table_id
+          left join discount_redemptions d on d.id = t.staff_redemption_id
+          left join users h on h.id = d.user_id
           where t.id = ${id}`);
         if (!tab) throw new DomainError('NOT_FOUND', 'Cuenta no encontrada');
         const lines = asRows<Omit<TabLine, 'unitGross' | 'total'>>(await tx`
@@ -690,9 +695,10 @@ export function createPosService(sql: Sql) {
                  l.note, l.sent_at, coalesce(u.full_name, u.email) as added_by_name
           from pos_tab_lines l join users u on u.id = l.added_by
           where l.tab_id = ${id} order by l.created_at, l.id`);
-        const { tableId, tableName, tableArea, ...rest } = tab;
+        const { tableId, tableName, tableArea, staffPct, staffHolder, ...rest } = tab;
         return {
           ...rest,
+          staffDiscount: staffPct ? { percent: staffPct, holderName: staffHolder ?? '' } : null,
           table: tableId ? { id: tableId, name: tableName!, area: tableArea! } : null,
           lines: lines.map((l) => {
             const ticket = buildTicketLines([l]);

@@ -347,3 +347,81 @@ Una caja abierta por terminal (índice único). Al abrirla se registra el fondo;
 | Cocina | «Enviar a cocina» marca las líneas; falta la impresora de comandas o la pantalla de cocina. |
 | Impresora de tickets | Se imprime con el diálogo del navegador (formato 80 mm). Para ESC/POS directo hace falta un puente local o Capacitor. |
 | Tiempo real | Las mesas se refrescan cada 5 s entre terminales. |
+
+---
+
+## 10. Tarjetas digitales de empleado (Apple Wallet / Google Wallet)
+
+El empleado lleva en el móvil una tarjeta con un QR. El TPV la lee y aplica a la cuenta el descuento de empleado de su rol.
+
+| Pieza | Dónde |
+|---|---|
+| Esquema, RLS, funciones y triggers | `supabase/migrations/20261104000024_staff_cards.sql` |
+| Dominio: formato del QR, TOTP (RFC 6238), contratos | `packages/staff-cards/src/domain/` |
+| Casos de uso | `packages/staff-cards/src/application/staff-card.service.ts` |
+| .pkpass (firma PKCS#7), Google Wallet (JWT + REST), APNs, cifrado | `packages/staff-cards/src/infrastructure/` |
+| Endpoint del TPV | `apps/tpv/src/app/api/v1/discounts/validate-qr/route.ts` |
+| Backoffice, web service de Apple y cron | `apps/web/src/app/api/v1/staff-cards/…`, `api/wallet/apple/v1/[...path]`, `api/cron/wallet-updates` |
+| Pruebas | `packages/staff-cards/src/**/*.test.ts` (24) · `tests/integration/staff-cards.test.ts` (16) |
+
+### Flujo
+
+```
+Backoffice (staff_cards.manage)         Móvil del empleado              TPV (pos.use)                 Postgres
+  POST /api/v1/staff-cards ───────────────────────────────────────────────────────────────────────► employee_cards (secreto cifrado)
+  GET  …/apple  → .pkpass firmado ──► Apple Wallet (QR estático)
+  GET  …/google → enlace «Añadir» ──► Google Wallet (QR TOTP cada 30 s)
+                                     enseña el QR ─────────► lector/cámara
+                                                             POST /api/v1/discounts/validate-qr
+                                                               1. parseQr (formato)          sin tocar la base
+                                                               2. app.staff_card(id, pos)  ─► ¿de esta empresa?
+                                                               3. verifyCode (Apple: secreto; Google: TOTP ±30 s)
+                                                               4. PIN del titular (si la política lo pide; bloqueo a los 5 fallos)
+                                                               5. app.pos_apply_staff_card ─► bloquea tarjeta y cuenta; estado, membresía,
+                                                                                             autoservicio, código ya usado, límites;
+                                                                                             crea el uso y pone el % en todas las líneas
+                                                             cobro normal (payTab) ─────────► trigger: el uso queda «redeemed» con € reales
+```
+
+El cliente nunca manda el porcentaje: lo fija `staff_discount_policies` (por rol, con una general de respaldo).
+
+### Antifraude
+
+| Amenaza | Defensa |
+|---|---|
+| Captura de pantalla (Google) | QR rotativo TOTP de 30 s, cada código vale una vez (`last_totp_step`) y `screenshotEligibility: INELIGIBLE` (Android). |
+| Captura de pantalla (Apple) | Apple Wallet **no admite QR rotativos**: el QR es estático. Por eso la política exige por defecto el **PIN del titular** en el TPV (`require_pin`), con bloqueo tras 5 fallos. Además, `sharingProhibited` impide reenviarlo por AirDrop. |
+| Camarero que se aplica su tarjeta, o se la pasa a un amigo | `allow_self_service = false`: la tarjeta no la puede aplicar quien maneja el TPV. Cada uso queda con titular, operador, terminal y ticket. |
+| Abuso repetido | `max_uses_per_day` y `monthly_discount_cap` por persona (no por tarjeta), comprobados con la tarjeta bloqueada `FOR UPDATE`. |
+| QR falsificado o de otra empresa | Secreto de 256 bits / semilla TOTP por tarjeta, comparación en tiempo constante; una tarjeta de otra empresa responde igual que una inexistente. |
+| Volcado de la base | Secretos cifrados con AES-256-GCM y una clave que solo tiene la aplicación (`STAFF_CARD_SECRET_KEY`); `app_user` no tiene `SELECT` sobre esa columna. |
+| Baja de un empleado | Al suspender la membresía, un trigger revoca sus tarjetas **en la misma transacción**. |
+
+### Revocación y actualización de pases
+
+Revocar o cambiar algo es inmediato en la base: la siguiente lectura en el TPV ya falla. Avisar al móvil va aparte, mediante una cola (*transactional outbox*):
+
+1. Cualquier cambio visible (revocar, cambio de política o de rol) sube `employee_cards.version`, y un trigger encola el aviso en `wallet_pass_updates`, en la misma transacción.
+2. `processWalletUpdates` reparte la cola (`FOR UPDATE SKIP LOCKED`, varios procesos a la vez):
+   - **Apple:** push vacío por APNs (HTTP/2, certificado del Pass Type ID). El móvil pregunta al web service qué ha cambiado y descarga el pase nuevo; una tarjeta revocada llega con `voided: true` y sin QR.
+   - **Google:** `PUT genericObject` con `state: INACTIVE` y sin QR.
+3. Se ejecuta al momento tras emitir, revocar o cambiar la política (`after()` de Next) y, para los reintentos, en `GET /api/cron/wallet-updates` (cron de Vercel con `CRON_SECRET`). Hasta 8 intentos por aviso.
+
+### Configuración
+
+| Variable | Para |
+|---|---|
+| `STAFF_CARD_SECRET_KEY` | Obligatoria. 32 bytes en base64 (`openssl rand -base64 32`), **la misma en backoffice y TPV**. |
+| `APPLE_PASS_TYPE_ID`, `APPLE_TEAM_ID`, `APPLE_PASS_CERT_PEM`, `APPLE_PASS_KEY_PEM` (+ `_PASSPHRASE`), `APPLE_WWDR_PEM` | Apple Wallet. Requiere Apple Developer Program (99 $/año) y un certificado «Pass Type ID». |
+| `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL`, `GOOGLE_WALLET_SA_KEY` | Google Wallet. Cuenta de emisor (gratis) y cuenta de servicio. |
+| `WALLET_PUBLIC_URL` | URL pública HTTPS del backoffice (web service de Apple y logo de Google). |
+| `CRON_SECRET` | Protege el cron de la cola. |
+
+### Pendiente
+
+| Tema | Estado |
+|---|---|
+| Pantallas | Faltan el botón «Tarjeta de empleado» en la cuenta del TPV (lectura con pistola USB/Bluetooth o con la cámara de la tablet, más teclado de PIN) y la gestión de tarjetas y políticas en el backoffice. La API ya está. |
+| Probar con Apple y Google reales | La firma del .pkpass está verificada con OpenSSL frente a una CA de pruebas, y el JWT de Google con su clave pública. Falta probarlos con los certificados reales y en un iPhone/Android. |
+| Cabeceras APNs | Se envía `apns-topic` = Pass Type ID con payload `{}`; confirmar contra la documentación vigente de Wallet al dar de alta el certificado. |
+| Cron en Vercel Hobby | Solo permite una ejecución al día; los avisos inmediatos van con `after()`. Para reintentos frecuentes, plan Pro o un cron externo. |

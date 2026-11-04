@@ -36,7 +36,8 @@ export function mapPgError(error: unknown): unknown {
       return new DomainError('NOT_FOUND', error.message);
     case 'OM001':
     case 'OM002':
-      return new DomainError('INVALID_STATE', error.message);
+      // `detail` de nuestros RAISE es un código estable para el cliente (p. ej. DAILY_LIMIT).
+      return new DomainError('INVALID_STATE', error.message, error.detail ? { reason: error.detail } : undefined);
     default:
       return error;
   }

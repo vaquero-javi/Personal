@@ -3,7 +3,7 @@
 import { useCallback, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowLeftRight, ChefHat, Minus, Plus, Printer, Trash2, Users, WifiOff } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, BadgePercent, ChefHat, Minus, Plus, Printer, Trash2, Users, WifiOff, X } from 'lucide-react';
 import type { CheckoutResult, MenuProduct, PosCategory, TabDetail } from '@omnia/pos/types';
 import { Button, Modal, Notice, useFlash } from '@/components/ui';
 import { elapsed, formatEuro, formatQty, formatTime } from '@/lib/format';
@@ -11,6 +11,7 @@ import { cancelTab, moveTab, precheck, sendToKitchen, setGuests, setLineDiscount
 import { CheckoutPanel } from './checkout-panel';
 import { ProductPicker } from './product-picker';
 import { SplitDialog } from './split-dialog';
+import { StaffCardDialog } from './staff-card-dialog';
 import { lineTotals, useTabLines, type LocalLine } from './use-tab-lines';
 
 export function TabScreen({ tab, categories, products, freeTables, cashOpen, manager, allowNegativeStock }: {
@@ -33,6 +34,7 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
   const [cancelling, setCancelling] = useState(false);
   const [paid, setPaid] = useState<CheckoutResult | null>(null);
   const [splitting, setSplitting] = useState(false);
+  const [scanning, setScanning] = useState(false);
   // Cobro de una parte: la cuenta sigue abierta con el resto.
   const partial = paid !== null && paid.tabId !== tab.id;
   const closed = tab.status === 'paid';
@@ -125,6 +127,9 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
             <Button size="sm" disabled={busy || !tab.table} onClick={() => setMoving(true)} title={tab.table ? undefined : 'Las cuentas de barra se pasan a mesa desde aquí cuando estén en una'}>
               <ArrowLeftRight className="size-4" aria-hidden /> Cambiar de mesa
             </Button>
+            <Button size="sm" disabled={busy || pending > 0 || tab.staffDiscount !== null} onClick={() => setScanning(true)} title={tab.staffDiscount ? 'La cuenta ya tiene una tarjeta de empleado' : undefined}>
+              <BadgePercent className="size-4" aria-hidden /> Tarjeta empleado
+            </Button>
             <Button size="sm" variant="ghost" className="text-danger" disabled={busy || pending > 0} onClick={() => setCancelling(true)}>
               <Trash2 className="size-4" aria-hidden /> Anular
             </Button>
@@ -141,6 +146,33 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
               <ChefHat className="size-4" aria-hidden /> Enviar a cocina{unsent > 0 && ` (${unsent})`}
             </Button>
           </div>
+
+          {tab.staffDiscount && (
+            <div className="flex items-center gap-3 border-b border-ok-line bg-ok-soft px-4 py-2 text-sm text-ok" role="status">
+              <BadgePercent className="size-5 shrink-0" aria-hidden />
+              <p className="min-w-0 flex-1">
+                <span className="font-bold">Descuento de empleado −{formatQty(tab.staffDiscount.percent)} %</span>
+                {tab.staffDiscount.holderName && <span> · {tab.staffDiscount.holderName}</span>}
+                <span className="block text-xs">En toda la cuenta, también en lo que se añada.</span>
+              </p>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-ok"
+                disabled={busy}
+                onClick={() =>
+                  act(async () => {
+                    const r = await fetch(`/api/v1/discounts/tabs/${tab.id}`, { method: 'DELETE' });
+                    if (r.ok) return { ok: true, message: 'Tarjeta de empleado quitada' };
+                    const body = await r.json().catch(() => ({}));
+                    return { ok: false, error: body.detail ?? 'No se pudo quitar' };
+                  })
+                }
+              >
+                <X className="size-4" aria-hidden /> Quitar
+              </Button>
+            </div>
+          )}
 
           {offline && (
             <p className="flex items-center gap-2 bg-warning-soft px-4 py-2 text-sm font-semibold text-warning" role="status">
@@ -232,6 +264,8 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
         onConfirm={(reason) => act(() => cancelTab(tab.id, reason), () => router.push('/mesas'))}
         busy={busy}
       />
+
+      <StaffCardDialog open={scanning} tabId={tab.id} onClose={() => setScanning(false)} onApplied={() => router.refresh()} />
 
       <SplitDialog
         open={splitting}
