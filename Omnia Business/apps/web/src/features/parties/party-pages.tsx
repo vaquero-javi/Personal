@@ -28,9 +28,9 @@ export async function PartyDetailPage({ org, id, role, base }: { org: string; id
   const [party, priceLists, invoices] = await Promise.all([
     container().parties.get(ctx, id),
     container().parties.priceLists(ctx),
-    can('invoicing.read') ? container().invoicing.list(ctx, { direction, partyId: id }) : Promise.resolve([]),
+    can('invoicing.read') ? container().invoicing.listPage(ctx, { direction, partyId: id, limit: 20 }).then((p) => p.items) : Promise.resolve([]),
   ]);
-  const own = invoices.slice(0, 20);
+  const own = invoices;
   const invoiceBase = role === 'customer' ? `/o/${org}/facturacion` : `/o/${org}/compras/facturas`;
   return (
     <>

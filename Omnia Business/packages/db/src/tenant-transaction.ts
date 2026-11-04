@@ -4,7 +4,7 @@ import { isRetryable, mapPgError } from './pg-errors';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function toPgUuidArray(ids: readonly string[]): string {
+export function toPgUuidArray(ids: readonly string[]): string {
   for (const id of ids) {
     if (!UUID.test(id)) throw new Error(`organization_id no válido: ${id}`);
   }

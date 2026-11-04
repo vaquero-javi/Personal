@@ -1,7 +1,7 @@
 import 'server-only';
 import { unstable_rethrow } from 'next/navigation';
 import { ZodError } from 'zod';
-import { isDomainError } from '@omnia/core';
+import { isDomainError, logger } from '@omnia/core';
 import { mapPgError } from '@omnia/db';
 
 export interface ActionState {
@@ -38,7 +38,7 @@ export async function runAction(work: () => Promise<string | void>): Promise<Act
       const fieldErrors = issues ? Object.fromEntries(issues.map((i) => [`customFields.${i.path.join('.')}`, i.message])) : undefined;
       return { error: error.message, ...(fieldErrors ? { fieldErrors } : {}) };
     }
-    console.error(raw);
+    logger.error('server action failed', { app: 'backoffice', error: raw });
     return { error: 'Algo ha fallado. Inténtalo de nuevo y, si persiste, avisa a soporte.' };
   }
 }

@@ -1,7 +1,7 @@
 import 'server-only';
 import { ZodError } from 'zod';
 import { ORGANIZATION_HEADER, bearerToken, parseOrganizationScope, resolveTenantContext } from '@omnia/auth';
-import { DomainError, isDomainError, type DomainErrorCode, type TenantContext } from '@omnia/core';
+import { DomainError, isDomainError, logger, type DomainErrorCode, type TenantContext } from '@omnia/core';
 import { container } from './container';
 import { currentUserId } from './session';
 
@@ -36,6 +36,9 @@ export async function handle(
   { status = 200 }: { status?: number } = {},
 ): Promise<Response> {
   const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
+  const log = logger.child({ requestId, method: request.method, path: new URL(request.url).pathname });
+  const startedAt = performance.now();
+  let ctx: TenantContext | undefined;
   try {
     const { sql, verifyAccessToken } = container();
     // Clientes nativos/PWA: Bearer. Navegador: la cookie de sesión de la web.
@@ -46,18 +49,24 @@ export async function handle(
         : await currentUserId();
     if (!userId) throw new DomainError('UNAUTHENTICATED', 'Sesión no válida o caducada');
     const scope = parseOrganizationScope(request.headers.get(ORGANIZATION_HEADER));
-    const ctx = await resolveTenantContext(sql, userId, scope, requestId);
+    ctx = await resolveTenantContext(sql, userId, scope, requestId);
 
     const body = await useCase(ctx);
+    log.info('request', { status, userId: ctx.userId, orgIds: ctx.organizationIds, ms: Math.round(performance.now() - startedAt) });
     return Response.json(body, { status, headers: { 'x-request-id': requestId } });
   } catch (error) {
+    const who = ctx ? { userId: ctx.userId, orgIds: ctx.organizationIds } : {};
+    const ms = Math.round(performance.now() - startedAt);
     if (error instanceof ZodError) {
+      log.info('request', { status: 422, code: 'VALIDATION', ms, ...who });
       return problem(422, 'VALIDATION', 'Datos no válidos', { issues: error.issues }, requestId);
     }
     if (isDomainError(error)) {
+      // Errores esperados (stock insuficiente, sin permiso…): no son fallos del sistema.
+      log.info('request', { status: STATUS[error.code], code: error.code, ms, ...who });
       return problem(STATUS[error.code], error.code, error.message, error.details, requestId);
     }
-    console.error({ requestId, error });
+    log.error('request failed', { status: 500, ms, ...who, error });
     return problem(500, 'INTERNAL', 'Error inesperado', undefined, requestId);
   }
 }

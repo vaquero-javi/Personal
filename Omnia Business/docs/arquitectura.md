@@ -228,6 +228,24 @@ Si algo falla, el ROLLBACK lo deshace todo. Los `serialization_failure` y `deadl
 
 ---
 
+## 5b. Rendimiento de listados (reglas)
+
+Medidas con `EXPLAIN ANALYZE` y RLS activa sobre 120.000 facturas en 4 empresas. Implementación de referencia: `packages/invoicing/src/{domain,infrastructure}/invoice-list*` + migración `0023_list_performance`.
+
+| Regla | Por qué |
+|---|---|
+| **Filtrar siempre por organización de forma explícita** (`orgScope(tx, ctx, 'x.organization_id')`), además de la RLS. | La condición de la RLS es una subconsulta y no sirve como prefijo de índice: sin el filtro explícito, Postgres recorre la tabla de **todas** las empresas (Seq Scan). Con él, Index Scan. La RLS sigue decidiendo qué se ve. |
+| **Paginar por cursor (keyset), nunca con `LIMIT` fijo ni `OFFSET`.** El orden termina en `id` para que no haya empates. | El `limit 300` escondía facturas (en un bar con TPV, 300 tickets son menos de un día). `OFFSET` lee y descarta todas las filas anteriores. Con keyset, la página 300 cuesta lo mismo que la 1 (0,18 ms). |
+| **La clave del cursor, sobre columnas simples** y en el mismo orden que el índice. Nada de `coalesce()` ni funciones en la comparación: si hace falta, columna generada. | Con RLS, Postgres solo lleva al índice condiciones que puede demostrar *leakproof*; un `coalesce` no lo es y el cursor pasa a ser un filtro fila a fila (8 ms → 0,14 ms al quitarlo). |
+| **Marcas de tiempo del cursor como texto:** `${v}::text::timestamptz`. | Si el parámetro se declara `timestamptz`, postgres.js lo convierte en `Date` y trunca los microsegundos: el cursor se salta las filas empatadas. |
+| **Totales con agregados en la base** (`sum`, con índice parcial si el subconjunto es pequeño), nunca sumando en JS lo que se ha traído. | Una suma de «lo que hay en pantalla» es incorrecta en cuanto se pagina. |
+| **Página + 1 fila en vez de `COUNT(*)`.** | Contar recorre todo el histórico en cada petición. |
+| **Toda FK que se use en joins o en `ON DELETE RESTRICT` lleva índice** `(organization_id, fk)`. | Sin él, borrar un artículo o abrir la ficha de un tercero recorre la tabla hija entera. Las FKs a `users` (`created_by`…) quedan sin índice a propósito. |
+
+Pendiente de aplicar estas reglas: los demás listados (`purchasing`, `sales`, `incidents`, `tasks`, `parties`, `warehouse.movements`) siguen con `limit` fijo y sin filtro explícito de organización. La búsqueda de texto (`ilike '%…%'`) recorre las facturas de la empresa; con volumen, índice trigram (`pg_trgm`).
+
+---
+
 ## 6. Multiplataforma
 
 - **Web y PWA (escritorio)**: la misma app Next.js, *mobile-first*. Falta añadir el *manifest* y el *service worker* cuando haya pantallas.

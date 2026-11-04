@@ -4,7 +4,7 @@ import { inputClass } from '@/components/ui/form';
 import { RowLink, Table, Td, Th, Tr } from '@/components/ui/table';
 import { formatDate, formatEuro } from '@/lib/format';
 import { fiscalStatus, invoiceStatus, receivedInvoiceStatus } from '@/lib/labels';
-import type { InvoiceSummary } from '@omnia/invoicing/types';
+import type { InvoicePage, InvoiceSummary } from '@omnia/invoicing/types';
 
 const FILTERS = [
   { value: undefined, label: 'Todas' },
@@ -23,14 +23,15 @@ const TYPES = [
 
 const chipClass = 'rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white';
 
-export function InvoiceList({ invoices, base, direction, estado, tipo, q }: { invoices: InvoiceSummary[]; base: string; direction: 'issued' | 'received'; estado?: string | undefined; tipo?: string | undefined; q?: string | undefined }) {
-  const href = (next: { estado?: string | undefined; tipo?: string | undefined }) => {
+export function InvoiceList({ page, cursor, base, direction, estado, tipo, q }: { page: InvoicePage<InvoiceSummary>; cursor?: string | undefined; base: string; direction: 'issued' | 'received'; estado?: string | undefined; tipo?: string | undefined; q?: string | undefined }) {
+  const invoices = page.items;
+  // Cambiar de filtro vuelve siempre a la primera página: el cursor solo vale para el filtro que lo generó.
+  const href = (next: { estado?: string | undefined; tipo?: string | undefined; cursor?: string | undefined }) => {
     const e = 'estado' in next ? next.estado : estado;
     const t = 'tipo' in next ? next.tipo : tipo;
-    const p = new URLSearchParams({ ...(e ? { estado: e } : {}), ...(t ? { tipo: t } : {}), ...(q ? { q } : {}) }).toString();
+    const p = new URLSearchParams({ ...(e ? { estado: e } : {}), ...(t ? { tipo: t } : {}), ...(q ? { q } : {}), ...(next.cursor ? { cursor: next.cursor } : {}) }).toString();
     return p ? `${base}?${p}` : base;
   };
-  const total = invoices.reduce((s, i) => s + Number(i.total) - Number(i.paidTotal), 0);
   return (
     <Cell>
       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-start">
@@ -60,7 +61,7 @@ export function InvoiceList({ invoices, base, direction, estado, tipo, q }: { in
         </form>
       </div>
       {invoices.length === 0 ? (
-        <EmptyState title="No hay facturas con este filtro" />
+        <EmptyState title={cursor ? 'No hay facturas más antiguas' : 'No hay facturas con este filtro'} />
       ) : (
         <>
           <Table minWidth={860}>
@@ -99,9 +100,23 @@ export function InvoiceList({ invoices, base, direction, estado, tipo, q }: { in
               ))}
             </tbody>
           </Table>
-          <p className="mt-3 text-right text-sm text-ink-2">
-            Pendiente en esta lista: <b className="text-ink">{formatEuro(total)}</b>
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <nav aria-label="Paginación" className="flex gap-2">
+              {cursor && (
+                <Link href={href({})} className={chipClass}>
+                  ← Más recientes
+                </Link>
+              )}
+              {page.nextCursor && (
+                <Link href={href({ cursor: page.nextCursor })} className={chipClass}>
+                  Más antiguas →
+                </Link>
+              )}
+            </nav>
+            <p className="ml-auto text-ink-2">
+              Pendiente con este filtro: <b className="text-ink">{formatEuro(page.outstandingTotal)}</b>
+            </p>
+          </div>
         </>
       )}
     </Cell>

@@ -15,7 +15,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
     ? await Promise.all([
         can('inventory.read') ? container().warehouse.items(ctx, { search: term }) : [],
         can('parties.read') ? container().parties.list(ctx, { search: term }) : [],
-        can('invoicing.read') ? container().invoicing.list(ctx, { search: term }) : [],
+        can('invoicing.read') ? container().invoicing.listPage(ctx, { search: term, limit: 20 }).then((p) => p.items) : [],
         container().incidents.list(ctx, { status: 'all', search: term }),
       ])
     : [[], [], [], []];

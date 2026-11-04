@@ -4,3 +4,4 @@ export * from './tenant';
 export * from './custom-fields';
 export * from './fields';
 export * from './files';
+export * from './logger';

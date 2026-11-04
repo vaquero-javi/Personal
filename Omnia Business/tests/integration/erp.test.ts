@@ -191,7 +191,7 @@ describe('Fichajes', () => {
 
 describe('Permisos (RLS)', () => {
   it('una empleada no ve facturas ni puede crearlas', async () => {
-    expect(await services.invoicing.list(marta)).toHaveLength(0);
+    expect((await services.invoicing.listPage(marta, {})).items).toHaveLength(0);
     const customers = await sql`select id from parties where is_customer limit 1`;
     await expect(
       services.invoicing.createDraft(marta, {

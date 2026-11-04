@@ -11,6 +11,10 @@ import {
   type TenantContext,
 } from '@omnia/core';
 import { asRow, asRows, withTenant, type Sql, type Tx } from '@omnia/db';
+import { InvoiceListQuery, decodeCursor, encodeCursor, type InvoicePage } from './domain/invoice-list';
+import { findInvoicePage, sumOutstanding } from './infrastructure/invoice-list.repository';
+
+export * from './domain/invoice-list';
 
 export type InvoiceStatus = 'draft' | 'issued' | 'partially_paid' | 'paid' | 'cancelled';
 export type FiscalStatus = 'not_applicable' | 'pending' | 'sent' | 'accepted' | 'accepted_with_errors' | 'rejected';
@@ -142,29 +146,34 @@ const SUMMARY_COLUMNS = (tx: Tx) => tx`
 
 export function createInvoicingService(sql: Sql) {
   return {
-    async list(
-      ctx: TenantContext,
-      { direction = 'issued', status, kind, search, partyId }: { direction?: 'issued' | 'received'; status?: string; kind?: 'invoice' | 'corrective' | 'ticket'; search?: string; partyId?: string } = {},
-    ): Promise<InvoiceSummary[]> {
-      const term = search?.trim() ? `%${search.trim()}%` : null;
-      return withTenant(sql, ctx, async (tx) =>
-        asRows<InvoiceSummary>(await tx`
-          select ${SUMMARY_COLUMNS(tx)}
-          from invoices i left join parties p on p.id = i.party_id
-          where i.direction = ${direction}
-            and (${status ?? null}::text is null
-                 or (${status ?? null} = 'overdue' and i.status in ('issued', 'partially_paid') and i.due_date < current_date)
-                 or (${status ?? null} = 'unpaid' and i.status in ('issued', 'partially_paid'))
-                 or i.status = ${status ?? null})
-            and (${kind ?? null}::text is null
-                 or (${kind ?? null} = 'invoice' and i.invoice_type in ('F1', 'F3'))
-                 or (${kind ?? null} = 'corrective' and i.invoice_type like 'R%')
-                 or (${kind ?? null} = 'ticket' and i.invoice_type = 'F2'))
-            and (${term}::text is null or i.full_number ilike ${term} or p.legal_name ilike ${term})
-            and (${partyId ?? null}::uuid is null or i.party_id = ${partyId ?? null})
-          order by (i.status = 'draft') desc, i.issue_date desc nulls first, i.full_number desc
-          limit 300`),
-      );
+    /**
+     * Listado paginado por cursor. `input` llega sin validar (query string, JSON):
+     * se valida aquí, en la frontera del caso de uso, antes de tocar la base.
+     *
+     * Página y total pendiente van en la MISMA transacción (misma foto de los
+     * datos) y en paralelo: postgres.js los encadena en la conexión sin esperar
+     * a que vuelva el primero.
+     */
+    async listPage(ctx: TenantContext, input: unknown): Promise<InvoicePage<InvoiceSummary>> {
+      const query = InvoiceListQuery.parse(input ?? {});
+      const after = query.cursor ? decodeCursor(query.cursor) : null;
+      return withTenant(sql, ctx, async (tx) => {
+        const [rows, outstandingTotal] = await Promise.all([
+          findInvoicePage(tx, ctx, query, after),
+          sumOutstanding(tx, ctx, query),
+        ]);
+        const hasMore = rows.length > query.limit;
+        const page = hasMore ? rows.slice(0, query.limit) : rows;
+        const last = page.at(-1);
+        return {
+          items: page.map(({ kDraft: _d, kSortDate: _s, kCreatedAt: _c, ...summary }) => summary as InvoiceSummary),
+          nextCursor:
+            hasMore && last
+              ? encodeCursor({ draft: last.kDraft, sortDate: last.kSortDate, createdAt: last.kCreatedAt, id: last.id })
+              : null,
+          outstandingTotal,
+        };
+      });
     },
 
     async get(ctx: TenantContext, id: string): Promise<InvoiceDetail> {
