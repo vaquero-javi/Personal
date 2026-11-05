@@ -150,6 +150,8 @@ const initMotion = () => {
         return;
     }
     gsap.registerPlugin(ScrollTrigger);
+    // En móvil la barra del navegador cambia la altura al hacer scroll; sin esto los anclajes saltarían
+    ScrollTrigger.config({ ignoreMobileResize: true });
     const mm = gsap.matchMedia();
 
     // Portada: letras que suben, foto que se descubre y textos que entran
@@ -212,9 +214,10 @@ const initMotion = () => {
         });
     });
 
-    // Formación y Habilidades: en escritorio cada sección se fija y sus tarjetas pasan en horizontal
-    mm.add('(min-width: 901px)', () => {
+    // Formación y Habilidades: cada sección se fija y sus tarjetas pasan en horizontal (también en móvil)
+    mm.add('all', () => {
         document.querySelectorAll('.skills-pin').forEach(pin => {
+            pin.classList.add('is-hscroll');
             const track = pin.querySelector('.skills-track');
             const distance = () => track.scrollWidth - window.innerWidth;
             const tween = gsap.to(track, {

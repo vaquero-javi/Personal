@@ -391,7 +391,11 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
 
 /* --- 02 · Formación y 03 · Habilidades (comparten recorrido horizontal) --- */
 .skills { padding: 0; }
-.skills-pin { padding: clamp(6rem, 12vw, 10rem) 0; overflow: hidden; }
+/* Sin animaciones (movimiento reducido o GSAP sin cargar) la fila se desliza a mano;
+   con el recorrido horizontal activo (.is-hscroll) lo mueve el scroll */
+.skills-pin { padding: clamp(6rem, 12vw, 10rem) 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.skills-pin::-webkit-scrollbar { display: none; }
+.skills-pin.is-hscroll { overflow: hidden; }
 .skills-track { display: flex; gap: 1.25rem; padding: 0 var(--gutter); width: max-content; }
 
 .skills-intro { width: max-content; max-width: 80vw; flex-shrink: 0; display: flex; flex-direction: column; padding-right: 2rem; }
@@ -625,11 +629,11 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
 
     .contact-grid { grid-template-columns: 1fr; }
 
-    /* En móvil y tablet las habilidades van en columna, sin recorrido horizontal */
-    .skills-track { flex-direction: column; width: auto; }
-    .skills-intro { width: auto; padding: 0 0 1rem; }
-    .skills-hint { display: none; }
-    .skill-card { width: auto; min-height: 0; gap: 2rem; }
+    /* En móvil y tablet también se recorren en horizontal: la sección ocupa la pantalla
+       (descontando la cabecera) y las tarjetas se ajustan al ancho del teléfono */
+    .skills-pin { min-height: 100svh; display: flex; align-items: center; padding: 5rem 0 2rem; }
+    .skills-intro { max-width: 78vw; padding-right: 1rem; }
+    .skill-card { width: min(78vw, 22rem); min-height: clamp(22rem, 62svh, 30rem); padding: 1.5rem; gap: 1.5rem; }
 
     .stack-card { top: 4.5rem; }
     .stack-inner { grid-template-columns: 1fr; min-height: 0; }
