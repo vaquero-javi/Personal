@@ -203,6 +203,7 @@ h1, h2, h3 { font-weight: 700; }
 .menu.is-open .menu-nav a:nth-child(3) { transition-delay: 0.1s; }
 .menu.is-open .menu-nav a:nth-child(4) { transition-delay: 0.15s; }
 .menu.is-open .menu-nav a:nth-child(5) { transition-delay: 0.2s; }
+.menu.is-open .menu-nav a:nth-child(6) { transition-delay: 0.25s; }
 .menu-num { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); font-stretch: 100%; }
 .menu-foot { display: grid; gap: 0.5rem; color: var(--muted); }
 
@@ -300,18 +301,8 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
 }
 .manifesto .w { display: inline-block; }
 
-.about-grid { display: grid; gap: clamp(2.5rem, 5vw, 4rem); margin-top: clamp(4rem, 8vw, 7rem); }
+.about-grid { margin-top: clamp(4rem, 8vw, 7rem); }
 .about-sub { font-size: clamp(1.1rem, 1.6vw, 1.35rem); color: var(--muted); max-width: 34ch; }
-
-/* Formación: tarjetas con la misma estructura que las de habilidades */
-.edu-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; }
-.edu-card { display: flex; flex-direction: column; gap: 0.75rem; min-height: clamp(16rem, 34vh, 20rem); padding: 1.75rem; }
-.edu-top { display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); }
-.edu-top span:last-child { color: var(--accent); }
-.edu-title { font-size: clamp(1.35rem, 1.9vw, 1.7rem); font-weight: 700; font-stretch: 112%; letter-spacing: -0.03em; line-height: 1.1; }
-.edu-place { margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--line); color: var(--muted); }
-.edu-card.liquid--accent .edu-top, .edu-card.liquid--accent .edu-top span:last-child, .edu-card.liquid--accent .edu-place { color: rgba(11, 12, 14, 0.65); }
-.edu-card.liquid--accent .edu-place { border-top-color: rgba(11, 12, 14, 0.18); }
 
 /* --- Tarjetas "liquid": cristal translúcido con una gota de luz que cambia de forma
    y sigue al cursor (--mx / --my las pone script.js) --- */
@@ -398,7 +389,7 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
     100% { border-radius: 55% 45% 35% 65% / 47% 70% 30% 53%; rotate: 200deg; }
 }
 
-/* --- 02 · Habilidades --- */
+/* --- 02 · Formación y 03 · Habilidades (comparten recorrido horizontal) --- */
 .skills { padding: 0; }
 .skills-pin { padding: clamp(6rem, 12vw, 10rem) 0; overflow: hidden; }
 .skills-track { display: flex; gap: 1.25rem; padding: 0 var(--gutter); width: max-content; }
@@ -430,6 +421,10 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
     font-size: clamp(1.1rem, 1.5vw, 1.35rem);
     font-weight: 500;
 }
+/* Formación: mismas tarjetas que Habilidades; los títulos largos parten con guion si no caben */
+.edu-card .skill-cat { hyphens: auto; overflow-wrap: break-word; }
+.edu-card .edu-years { font-size: 0.85rem; color: var(--accent); }
+.skill-card--accent .edu-years { color: rgba(11, 12, 14, 0.65); }
 .skill-card--accent .skill-index { color: rgba(11, 12, 14, 0.6); }
 .skill-card--accent .skill-items li { border-top-color: rgba(11, 12, 14, 0.18); }
 .soft-list { margin-top: auto; display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -581,7 +576,6 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
     .hero-meta span:first-child { display: none; }
 
     .contact-grid { grid-template-columns: 1fr; }
-    .edu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
     /* En móvil y tablet las habilidades van en columna, sin recorrido horizontal */
     .skills-track { flex-direction: column; width: auto; }
@@ -602,8 +596,6 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
 @media (max-width: 600px) {
     .topbar-cv { display: none; }
     .logo-name { display: none; }
-    .edu-grid { grid-template-columns: 1fr; }
-    .edu-card { min-height: 0; }
     .form { grid-template-columns: 1fr; }
     .contact-links li { grid-template-columns: 1fr; gap: 0.2rem; }
 }

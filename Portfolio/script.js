@@ -212,31 +212,33 @@ const initMotion = () => {
         });
     });
 
-    // Habilidades: en escritorio la sección se fija y las tarjetas pasan en horizontal
+    // Formación y Habilidades: en escritorio cada sección se fija y sus tarjetas pasan en horizontal
     mm.add('(min-width: 901px)', () => {
-        const track = document.querySelector('.skills-track');
-        const distance = () => track.scrollWidth - window.innerWidth;
-        const tween = gsap.to(track, {
-            x: () => -distance(),
-            ease: 'none',
-            scrollTrigger: {
-                trigger: '.skills-pin',
-                start: 'top top',
-                end: () => `+=${distance()}`,
-                pin: true,
-                scrub: 1,
-                invalidateOnRefresh: true,
-                anticipatePin: 1
-            }
-        });
-        // Cada tarjeta gira y se asienta al entrar por la derecha
-        gsap.utils.toArray('.skill-card').forEach(card => {
-            gsap.from(card, {
-                rotate: 4,
-                yPercent: 10,
-                opacity: 0.3,
+        document.querySelectorAll('.skills-pin').forEach(pin => {
+            const track = pin.querySelector('.skills-track');
+            const distance = () => track.scrollWidth - window.innerWidth;
+            const tween = gsap.to(track, {
+                x: () => -distance(),
                 ease: 'none',
-                scrollTrigger: { trigger: card, containerAnimation: tween, start: 'left 100%', end: 'left 60%', scrub: true }
+                scrollTrigger: {
+                    trigger: pin,
+                    start: 'top top',
+                    end: () => `+=${distance()}`,
+                    pin: true,
+                    scrub: 1,
+                    invalidateOnRefresh: true,
+                    anticipatePin: 1
+                }
+            });
+            // Cada tarjeta gira y se asienta al entrar por la derecha
+            track.querySelectorAll('.skill-card').forEach(card => {
+                gsap.from(card, {
+                    rotate: 4,
+                    yPercent: 10,
+                    opacity: 0.3,
+                    ease: 'none',
+                    scrollTrigger: { trigger: card, containerAnimation: tween, start: 'left 100%', end: 'left 60%', scrub: true }
+                });
             });
         });
     });
