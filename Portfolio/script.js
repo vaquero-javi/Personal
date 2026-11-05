@@ -248,9 +248,10 @@ const initMotion = () => {
     cards.forEach((card, i) => {
         const next = cards[i + 1];
         if (!next) return;
-        gsap.to(card.querySelector('.stack-inner'), {
+        // Se oscurece con una capa (--dim) en vez de opacity, para que el cristal no deje ver la tarjeta de debajo
+        gsap.fromTo(card.querySelector('.stack-inner'), { scale: 1, '--dim': 0 }, {
             scale: 0.9,
-            opacity: 0.35,
+            '--dim': 0.65,
             ease: 'none',
             scrollTrigger: { trigger: next, start: 'top bottom', end: 'top 15%', scrub: true }
         });

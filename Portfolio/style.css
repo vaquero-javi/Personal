@@ -431,21 +431,69 @@ section { position: relative; padding: clamp(6rem, 12vw, 10rem) 0; }
 .soft-list li { padding: 0.55rem 1rem; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 0.98rem; }
 
 /* --- 03 · Proyectos (tarjetas apiladas con position: sticky) --- */
-.projects { padding-bottom: 4rem; }
+/* Fondo con luces de color para que el cristal de las tarjetas tenga algo que difuminar */
+.projects { padding-bottom: 4rem; overflow-x: clip; isolation: isolate; }
+.projects::before, .projects::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: min(55vw, 760px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: blur(110px);
+    pointer-events: none;
+}
+.projects::before { top: 18%; left: -12%; background: rgba(201, 239, 91, 0.16); }
+.projects::after { bottom: 8%; right: -10%; background: rgba(91, 156, 239, 0.16); }
+
 .stack { display: grid; gap: 4vh; padding: 0 var(--gutter); max-width: 1440px; margin: 0 auto; }
 .stack-card { position: sticky; top: 5.5rem; }
+/* Glassmorphism: cristal esmerilado que difumina lo que hay detrás (luces y la tarjeta anterior) */
 .stack-inner {
+    position: relative;
     display: grid;
     grid-template-columns: 7fr 5fr;
     gap: clamp(1.5rem, 3vw, 3rem);
     align-items: center;
     padding: clamp(1rem, 2vw, 1.5rem);
-    border-radius: calc(var(--r) + 8px);
-    background: var(--bg-2);
-    border: 1px solid var(--line);
+    border-radius: calc(var(--r) + 10px);
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025) 50%, rgba(255, 255, 255, 0.05));
+    background-color: rgba(16, 18, 22, 0.62);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+        0 40px 80px -40px rgba(0, 0, 0, 0.85);
     transform-origin: 50% 0;
     will-change: transform;
 }
+/* Capa que oscurece la tarjeta cuando la siguiente se apila encima (script.js anima --dim) */
+.stack-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    background: rgba(11, 12, 14, var(--dim, 0));
+    pointer-events: none;
+}
+/* Brillo especular en el borde superior izquierdo */
+.stack-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.14));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+}
+.stack-media { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 40px -20px rgba(0, 0, 0, 0.7); }
+.tags li { background: rgba(255, 255, 255, 0.05); }
 .stack-media { border-radius: var(--r); overflow: hidden; background: #000; aspect-ratio: 16 / 9; }
 .stack-media video { width: 100%; height: 100%; object-fit: cover; }
 .stack-info { display: grid; gap: 1.1rem; justify-items: start; padding: 1rem 1rem 1rem 0; }
