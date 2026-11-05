@@ -306,6 +306,22 @@ const initVideos = () => {
     videos.forEach(video => io.observe(video));
 };
 
+// --- 6b. TARJETAS LIQUID: la gota de luz sigue al cursor y vuelve a su sitio al salir ---
+const initLiquid = () => {
+    if (reducedMotion || !window.matchMedia('(hover: hover)').matches) return;
+    document.querySelectorAll('.liquid').forEach(card => {
+        card.addEventListener('pointermove', e => {
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
+            card.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
+        });
+        card.addEventListener('pointerleave', () => {
+            card.style.removeProperty('--mx');
+            card.style.removeProperty('--my');
+        });
+    });
+};
+
 // --- 7. COPIAR CORREO ---
 const initCopy = () => {
     document.querySelectorAll('[data-copy]').forEach(btn => {
@@ -414,6 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTopbar();
     initClock();
     initVideos();
+    initLiquid();
     initCopy();
     initContactForm();
 });
