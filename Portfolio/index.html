@@ -5,383 +5,480 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Javier Vaquero | Desarrollador Full Stack</title>
     <meta name="description" content="Javier Vaquero Vila, desarrollador Full Stack en Madrid. Proyectos, experiencia y contacto.">
-    <meta name="theme-color" content="#0b0c0e">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)">
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="preload" href="assets/fonts/Archivo-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="assets/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <script>document.documentElement.classList.add('js');</script>
+    <script>
+        (function () {
+            var d = document.documentElement;
+            d.classList.add('js');
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('motion');
+            try {
+                var t = localStorage.getItem('theme');
+                if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <a class="skip-link" href="#main">Saltar al contenido</a>
 
-    <div class="progress" aria-hidden="true"><span class="progress-bar"></span></div>
+    <!-- Efecto de borde: difumina el contenido que pasa bajo la isla -->
+    <div class="edge" aria-hidden="true"></div>
 
-    <header class="topbar">
-        <a href="#inicio" class="logo" aria-label="Javier Vaquero, ir al inicio">
-            <span class="logo-mark">JV</span>
-            <span class="logo-name">Javier Vaquero</span>
-        </a>
-
-        <nav class="topnav" aria-label="Principal">
-            <a href="#sobre-mi">Sobre mí</a>
-            <a href="#formacion">Formación</a>
-            <a href="#habilidades">Habilidades</a>
-            <a href="#proyectos">Proyectos</a>
-            <a href="#experiencia">Experiencia</a>
-            <a href="#contacto">Contacto</a>
-        </nav>
-
-        <div class="topbar-actions">
-            <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="pill pill--ghost topbar-cv">CV <i class="ti ti-download" aria-hidden="true"></i></a>
-            <button class="menu-btn" type="button" aria-controls="menu" aria-expanded="false">
-                <span class="menu-btn-label">Menú</span>
-                <span class="menu-btn-lines" aria-hidden="true"><span></span><span></span></span>
+    <!-- Isla de navegación translúcida -->
+    <header class="island" id="island">
+        <nav class="island-inner mat" aria-label="Principal">
+            <a href="#inicio" class="island-logo" aria-label="Javier Vaquero, ir al inicio">JV</a>
+            <div class="island-links">
+                <span class="island-thumb" aria-hidden="true"></span>
+                <a href="#sobre-mi" data-nav>Sobre mí</a>
+                <a href="#proyectos" data-nav>Proyectos</a>
+                <a href="#habilidades" data-nav>Habilidades</a>
+                <a href="#trayectoria" data-nav>Trayectoria</a>
+                <a href="#contacto" data-nav>Contacto</a>
+            </div>
+            <span class="island-current" aria-hidden="true">Inicio</span>
+            <button class="icon-btn theme-btn" type="button" aria-label="Cambiar a tema oscuro">
+                <i class="ti ti-moon" aria-hidden="true"></i><i class="ti ti-sun" aria-hidden="true"></i>
             </button>
-        </div>
+            <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="island-cv">CV <i class="ti ti-download" aria-hidden="true"></i></a>
+            <button class="icon-btn menu-btn" type="button" data-sheet-open="menu" aria-label="Abrir menú" aria-haspopup="dialog">
+                <i class="ti ti-menu-2" aria-hidden="true"></i>
+            </button>
+        </nav>
     </header>
 
-    <div class="menu" id="menu" hidden>
-        <nav class="menu-nav" aria-label="Menú">
-            <a href="#sobre-mi"><span class="menu-num">01</span>Sobre mí</a>
-            <a href="#formacion"><span class="menu-num">02</span>Formación</a>
-            <a href="#habilidades"><span class="menu-num">03</span>Habilidades</a>
-            <a href="#proyectos"><span class="menu-num">04</span>Proyectos</a>
-            <a href="#experiencia"><span class="menu-num">05</span>Experiencia</a>
-            <a href="#contacto"><span class="menu-num">06</span>Contacto</a>
-        </nav>
-        <div class="menu-foot">
-            <a href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
-            <a href="https://github.com/vaquero-javi" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener">LinkedIn</a>
+    <div class="page" id="page">
+        <main id="main">
+            <!-- INICIO -->
+            <section id="inicio" class="hero">
+                <div class="hero-bg" aria-hidden="true"><span></span><span></span><span></span></div>
+                <div class="container hero-grid">
+                    <div class="hero-copy">
+                        <p class="status-chip mat mat--thin" data-reveal>
+                            <span class="status-dot" aria-hidden="true"></span>Disponible para nuevas oportunidades
+                        </p>
+                        <h1 class="display-1" data-reveal>Javier Vaquero.<span class="tone">Desarrollador Full&nbsp;Stack.</span></h1>
+                        <p class="lead" data-reveal>Experiencia práctica en entorno corporativo bancario creando componentes escalables y construyendo aplicaciones de extremo a extremo.</p>
+                        <div class="actions" data-reveal>
+                            <a href="#proyectos" class="btn btn-primary">Ver proyectos</a>
+                            <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="btn btn-secondary mat mat--thin">Descargar CV <i class="ti ti-download" aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="pass-wrap" data-reveal="materialize">
+                        <div class="pass mat" aria-label="Tarjeta de presentación de Javier Vaquero Vila" role="group">
+                            <span class="pass-glare" aria-hidden="true"></span>
+                            <div class="pass-top">
+                                <span class="pass-logo" aria-hidden="true">JV</span>
+                                <span class="caption">Portfolio 2026</span>
+                            </div>
+                            <figure class="pass-photo">
+                                <img src="assets/fotoJavi.png" alt="Retrato de Javier Vaquero Vila" width="1254" height="1254" fetchpriority="high" draggable="false">
+                            </figure>
+                            <p class="pass-name">Javier Vaquero Vila</p>
+                            <dl class="pass-fields">
+                                <div><dt>Rol</dt><dd>Full Stack</dd></div>
+                                <div><dt>Base</dt><dd>Madrid</dd></div>
+                                <div><dt>Hora local</dt><dd><time data-clock>--:--</time></dd></div>
+                            </dl>
+                        </div>
+                        <p class="hint caption" aria-hidden="true"><i class="ti ti-hand-finger" aria-hidden="true"></i> Arrastra la tarjeta</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SOBRE MÍ -->
+            <section id="sobre-mi" class="section">
+                <div class="container">
+                    <p class="eyebrow" data-reveal>Sobre mí</p>
+                    <p class="about-text" data-words>Soy un programador polivalente enfocado en el desarrollo software, especializado en backend pero con conocimientos en frontend también. Combino pensamiento estructurado y resolución de problemas con un trasfondo en marketing que me ayuda a entender a usuarios y negocio.</p>
+                    <p class="lead about-sub" data-reveal>Me adapto rápido a nuevos stacks tecnológicos y colaboro bien en equipos multidisciplinares para entregar código limpio y mantenible.</p>
+
+                    <ul class="facts">
+                        <li class="tile" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-briefcase" aria-hidden="true"></i></span>
+                            <span class="tile-k">Última experiencia</span>
+                            <strong class="tile-v">Full Stack en Accenture</strong>
+                            <span class="tile-s">Prácticas · cliente BBVA</span>
+                        </li>
+                        <li class="tile" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-stack-2" aria-hidden="true"></i></span>
+                            <span class="tile-k">Enfoque</span>
+                            <strong class="tile-v">Backend, con base en frontend</strong>
+                            <span class="tile-s">Java, Node.js, Lit, Angular</span>
+                        </li>
+                        <li class="tile" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-speakerphone" aria-hidden="true"></i></span>
+                            <span class="tile-k">Diferencial</span>
+                            <strong class="tile-v">Trasfondo en marketing</strong>
+                            <span class="tile-s">Entiendo a usuarios y negocio</span>
+                        </li>
+                        <li class="tile" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-school" aria-hidden="true"></i></span>
+                            <span class="tile-k">Formación</span>
+                            <strong class="tile-v">Ingeniería Informática</strong>
+                            <span class="tile-s">UOC · en curso</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- PROYECTOS: carrusel que se arrastra con inercia -->
+            <section id="proyectos" class="section projects">
+                <div class="container section-head">
+                    <div>
+                        <p class="eyebrow" data-reveal>Proyectos</p>
+                        <h2 class="display-2" data-reveal>Cosas que he construido.</h2>
+                    </div>
+                    <div class="carousel-ctrl" data-reveal>
+                        <span class="counter caption" aria-hidden="true"><span data-counter>01</span> / 03</span>
+                        <button class="icon-btn icon-btn--lg mat mat--thin" type="button" data-prev aria-label="Proyecto anterior"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+                        <button class="icon-btn icon-btn--lg mat mat--thin" type="button" data-next aria-label="Proyecto siguiente"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+
+                <div class="carousel" role="region" aria-roledescription="carrusel" aria-label="Proyectos destacados" tabindex="0" data-reveal>
+                    <div class="carousel-track">
+                        <article class="pcard" aria-roledescription="diapositiva" aria-label="1 de 3: Somni" data-project="somni">
+                            <div class="pcard-inner">
+                                <video class="pcard-media" poster="assets/somni-poster.jpg" data-src="assets/somni-trailer.mp4" width="1280" height="720" muted loop playsinline preload="none" aria-hidden="true"></video>
+                                <span class="pcard-dim" aria-hidden="true"></span>
+                                <div class="pcard-body">
+                                    <div class="pcard-text">
+                                        <p class="pcard-kicker">iOS · watchOS</p>
+                                        <h3 class="pcard-title">Somni</h3>
+                                        <p class="pcard-tag">Despertador inteligente para iPhone y Apple Watch.</p>
+                                    </div>
+                                    <button class="btn btn-light" type="button" data-sheet-open="somni">Ver proyecto <i class="ti ti-plus" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="pcard" aria-roledescription="diapositiva" aria-label="2 de 3: Chronos" data-project="chronos">
+                            <div class="pcard-inner">
+                                <video class="pcard-media" poster="assets/chronos-poster.jpg" data-src="assets/chronos-trailer.mp4" width="1280" height="720" muted loop playsinline preload="none" aria-hidden="true"></video>
+                                <span class="pcard-dim" aria-hidden="true"></span>
+                                <div class="pcard-body">
+                                    <div class="pcard-text">
+                                        <p class="pcard-kicker">Web · PWA</p>
+                                        <h3 class="pcard-title">Chronos</h3>
+                                        <p class="pcard-tag">Calendario, avisos push y apuntes con estudio por IA.</p>
+                                    </div>
+                                    <button class="btn btn-light" type="button" data-sheet-open="chronos">Ver proyecto <i class="ti ti-plus" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="pcard" aria-roledescription="diapositiva" aria-label="3 de 3: PTD App" data-project="ptd">
+                            <div class="pcard-inner">
+                                <video class="pcard-media" poster="assets/ptd-poster.jpg" data-src="assets/ptd-trailer.mp4" width="1280" height="720" muted loop playsinline preload="none" aria-hidden="true"></video>
+                                <span class="pcard-dim" aria-hidden="true"></span>
+                                <div class="pcard-body">
+                                    <div class="pcard-text">
+                                        <p class="pcard-kicker">Android</p>
+                                        <h3 class="pcard-title">PTD App</h3>
+                                        <p class="pcard-tag">Gastos compartidos en grupo, sincronizados en tiempo real.</p>
+                                    </div>
+                                    <button class="btn btn-light" type="button" data-sheet-open="ptd">Ver proyecto <i class="ti ti-plus" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="dots" data-reveal>
+                    <button type="button" aria-label="Ir a Somni"></button>
+                    <button type="button" aria-label="Ir a Chronos"></button>
+                    <button type="button" aria-label="Ir a PTD App"></button>
+                </div>
+            </section>
+
+            <!-- HABILIDADES: control segmentado + paneles que se deslizan -->
+            <section id="habilidades" class="section">
+                <div class="container">
+                    <div class="section-head section-head--stack">
+                        <p class="eyebrow" data-reveal>Habilidades</p>
+                        <h2 class="display-2" data-reveal>Las herramientas con las que trabajo a diario.</h2>
+                    </div>
+
+                    <div class="tabs" data-tabs data-reveal>
+                        <div class="seg" role="tablist" aria-label="Categorías de habilidades">
+                            <span class="seg-thumb" aria-hidden="true"></span>
+                            <button role="tab" type="button" id="tab-lang" aria-controls="panel-lang" aria-selected="true">Lenguajes</button>
+                            <button role="tab" type="button" id="tab-web" aria-controls="panel-web" aria-selected="false" tabindex="-1">Web</button>
+                            <button role="tab" type="button" id="tab-apps" aria-controls="panel-apps" aria-selected="false" tabindex="-1">Apps</button>
+                            <button role="tab" type="button" id="tab-data" aria-controls="panel-data" aria-selected="false" tabindex="-1">Datos</button>
+                            <button role="tab" type="button" id="tab-team" aria-controls="panel-team" aria-selected="false" tabindex="-1">Equipo</button>
+                        </div>
+
+                        <div class="tabs-viewport">
+                            <div class="tabs-track">
+                                <div class="tab-panel" role="tabpanel" id="panel-lang" aria-labelledby="tab-lang">
+                                    <ul class="skill-grid">
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-coffee" aria-hidden="true"></i></span>Java</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-kotlin" aria-hidden="true"></i></span>Kotlin</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-python" aria-hidden="true"></i></span>Python</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-javascript" aria-hidden="true"></i></span>JavaScript</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-typescript" aria-hidden="true"></i></span>TypeScript</li>
+                                    </ul>
+                                </div>
+                                <div class="tab-panel" role="tabpanel" id="panel-web" aria-labelledby="tab-web">
+                                    <ul class="skill-grid">
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-angular" aria-hidden="true"></i></span>Angular</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-flame" aria-hidden="true"></i></span>Lit</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-html5" aria-hidden="true"></i></span>HTML5</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-css3" aria-hidden="true"></i></span>CSS</li>
+                                    </ul>
+                                </div>
+                                <div class="tab-panel" role="tabpanel" id="panel-apps" aria-labelledby="tab-apps">
+                                    <ul class="skill-grid">
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-android" aria-hidden="true"></i></span>Android Studio</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-device-desktop" aria-hidden="true"></i></span>JavaFX</li>
+                                    </ul>
+                                </div>
+                                <div class="tab-panel" role="tabpanel" id="panel-data" aria-labelledby="tab-data">
+                                    <ul class="skill-grid">
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-nodejs" aria-hidden="true"></i></span>Node.js</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-api" aria-hidden="true"></i></span>REST API</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-mysql" aria-hidden="true"></i></span>MySQL</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-firebase" aria-hidden="true"></i></span>Firebase</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-git" aria-hidden="true"></i></span>Git</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-brand-github" aria-hidden="true"></i></span>GitHub</li>
+                                    </ul>
+                                </div>
+                                <div class="tab-panel" role="tabpanel" id="panel-team" aria-labelledby="tab-team">
+                                    <ul class="skill-grid">
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i></span>Adaptabilidad tecnológica</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-puzzle" aria-hidden="true"></i></span>Resolución de problemas</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-hierarchy-2" aria-hidden="true"></i></span>Pensamiento estructurado</li>
+                                        <li class="skill"><span class="skill-icon"><i class="ti ti-users" aria-hidden="true"></i></span>Trabajo colaborativo</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="hint caption tabs-hint" aria-hidden="true"><i class="ti ti-arrows-horizontal" aria-hidden="true"></i> Desliza entre categorías</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TRAYECTORIA: experiencia y formación -->
+            <section id="trayectoria" class="section">
+                <div class="container">
+                    <div class="section-head section-head--stack">
+                        <p class="eyebrow" data-reveal>Trayectoria</p>
+                        <h2 class="display-2" data-reveal>De la gestión de equipos al código.</h2>
+                    </div>
+
+                    <div class="tabs" data-tabs data-reveal>
+                        <div class="seg" role="tablist" aria-label="Trayectoria">
+                            <span class="seg-thumb" aria-hidden="true"></span>
+                            <button role="tab" type="button" id="tab-exp" aria-controls="panel-exp" aria-selected="true">Experiencia</button>
+                            <button role="tab" type="button" id="tab-edu" aria-controls="panel-edu" aria-selected="false" tabindex="-1">Formación</button>
+                        </div>
+
+                        <div class="tabs-viewport">
+                            <div class="tabs-track">
+                                <div class="tab-panel" role="tabpanel" id="panel-exp" aria-labelledby="tab-exp">
+                                    <ol class="entries">
+                                        <li class="entry">
+                                            <p class="entry-date">Mar 2026 – May 2026</p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">Prácticas Full Stack Developer</h3>
+                                                <p class="entry-org">Accenture (cliente: BBVA), Madrid</p>
+                                                <ul class="entry-points">
+                                                    <li>Desarrollo de aplicaciones integrales para proyectos complejos del sector bancario.</li>
+                                                    <li>Componentes frontend dinámicos con JavaScript y Lit.</li>
+                                                    <li>Desarrollo, testing y mantenimiento de servicios backend con Node.js.</li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="entry">
+                                            <p class="entry-date">Nov 2023 – Sep 2025</p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">Encargado de Camareros</h3>
+                                                <p class="entry-org">Anubis Coctelería, Fuenlabrada</p>
+                                                <p class="entry-text">Gestión de equipos, organización del servicio y atención al cliente. Liderazgo y resolución de conflictos bajo presión.</p>
+                                            </div>
+                                        </li>
+                                        <li class="entry">
+                                            <p class="entry-date">Abr 2021 – Dic 2023</p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">Socorrista</h3>
+                                                <p class="entry-org">Real Summar, Fuenlabrada</p>
+                                                <p class="entry-text">Responsabilidad directa sobre seguridad y prevención, con atención constante y decisiones críticas inmediatas.</p>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </div>
+                                <div class="tab-panel" role="tabpanel" id="panel-edu" aria-labelledby="tab-edu">
+                                    <ol class="entries">
+                                        <li class="entry">
+                                            <p class="entry-date">2026 – Actualidad <span class="badge">En curso</span></p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">Grado en Ingeniería Informática</h3>
+                                                <p class="entry-org">Universitat Oberta de Catalunya (UOC)</p>
+                                            </div>
+                                        </li>
+                                        <li class="entry">
+                                            <p class="entry-date">2024 – 2026</p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">G.S. Desarrollo de Aplicaciones Multiplataforma</h3>
+                                                <p class="entry-org">CES Juan Pablo II, Alcorcón</p>
+                                            </div>
+                                        </li>
+                                        <li class="entry">
+                                            <p class="entry-date">2022 – 2024</p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">G.S. Marketing y Publicidad</h3>
+                                                <p class="entry-org">MEDAC, Fuenlabrada</p>
+                                            </div>
+                                        </li>
+                                        <li class="entry">
+                                            <p class="entry-date">2020 – 2022</p>
+                                            <div class="entry-body">
+                                                <h3 class="title-2">Bachillerato Científico-Tecnológico</h3>
+                                                <p class="entry-org">IES África, Fuenlabrada</p>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTACTO -->
+            <section id="contacto" class="section contact">
+                <div class="container">
+                    <p class="eyebrow" data-reveal>Contacto</p>
+                    <h2 class="display-1 contact-title" data-reveal>¿Tienes un proyecto o una oportunidad? <span class="accent">Hablemos.</span></h2>
+
+                    <div class="contact-grid">
+                        <div class="tile tile--mail" data-reveal>
+                            <span class="tile-k">Correo</span>
+                            <a class="mail-link" href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
+                            <button class="btn btn-secondary btn-sm" type="button" data-copy="javiervaquerovila@gmail.com"><i class="ti ti-copy" aria-hidden="true"></i> Copiar</button>
+                        </div>
+                        <button class="tile tile--action" type="button" data-sheet-open="contact" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-message-circle" aria-hidden="true"></i></span>
+                            <strong class="tile-v">Escribir un mensaje</strong>
+                            <span class="tile-s">Te respondo en 24–48 h</span>
+                        </button>
+                        <a class="tile tile--link" href="https://github.com/vaquero-javi" target="_blank" rel="noopener" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-brand-github" aria-hidden="true"></i></span>
+                            <span class="tile-k">GitHub</span>
+                            <strong class="tile-v">vaquero-javi</strong>
+                            <i class="ti ti-arrow-up-right tile-arrow" aria-hidden="true"></i>
+                        </a>
+                        <a class="tile tile--link" href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-brand-linkedin" aria-hidden="true"></i></span>
+                            <span class="tile-k">LinkedIn</span>
+                            <strong class="tile-v">javier-vaquero-vila</strong>
+                            <i class="ti ti-arrow-up-right tile-arrow" aria-hidden="true"></i>
+                        </a>
+                        <div class="tile" data-reveal>
+                            <span class="tile-icon"><i class="ti ti-map-pin" aria-hidden="true"></i></span>
+                            <span class="tile-k">Ubicación</span>
+                            <strong class="tile-v">Fuenlabrada, Madrid</strong>
+                            <span class="tile-s">Hora local <time data-clock>--:--</time></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="container footer-row">
+                <span>&copy; 2026 Javier Vaquero Vila</span>
+                <span>Diseñado y desarrollado en Madrid</span>
+                <a href="#inicio" class="to-top">Volver arriba <i class="ti ti-arrow-up" aria-hidden="true"></i></a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Sheet: un único panel inferior que se arrastra; su contenido cambia según quién lo abra -->
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="sheet mat mat--thick" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+        <div class="sheet-head">
+            <span class="grabber" aria-hidden="true"></span>
+            <h2 class="sheet-title" id="sheet-title">Menú</h2>
+            <button class="icon-btn sheet-close" type="button" aria-label="Cerrar"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="sheet-body">
+            <div data-sheet="menu" data-title="Menú" hidden>
+                <nav class="menu-list" aria-label="Menú">
+                    <a href="#sobre-mi">Sobre mí <i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+                    <a href="#proyectos">Proyectos <i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+                    <a href="#habilidades">Habilidades <i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+                    <a href="#trayectoria">Trayectoria <i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+                    <a href="#contacto">Contacto <i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+                </nav>
+                <div class="sheet-actions">
+                    <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="btn btn-primary">Descargar CV <i class="ti ti-download" aria-hidden="true"></i></a>
+                </div>
+            </div>
+
+            <article data-sheet="somni" data-title="Somni" hidden>
+                <video class="sheet-video" src="assets/somni-trailer.mp4" poster="assets/somni-poster.jpg" width="1280" height="720" controls playsinline preload="none" aria-label="Vídeo de presentación de Somni"></video>
+                <p class="pcard-kicker sheet-kicker">iOS · watchOS</p>
+                <p class="sheet-text">Despertador inteligente para iPhone y Apple Watch que empieza a contar cuando te duermes de verdad. El reloj lee en directo el acelerómetro y el pulso para detectar el momento exacto en que te duermes, y te despierta tras la siesta que elegiste o al final de tu último ciclo de sueño completo. Incluye estadísticas de sueño y todo funciona en el dispositivo, sin servidores.</p>
+                <ul class="tags"><li>Swift 6</li><li>SwiftUI</li><li>watchOS</li><li>HealthKit</li></ul>
+                <a href="https://github.com/vaquero-javi/Personal/tree/main/Somni" target="_blank" rel="noopener" class="btn btn-secondary mat mat--thin"><i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a>
+            </article>
+
+            <article data-sheet="chronos" data-title="Chronos" hidden>
+                <video class="sheet-video" src="assets/chronos-trailer.mp4" poster="assets/chronos-poster.jpg" width="1280" height="720" controls playsinline preload="none" aria-label="Tráiler de Chronos"></video>
+                <p class="pcard-kicker sheet-kicker">Web · PWA</p>
+                <p class="sheet-text">App web instalable (PWA) con calendario, avisos que llegan como notificación push al móvil y al ordenador, y apuntes a mano o con teclado sobre hojas y PDFs. Incluye un modo de estudio con IA que genera resúmenes, exámenes y tarjetas a partir de los apuntes.</p>
+                <ul class="tags"><li>React</li><li>TypeScript</li><li>Supabase</li><li>PWA</li></ul>
+                <a href="https://github.com/vaquero-javi/Personal/tree/main/Chronon" target="_blank" rel="noopener" class="btn btn-secondary mat mat--thin"><i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a>
+            </article>
+
+            <article data-sheet="ptd" data-title="PTD App" hidden>
+                <video class="sheet-video" src="assets/ptd-trailer.mp4" poster="assets/ptd-poster.jpg" width="1280" height="720" controls playsinline preload="none" aria-label="Tráiler de PTD App"></video>
+                <p class="pcard-kicker sheet-kicker">Android</p>
+                <p class="sheet-text">App Android para dividir gastos en grupo: cada uno apunta lo que paga y entre quiénes se reparte, y la app calcula cuánto debe cada persona. Incluye inicio de sesión con Google, monedero con recarga mediante Google Pay, liquidación del grupo y notificaciones, con los datos sincronizados en tiempo real en Firebase.</p>
+                <ul class="tags"><li>Kotlin</li><li>Jetpack Compose</li><li>Firebase</li><li>Google Pay</li></ul>
+                <a href="https://github.com/vaquero-javi/Personal/tree/main/PTD-app" target="_blank" rel="noopener" class="btn btn-secondary mat mat--thin"><i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a>
+            </article>
+
+            <div data-sheet="contact" data-title="Escribir un mensaje" hidden>
+                <form id="contact-form" action="https://formspree.io/f/mpqnvvdd" method="POST" class="form" novalidate>
+                    <div class="field">
+                        <label for="name">Nombre</label>
+                        <input type="text" name="nombre" id="name" autocomplete="name" required>
+                        <p class="field-error" id="name-error"></p>
+                    </div>
+                    <div class="field">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" name="_replyto" id="email" autocomplete="email" inputmode="email" required>
+                        <p class="field-error" id="email-error"></p>
+                    </div>
+                    <div class="field field--wide">
+                        <label for="message">Mensaje</label>
+                        <textarea name="mensaje" id="message" rows="5" required></textarea>
+                        <p class="field-error" id="message-error"></p>
+                    </div>
+                    <input type="hidden" name="_subject" value="Nuevo mensaje desde tu Portfolio Web">
+                    <div class="form-foot field--wide">
+                        <button type="submit" id="form-btn" class="btn btn-primary">Enviar mensaje <i class="ti ti-send" aria-hidden="true"></i></button>
+                        <p class="form-status" role="status" aria-live="polite"></p>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <main id="main">
-        <!-- 00 · INICIO -->
-        <section id="inicio" class="hero">
-            <div class="hero-meta mono">
-                <span>Portfolio 2026</span>
-                <span class="status"><span class="status-dot" aria-hidden="true"></span>Disponible para nuevas oportunidades</span>
-                <span>Madrid <time class="clock" data-clock>--:--</time></span>
-            </div>
+    <div class="toast mat" role="status" aria-live="polite">
+        <i class="ti ti-circle-check-filled" aria-hidden="true"></i><span class="toast-text"></span>
+    </div>
 
-            <h1 class="hero-name" aria-label="Javier Vaquero Vila">
-                <span class="hero-line hero-line--a" aria-hidden="true"><span class="split">Javier</span></span>
-                <span class="hero-line hero-line--b" aria-hidden="true"><span class="split">Vaquero</span></span>
-            </h1>
-
-            <div class="hero-row">
-                <figure class="hero-photo">
-                    <img src="assets/fotoJavi.png" alt="Retrato de Javier Vaquero Vila" width="1254" height="1254" fetchpriority="high">
-                </figure>
-                <div class="hero-copy">
-                    <p class="eyebrow mono">Desarrollador Full Stack</p>
-                    <p class="hero-lead">Desarrollador Full Stack con experiencia práctica en entorno corporativo bancario creando componentes escalables y construyendo aplicaciones end-to-end.</p>
-                    <div class="hero-actions">
-                        <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf" class="pill pill--solid">Descargar CV <i class="ti ti-download" aria-hidden="true"></i></a>
-                    </div>
-                </div>
-                <a href="#sobre-mi" class="scroll-cue mono" aria-label="Bajar a Sobre mí">
-                    <span class="scroll-cue-track" aria-hidden="true"><span></span></span>
-                    Scroll
-                </a>
-            </div>
-        </section>
-
-        <!-- Cinta de tecnologías: su velocidad responde al scroll -->
-        <div class="ticker" aria-label="Tecnologías: Java, Kotlin, Python, JavaScript, TypeScript, Angular, Lit, Node.js, Android Studio, JavaFX, MySQL, Firebase, Git">
-            <div class="ticker-track" aria-hidden="true">
-                <ul class="ticker-group">
-                    <li>Java</li><li>Kotlin</li><li>Python</li><li>JavaScript</li><li>TypeScript</li><li>Angular</li><li>Lit</li><li>Node.js</li><li>Android Studio</li><li>JavaFX</li><li>MySQL</li><li>Firebase</li><li>Git</li>
-                </ul>
-                <ul class="ticker-group">
-                    <li>Java</li><li>Kotlin</li><li>Python</li><li>JavaScript</li><li>TypeScript</li><li>Angular</li><li>Lit</li><li>Node.js</li><li>Android Studio</li><li>JavaFX</li><li>MySQL</li><li>Firebase</li><li>Git</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- 01 · SOBRE MÍ -->
-        <section id="sobre-mi" class="about">
-            <div class="wrap">
-                <header class="sec-head">
-                    <span class="sec-num mono">01</span>
-                    <h2 class="sec-title">Sobre mí</h2>
-                </header>
-
-                <p class="manifesto" data-scrub-words>Soy un programador polivalente enfocado en el desarrollo software, especializado en backend pero con conocimientos en frontend también. Combino pensamiento estructurado y resolución de problemas con un trasfondo en marketing que me ayuda a entender a usuarios y negocio.</p>
-
-                <div class="about-grid">
-                    <p class="about-sub" data-rise>Me adapto rápido a nuevos stacks tecnológicos y colaboro bien en equipos multidisciplinares para entregar código limpio y mantenible.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 02 · FORMACIÓN: en escritorio se recorre en horizontal -->
-        <section id="formacion" class="skills">
-            <div class="skills-pin">
-                <div class="skills-track">
-                    <div class="skills-intro">
-                        <header class="sec-head">
-                            <span class="sec-num mono">02</span>
-                            <h2 class="sec-title">Formación</h2>
-                        </header>
-                        <p class="skills-hint mono" aria-hidden="true">Sigue bajando <i class="ti ti-arrow-right"></i></p>
-                    </div>
-
-                    <article class="skill-card edu-card liquid skill-card--accent liquid--accent">
-                        <span class="skill-index mono">2.1</span>
-                        <h3 class="skill-cat">Grado en Ingeniería Informática</h3>
-                        <ul class="skill-items"><li class="edu-years mono">2026 / Actualidad</li><li>Universitat Oberta de Catalunya (UOC)</li></ul>
-                    </article>
-                    <article class="skill-card edu-card liquid">
-                        <span class="skill-index mono">2.2</span>
-                        <h3 class="skill-cat">G.S. Desarrollo de Aplicaciones Multiplataforma</h3>
-                        <ul class="skill-items"><li class="edu-years mono">2024 / 2026</li><li>CES Juan Pablo II, Alcorcón</li></ul>
-                    </article>
-                    <article class="skill-card edu-card liquid">
-                        <span class="skill-index mono">2.3</span>
-                        <h3 class="skill-cat">G.S. Marketing y Publicidad</h3>
-                        <ul class="skill-items"><li class="edu-years mono">2022 / 2024</li><li>MEDAC, Fuenlabrada</li></ul>
-                    </article>
-                    <article class="skill-card edu-card liquid">
-                        <span class="skill-index mono">2.4</span>
-                        <h3 class="skill-cat">Bachillerato Científico-Tecnológico</h3>
-                        <ul class="skill-items"><li class="edu-years mono">2020 / 2022</li><li>IES África, Fuenlabrada</li></ul>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- 03 · HABILIDADES: en escritorio se recorre en horizontal -->
-        <section id="habilidades" class="skills">
-            <div class="skills-pin">
-                <div class="skills-track">
-                    <div class="skills-intro">
-                        <header class="sec-head">
-                            <span class="sec-num mono">03</span>
-                            <h2 class="sec-title">Habilidades</h2>
-                        </header>
-                        <p class="skills-lead">Las herramientas con las que trabajo a diario y cómo trabajo con un equipo.</p>
-                        <p class="skills-hint mono" aria-hidden="true">Sigue bajando <i class="ti ti-arrow-right"></i></p>
-                    </div>
-
-                    <article class="skill-card skill-card--accent liquid liquid--accent">
-                        <span class="skill-index mono">3.1</span>
-                        <h3 class="skill-cat">Lenguajes</h3>
-                        <ul class="skill-items"><li>Java</li><li>Kotlin</li><li>Python</li><li>JavaScript</li><li>TypeScript</li></ul>
-                    </article>
-                    <article class="skill-card liquid">
-                        <span class="skill-index mono">3.2</span>
-                        <h3 class="skill-cat">Web y frontend</h3>
-                        <ul class="skill-items"><li>Angular</li><li>Lit</li><li>HTML5</li><li>CSS</li></ul>
-                    </article>
-                    <article class="skill-card liquid">
-                        <span class="skill-index mono">3.3</span>
-                        <h3 class="skill-cat">Móvil y escritorio</h3>
-                        <ul class="skill-items"><li>Android Studio</li><li>JavaFX</li></ul>
-                    </article>
-                    <article class="skill-card liquid">
-                        <span class="skill-index mono">3.4</span>
-                        <h3 class="skill-cat">Datos y herramientas</h3>
-                        <ul class="skill-items"><li>Node.js</li><li>REST API</li><li>MySQL</li><li>Firebase</li><li>Git</li><li>GitHub</li></ul>
-                    </article>
-                    <article class="skill-card skill-card--soft liquid">
-                        <span class="skill-index mono">3.5</span>
-                        <h3 class="skill-cat">Cómo trabajo</h3>
-                        <ul class="soft-list">
-                            <li>Adaptabilidad tecnológica</li>
-                            <li>Resolución de problemas</li>
-                            <li>Pensamiento estructurado</li>
-                            <li>Trabajo colaborativo</li>
-                        </ul>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- 04 · PROYECTOS: tarjetas que se apilan -->
-        <section id="proyectos" class="projects">
-            <div class="wrap">
-                <header class="sec-head">
-                    <span class="sec-num mono">04</span>
-                    <h2 class="sec-title">Proyectos destacados</h2>
-                </header>
-            </div>
-
-            <div class="stack">
-                <article class="stack-card">
-                    <div class="stack-inner">
-                        <div class="stack-media">
-                            <video src="assets/somni-trailer.mp4" poster="assets/somni-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Vídeo de presentación de Somni"></video>
-                        </div>
-                        <div class="stack-info">
-                            <span class="stack-count mono">01 / 03</span>
-                            <h3 class="stack-title">Somni</h3>
-                            <p>Despertador inteligente para iPhone y Apple Watch que empieza a contar cuando te duermes de verdad. El reloj lee en directo el acelerómetro y el pulso para detectar el momento exacto en que te duermes, y te despierta tras la siesta que elegiste o al final de tu último ciclo de sueño completo. Incluye estadísticas de sueño y todo funciona en el dispositivo, sin servidores.</p>
-                            <ul class="tags mono"><li>Swift 6</li><li>SwiftUI</li><li>watchOS</li><li>HealthKit</li></ul>
-                            <a href="https://github.com/vaquero-javi/Personal/tree/main/Somni" target="_blank" rel="noopener" class="pill pill--ghost">
-                                <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="stack-card">
-                    <div class="stack-inner">
-                        <div class="stack-media">
-                            <video src="assets/chronos-trailer.mp4" poster="assets/chronos-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Tráiler de Chronos"></video>
-                        </div>
-                        <div class="stack-info">
-                            <span class="stack-count mono">02 / 03</span>
-                            <h3 class="stack-title">Chronos</h3>
-                            <p>App web instalable (PWA) con calendario, avisos que llegan como notificación push al móvil y al ordenador, y apuntes a mano o con teclado sobre hojas y PDFs. Incluye un modo de estudio con IA que genera resúmenes, exámenes y tarjetas a partir de los apuntes.</p>
-                            <ul class="tags mono"><li>React</li><li>TypeScript</li><li>Supabase</li><li>PWA</li></ul>
-                            <a href="https://github.com/vaquero-javi/Personal/tree/main/Chronon" target="_blank" rel="noopener" class="pill pill--ghost">
-                                <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="stack-card">
-                    <div class="stack-inner">
-                        <div class="stack-media">
-                            <video src="assets/ptd-trailer.mp4" poster="assets/ptd-poster.jpg" width="1280" height="720" muted loop playsinline controls preload="none" data-autoplay aria-label="Tráiler de PTD App"></video>
-                        </div>
-                        <div class="stack-info">
-                            <span class="stack-count mono">03 / 03</span>
-                            <h3 class="stack-title">PTD App</h3>
-                            <p>App Android para dividir gastos en grupo: cada uno apunta lo que paga y entre quiénes se reparte, y la app calcula cuánto debe cada persona. Incluye inicio de sesión con Google, monedero con recarga mediante Google Pay, liquidación del grupo y notificaciones, con los datos sincronizados en tiempo real en Firebase.</p>
-                            <ul class="tags mono"><li>Kotlin</li><li>Jetpack Compose</li><li>Firebase</li><li>Google Pay</li></ul>
-                            <a href="https://github.com/vaquero-javi/Personal/tree/main/PTD-app" target="_blank" rel="noopener" class="pill pill--ghost">
-                                <i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        </section>
-
-        <!-- 05 · EXPERIENCIA: la línea se dibuja con el scroll -->
-        <section id="experiencia" class="experience">
-            <div class="wrap">
-                <header class="sec-head">
-                    <span class="sec-num mono">05</span>
-                    <h2 class="sec-title">Experiencia</h2>
-                </header>
-
-                <ol class="timeline">
-                    <li class="timeline-line" aria-hidden="true"><span></span></li>
-
-                    <li class="job job--current" data-rise>
-                        <span class="job-dot" aria-hidden="true"></span>
-                        <p class="job-dates mono">Mar 2026 / May 2026</p>
-                        <div class="job-body">
-                            <h3 class="job-role">Prácticas Full Stack Developer</h3>
-                            <p class="job-company">Accenture (cliente: BBVA), Madrid</p>
-                            <ul class="job-points">
-                                <li>Desarrollo de aplicaciones integrales para proyectos complejos del sector bancario.</li>
-                                <li>Componentes frontend dinámicos con JavaScript y Lit.</li>
-                                <li>Desarrollo, testing y mantenimiento de servicios backend con Node.js.</li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="job" data-rise>
-                        <span class="job-dot" aria-hidden="true"></span>
-                        <p class="job-dates mono">Nov 2023 / Sep 2025</p>
-                        <div class="job-body">
-                            <h3 class="job-role">Encargado de Camareros</h3>
-                            <p class="job-company">Anubis Coctelería, Fuenlabrada</p>
-                            <p class="job-text">Gestión de equipos, organización del servicio y atención al cliente. Liderazgo y resolución de conflictos bajo presión.</p>
-                        </div>
-                    </li>
-
-                    <li class="job" data-rise>
-                        <span class="job-dot" aria-hidden="true"></span>
-                        <p class="job-dates mono">Abr 2021 / Dic 2023</p>
-                        <div class="job-body">
-                            <h3 class="job-role">Socorrista</h3>
-                            <p class="job-company">Real Summar, Fuenlabrada</p>
-                            <p class="job-text">Responsabilidad directa sobre seguridad y prevención, con atención constante y decisiones críticas inmediatas.</p>
-                        </div>
-                    </li>
-                </ol>
-            </div>
-        </section>
-
-        <!-- 06 · CONTACTO -->
-        <section id="contacto" class="contact">
-            <div class="wrap">
-                <header class="sec-head">
-                    <span class="sec-num mono">06</span>
-                    <h2 class="sec-title">Contacto</h2>
-                </header>
-
-                <p class="contact-big" aria-label="¿Tienes un proyecto o una oportunidad? Hablemos.">
-                    <span class="contact-big-line" aria-hidden="true">¿Tienes un proyecto</span>
-                    <span class="contact-big-line" aria-hidden="true">o una oportunidad?</span>
-                    <span class="contact-big-line contact-big-line--accent" aria-hidden="true">Hablemos.</span>
-                </p>
-
-                <div class="contact-grid">
-                    <div class="contact-side">
-                        <div class="mail-row" data-rise>
-                            <a class="mail-link" href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
-                            <button class="copy-btn mono" type="button" data-copy="javiervaquerovila@gmail.com">
-                                <i class="ti ti-copy" aria-hidden="true"></i><span class="copy-label">Copiar</span>
-                            </button>
-                        </div>
-                        <ul class="contact-links" data-rise>
-                            <li><span class="mono">GitHub</span><a href="https://github.com/vaquero-javi" target="_blank" rel="noopener">vaquero-javi <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a></li>
-                            <li><span class="mono">LinkedIn</span><a href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener">javier-vaquero-vila <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a></li>
-                            <li><span class="mono">Ubicación</span><span>Fuenlabrada, Madrid</span></li>
-                        </ul>
-                    </div>
-
-                    <form id="contact-form" action="https://formspree.io/f/mpqnvvdd" method="POST" class="form" novalidate data-rise>
-                        <div class="field">
-                            <label for="name">Nombre</label>
-                            <input type="text" name="nombre" id="name" autocomplete="name" required>
-                            <p class="field-error" id="name-error"></p>
-                        </div>
-                        <div class="field">
-                            <label for="email">Correo electrónico</label>
-                            <input type="email" name="_replyto" id="email" autocomplete="email" required>
-                            <p class="field-error" id="email-error"></p>
-                        </div>
-                        <div class="field field--wide">
-                            <label for="message">Mensaje</label>
-                            <textarea name="mensaje" id="message" rows="5" required></textarea>
-                            <p class="field-error" id="message-error"></p>
-                        </div>
-                        <input type="hidden" name="_subject" value="Nuevo mensaje desde tu Portfolio Web">
-                        <div class="form-foot field--wide">
-                            <button type="submit" id="form-btn" class="pill pill--solid">Enviar mensaje <i class="ti ti-send" aria-hidden="true"></i></button>
-                            <p class="form-status" role="status" aria-live="polite"></p>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="wrap">
-            <p class="footer-name" aria-hidden="true">Javier Vaquero</p>
-            <div class="footer-row mono">
-                <span>&copy; 2026 Javier Vaquero Vila</span>
-                <span>Madrid <time data-clock>--:--</time></span>
-                <a href="#inicio" class="to-top">Volver arriba <i class="ti ti-arrow-up" aria-hidden="true"></i></a>
-            </div>
-        </div>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>
