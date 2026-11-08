@@ -422,76 +422,70 @@ const initWords = () => {
 };
 
 /* ==========================================================================
-   6. TARJETA DE PRESENTACIÓN: se arrastra 1:1, se inclina con la velocidad
-   y vuelve a su sitio heredando la velocidad del lanzamiento
+   6. TARJETA DE PRESENTACIÓN: al pulsarla gira y enseña la ficha por detrás.
+   El giro es un spring: si vuelves a pulsar a mitad, invierte desde donde está.
    ========================================================================== */
 const initPass = () => {
     const pass = $('.pass');
     if (!pass) return;
-    const m = new Motion({ x: 0, y: 0, r: 0, rx: 0, ry: 0, lift: 0 }, ({ x, y, r, rx, ry, lift }) => {
-        pass.style.transform = `translate3d(${x}px,${y}px,0) rotate(${r}deg) rotateX(${rx}deg) rotateY(${ry}deg) scale(${1 + lift * 0.035})`;
-        pass.style.setProperty('--lift', lift.toFixed(3));
-    }, { precision: { x: 0.05, y: 0.05, r: 0.01, rx: 0.01, ry: 0.01, lift: 0.001 } });
+    const front = $('.pass-front', pass);
+    const back = $('.pass-back', pass);
+    const glares = $$('.pass-glare', pass);
+    const hint = $('.pass-hint');
+    let flipped = false;
 
-    const tracker = new Tracker();
-    const FREE = 70;
-    let base = { x: 0, y: 0 };
-    let dragging = false;
+    const m = new Motion({ flip: 0, rx: 0, ry: 0, s: 1 }, ({ flip, rx, ry, s }) => {
+        pass.style.transform = `rotateX(${rx}deg) rotateY(${flip + ry}deg) scale(${s})`;
+    }, { precision: { flip: 0.05, rx: 0.01, ry: 0.01, s: 0.0005 } });
 
-    // Libre dentro de un radio; más allá, resistencia progresiva
-    const tether = v => (Math.abs(v) <= FREE ? v : Math.sign(v) * (FREE + rubber(Math.abs(v) - FREE, 260)));
-
-    draggable(pass, {
-        immediate: true,
-        down: e => {
-            // Agarra la tarjeta donde esté, aunque siga volviendo
-            const { x, y } = m.values();
-            m.set({ x, y });
-            base = { x, y };
-            dragging = true;
-            tracker.reset();
-            tracker.add(x, y, e.timeStamp);
-            pass.classList.add('is-dragging');
-            pass.style.setProperty('--glare', '0');
-            m.to({ lift: 1, rx: 0, ry: 0 }, { response: 0.3, damping: 1 });
-        },
-        move: ({ dx, dy, t }) => {
-            const x = tether(base.x + dx);
-            const y = tether(base.y + dy);
-            const prevX = m.get('x');
-            m.set({ x, y });
-            tracker.add(x, y, t);
-            // Se inclina hacia donde va, como un objeto colgado del dedo
-            const vx = (x - prevX) * 60;
-            m.to({ r: clamp(vx * 0.01, -10, 10) }, { response: 0.35, damping: 0.8 });
-        },
-        end: ({ t }) => {
-            dragging = false;
-            pass.classList.remove('is-dragging');
-            const v = tracker.velocity(t);
-            // Hubo lanzamiento: rebote ligero; sin él, vuelta suave
-            const flung = Math.hypot(v.x, v.y) > 200;
-            m.to({ x: 0, y: 0 }, { velocity: v, response: 0.55, damping: flung ? 0.62 : 0.85 });
-            m.to({ r: 0, lift: 0 }, { response: 0.5, damping: 0.75 });
+    const toggle = () => {
+        flipped = !flipped;
+        pass.setAttribute('aria-pressed', String(flipped));
+        front.setAttribute('aria-hidden', String(flipped));
+        back.setAttribute('aria-hidden', String(!flipped));
+        if (hint) {
+            hint.lastElementChild.textContent = flipped ? 'Pulsa para volver al anverso' : 'Pulsa para ver el reverso';
+            hint.classList.remove('is-swap');
+            void hint.offsetWidth;
+            hint.classList.add('is-swap');
         }
+        // Un leve rebote al asentarse, como una tarjeta física
+        m.to({ flip: flipped ? 180 : 0 }, { response: 0.6, damping: 0.78 });
+        haptic(6);
+    };
+
+    // Respuesta al pulsar (pointer-down): se hunde un poco; al soltar, gira
+    pass.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        m.to({ s: 0.97 }, { response: 0.15, damping: 1 });
+    });
+    const up = () => m.to({ s: 1 }, { response: 0.35, damping: 0.7 });
+    pass.addEventListener('pointerup', up);
+    pass.addEventListener('pointercancel', up);
+    pass.addEventListener('click', toggle);
+    pass.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        toggle();
     });
 
-    // Inclinación 3D al pasar el ratón (solo punteros finos)
+    // Inclinación 3D y brillo al pasar el ratón (solo punteros finos)
     if (finePointer.matches) {
         pass.addEventListener('pointermove', e => {
-            if (dragging || reduced) return;
+            if (reduced) return;
             const r = pass.getBoundingClientRect();
             const px = (e.clientX - r.left) / r.width - 0.5;
             const py = (e.clientY - r.top) / r.height - 0.5;
-            pass.style.setProperty('--gx', `${(px + 0.5) * 100}%`);
-            pass.style.setProperty('--gy', `${(py + 0.5) * 100}%`);
-            pass.style.setProperty('--glare', '1');
+            glares.forEach(g => {
+                g.style.setProperty('--gx', `${(flipped ? 0.5 - px : px + 0.5) * 100}%`);
+                g.style.setProperty('--gy', `${(py + 0.5) * 100}%`);
+                g.style.setProperty('--glare', '1');
+            });
             m.to({ rx: -py * 9, ry: px * 11 }, { response: 0.5, damping: 1 });
         });
         pass.addEventListener('pointerleave', () => {
-            if (dragging) return;
-            pass.style.setProperty('--glare', '0');
-            m.to({ rx: 0, ry: 0 }, { response: 0.6, damping: 1 });
+            glares.forEach(g => g.style.setProperty('--glare', '0'));
+            m.to({ rx: 0, ry: 0, s: 1 }, { response: 0.6, damping: 1 });
         });
     }
 };
