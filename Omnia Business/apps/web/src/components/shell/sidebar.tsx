@@ -128,14 +128,20 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
-        <Link href="/" className="flex items-center gap-2.5 rounded-lg">
-          <span
-            aria-hidden
-            className="flex size-8 items-center justify-center rounded-[9px] bg-gradient-to-b from-[#3a3a3c] to-[#1d1d1f] text-[15px] font-bold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_1px_2px_rgb(0_0_0/0.2)]"
-          >
-            O
+        <Link href="/" aria-label="Omnia, inicio" className="flex items-center gap-2 rounded-lg">
+          {/* Anillos del logo (public/brand/logo.png, 256×256 con fondo blanco), recortados:
+              el blanco desaparece con multiply y en oscuro se invierte y se funde con screen. */}
+          <span aria-hidden className="relative block h-[26px] w-[39px] overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo.png"
+              alt=""
+              width={53}
+              height={53}
+              className="absolute top-[-13.4px] left-[-7px] size-[53px] max-w-none mix-blend-multiply dark:mix-blend-screen dark:invert"
+            />
           </span>
-          <span className="font-display text-[17px] font-semibold tracking-[-0.01em]">Omnia</span>
+          <span className="font-display text-[19px] font-bold tracking-[-0.015em]">Omnia</span>
         </Link>
         {devMode && (
           <span title="Entorno de desarrollo con datos ficticios" className="ml-auto rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
