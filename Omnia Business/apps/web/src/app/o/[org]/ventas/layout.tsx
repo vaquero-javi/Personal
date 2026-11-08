@@ -13,7 +13,6 @@ export default async function SalesLayout({ children, params }: { children: Reac
         base={`/o/${org}/ventas`}
         items={[
           { href: '', label: 'Pedidos B2B' },
-          { href: 'tpv', label: 'TPV' },
           { href: 'clientes', label: 'Clientes' },
           { href: 'tarifas', label: 'Tarifas' },
         ]}

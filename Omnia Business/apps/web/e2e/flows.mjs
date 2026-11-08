@@ -130,14 +130,6 @@ await step('Ajuste de stock', async () => {
   await waitText('Ajuste registrado');
 });
 
-await step('Cobro en TPV', async () => {
-  await go(`${ORG}/ventas/tpv`);
-  await page.waitForFunction(() => [...document.querySelectorAll('ul button')].some((b) => !b.disabled), { timeout: 30000 });
-  await page.evaluate(() => [...document.querySelectorAll('ul button')].find((b) => !b.disabled).click());
-  await clickButton('Cobrar');
-  await waitText('Cobrado ·');
-});
-
 let invoiceUrl = '';
 await step('Crear y emitir factura', async () => {
   await go(`${ORG}/facturacion/nueva`);

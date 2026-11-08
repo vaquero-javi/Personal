@@ -57,21 +57,6 @@ export async function cancelSalesOrder(org: string, id: string, _: ActionState, 
   });
 }
 
-/** Cobro de TPV. Devuelve el ticket para mostrarlo en pantalla. */
-export async function posCheckout(org: string, payload: { warehouseId: string; method: 'cash' | 'card'; tendered?: string; lines: { itemId: string; quantity: string }[] }) {
-  const { ctx } = await requirePermission(org, 'sales.write');
-  try {
-    const ticket = await container().sales.posCheckout(ctx, payload);
-    revalidate(org);
-    return { ok: true as const, ticket };
-  } catch (error) {
-    const result = await runAction(async () => {
-      throw error;
-    });
-    return { ok: false as const, error: result.error ?? 'No se pudo cobrar' };
-  }
-}
-
 export async function createPriceList(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
     const { ctx } = await requirePermission(org, 'parties.write');
