@@ -656,121 +656,401 @@ const initCarousel = () => {
 };
 
 /* ==========================================================================
-   8. PESTAÑAS: control segmentado + paneles que se deslizan con el dedo.
-   Una sola posición continua mueve a la vez el indicador, los paneles y
-   la altura, así que tocar, arrastrar el indicador o deslizar el panel se
-   sienten como el mismo objeto.
+   8. SOBRE MÍ · BURBUJAS: caen al entrar en pantalla, chocan entre sí y se
+   pueden coger, lanzar (heredan la velocidad del dedo) y empujar unas a otras.
+   Tocar un hueco vacío las aparta con un pequeño impulso.
    ========================================================================== */
-const initTabs = tabsRoot => {
-    const seg = $('.seg', tabsRoot);
-    const thumb = $('.seg-thumb', seg);
-    const tabs = $$('[role="tab"]', seg);
-    const viewport = $('.tabs-viewport', tabsRoot);
-    const track = $('.tabs-track', tabsRoot);
-    const panels = $$('[role="tabpanel"]', tabsRoot);
-    const n = tabs.length;
-    let index = Math.max(0, tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'));
-    let W = 0, gap = 0, segs = [], heights = [];
+const initPit = () => {
+    const pit = $('[data-pit]');
+    if (!pit || reduced) return;
+    const els = $$('.bubble', pit);
+    pit.classList.add('is-live');
 
-    const measure = () => {
-        W = viewport.clientWidth;
-        gap = parseFloat(getComputedStyle(track).columnGap) || 0;
-        segs = tabs.map(t => ({ x: t.offsetLeft, w: t.offsetWidth }));
-        heights = panels.map(p => p.offsetHeight);
-    };
+    const G = 2600;          // gravedad (px/s²)
+    const BOUNCE = 0.32;     // restitución
+    const STEP = 1 / 120;
+    let W = 0, H = 0;
+    let bodies = [];
+    let held = null;
+    let running = false;
+    let started = false;
+    let visible = false;
+    let still = 0;
+    let acc = 0;
+    let last = 0;
 
-    const m = new Motion({ pos: index }, ({ pos }) => {
-        track.style.transform = `translate3d(${-pos * (W + gap)}px,0,0)`;
-        const i0 = n > 1 ? clamp(Math.floor(pos), 0, n - 2) : 0;
-        const i1 = Math.min(i0 + 1, n - 1);
-        const f = pos - i0;
-        // El indicador extrapola en los bordes: así también "estira" con el rubber-band
-        thumb.style.transform = `translate3d(${lerp(segs[i0].x, segs[i1].x, f)}px,0,0)`;
-        thumb.style.width = `${lerp(segs[i0].w, segs[i1].w, clamp(f, 0, 1))}px`;
-        viewport.style.height = `${lerp(heights[i0], heights[i1], clamp(f, 0, 1))}px`;
-    }, { response: 0.42, damping: 1, precision: 0.0005 });
-
-    const select = (i, velocity = 0, flung = false) => {
-        index = clamp(i, 0, n - 1);
-        tabs.forEach((t, k) => {
-            t.setAttribute('aria-selected', String(k === index));
-            t.tabIndex = k === index ? 0 : -1;
+    const size = () => {
+        W = pit.clientWidth;
+        H = pit.clientHeight;
+        const small = W < 600;
+        bodies.forEach(b => {
+            b.el.style.width = b.el.style.height = '';
+            b.el.style.width = 'max-content';
+            const d = Math.max(b.el.offsetWidth, b.el.offsetHeight) + (small ? 16 : 40);
+            b.r = Math.max(d, small ? 72 : 112) / 2;
+            b.m = b.r * b.r;
+            b.el.style.width = b.el.style.height = `${b.r * 2}px`;
+            b.x = clamp(b.x, b.r, W - b.r);
+            if (b.in) b.y = clamp(b.y, b.r, H - b.r);
         });
-        panels.forEach((p, k) => { p.inert = k !== index; });
-        m.to({ pos: index }, { velocity, response: 0.42, damping: flung ? 0.86 : 1 });
     };
 
-    measure();
-    select(index);
-    m.set({ pos: index });
-
-    tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
-    seg.addEventListener('keydown', e => {
-        const keys = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: n - 1 };
-        if (!(e.key in keys)) return;
-        e.preventDefault();
-        select(keys[e.key]);
-        tabs[index].focus();
+    bodies = els.map((el, i) => ({ el, x: 0, y: 0, vx: 0, vy: 0, r: 40, m: 1, in: false, i }));
+    size();
+    // Posición de salida: escalonadas por encima del borde superior
+    bodies.forEach((b, i) => {
+        b.x = b.r + Math.random() * Math.max(1, W - 2 * b.r);
+        b.y = -b.r - i * 90 - Math.random() * 60;
+        b.vx = (Math.random() - 0.5) * 160;
     });
 
-    const posRubber = (raw, unit) => {
-        if (raw < 0) return -rubber(-raw * unit, unit) / unit;
-        if (raw > n - 1) return n - 1 + rubber((raw - (n - 1)) * unit, unit) / unit;
-        return raw;
+    const render = () => {
+        for (const b of bodies) b.el.style.transform = `translate3d(${(b.x - b.r).toFixed(1)}px,${(b.y - b.r).toFixed(1)}px,0)`;
     };
 
-    // Deslizar el panel
+    const step = h => {
+        for (const b of bodies) {
+            if (b === held) continue;
+            b.vy += G * h;
+            b.vx *= 0.9995;
+            b.x += b.vx * h;
+            b.y += b.vy * h;
+        }
+        // Choques entre burbujas (varias pasadas para que se asienten sin solaparse)
+        for (let it = 0; it < 3; it++) {
+            for (let a = 0; a < bodies.length; a++) {
+                const A = bodies[a];
+                for (let c = a + 1; c < bodies.length; c++) {
+                    const B = bodies[c];
+                    const dx = B.x - A.x;
+                    const dy = B.y - A.y;
+                    const min = A.r + B.r;
+                    const d2 = dx * dx + dy * dy;
+                    if (d2 >= min * min || d2 === 0) continue;
+                    const d = Math.sqrt(d2);
+                    const nx = dx / d;
+                    const ny = dy / d;
+                    const wa = A === held ? 0 : 1 / A.m;
+                    const wb = B === held ? 0 : 1 / B.m;
+                    const sum = wa + wb;
+                    if (!sum) continue;
+                    const overlap = min - d;
+                    A.x -= nx * overlap * (wa / sum);
+                    A.y -= ny * overlap * (wa / sum);
+                    B.x += nx * overlap * (wb / sum);
+                    B.y += ny * overlap * (wb / sum);
+                    const vn = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny;
+                    if (vn < 0) {
+                        const j = (-(1 + BOUNCE) * vn) / sum;
+                        A.vx -= j * wa * nx; A.vy -= j * wa * ny;
+                        B.vx += j * wb * nx; B.vy += j * wb * ny;
+                    }
+                }
+            }
+        }
+        // Paredes y suelo
+        for (const b of bodies) {
+            if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
+            if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
+            if (b.y > H - b.r) {
+                b.y = H - b.r;
+                b.vy = -Math.abs(b.vy) * BOUNCE;
+                if (Math.abs(b.vy) < 40) b.vy = 0;
+                b.vx *= 0.97; // rozamiento con el suelo
+            }
+            if (b.y > b.r) b.in = true;
+            if (b.in && b.y < b.r) { b.y = b.r; b.vy = Math.abs(b.vy) * BOUNCE; }
+        }
+    };
+
+    const frame = t => {
+        const dt = last ? Math.min((t - last) / 1000, 1 / 20) : 1 / 60;
+        last = t;
+        acc += dt;
+        while (acc >= STEP) { step(STEP); acc -= STEP; }
+        render();
+        // Se duerme cuando todo está quieto (no gasta batería)
+        const energy = bodies.reduce((e, b) => e + Math.abs(b.vx) + Math.abs(b.vy), 0);
+        still = !held && bodies.every(b => b.in) && energy < bodies.length * 6 ? still + dt : 0;
+        if (still > 0.6 || !visible) { running = false; last = 0; return; }
+        requestAnimationFrame(frame);
+    };
+    const wake = () => {
+        if (running || !started) return;
+        running = true;
+        still = 0;
+        requestAnimationFrame(frame);
+    };
+
+    render();
+    new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) { started = true; wake(); }
+    }, { threshold: 0.25 }).observe(pit);
+
+    // Coger y lanzar
     const tracker = new Tracker();
-    let base = 0;
-    draggable(viewport, {
+    let grab = { x: 0, y: 0 };
+    const local = e => {
+        const r = pit.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    bodies.forEach(b => {
+        b.el.addEventListener('pointerdown', e => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            e.stopPropagation();
+            started = true;
+            held = b;
+            b.in = true;
+            const p = local(e);
+            grab = { x: p.x - b.x, y: p.y - b.y };
+            tracker.reset();
+            tracker.add(b.x, b.y, e.timeStamp);
+            b.vx = b.vy = 0;
+            b.el.classList.add('is-held');
+            try { b.el.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ }
+            wake();
+        });
+        b.el.addEventListener('pointermove', e => {
+            if (held !== b) return;
+            const p = local(e);
+            b.x = clamp(p.x - grab.x, b.r, W - b.r);
+            b.y = clamp(p.y - grab.y, b.r, H - b.r);
+            tracker.add(b.x, b.y, e.timeStamp);
+            // Mientras se arrastra, su velocidad empuja a las demás
+            const v = tracker.velocity(e.timeStamp);
+            b.vx = v.x;
+            b.vy = v.y;
+        });
+        const drop = e => {
+            if (held !== b) return;
+            const v = tracker.velocity(e.timeStamp);
+            b.vx = clamp(v.x, -3200, 3200);
+            b.vy = clamp(v.y, -3200, 3200);
+            held = null;
+            b.el.classList.remove('is-held');
+            if (Math.hypot(b.vx, b.vy) > 900) haptic(6);
+            wake();
+        };
+        b.el.addEventListener('pointerup', drop);
+        b.el.addEventListener('pointercancel', drop);
+        b.el.addEventListener('dragstart', e => e.preventDefault());
+    });
+
+    // Toque en un hueco: onda expansiva
+    pit.addEventListener('pointerdown', e => {
+        if (e.target !== pit) return;
+        const p = local(e);
+        for (const b of bodies) {
+            const dx = b.x - p.x;
+            const dy = b.y - p.y;
+            const d = Math.max(Math.hypot(dx, dy), 1);
+            const f = Math.max(0, 1 - d / 320) * 1400;
+            b.vx += (dx / d) * f;
+            b.vy += (dy / d) * f - f * 0.4;
+        }
+        started = true;
+        wake();
+    });
+
+    new ResizeObserver(() => { size(); render(); wake(); }).observe(pit);
+    document.fonts?.ready.then(() => { size(); render(); });
+};
+
+/* ==========================================================================
+   8a. TRAYECTORIA: línea temporal. El cabezal se arrastra 1:1; si se lanza,
+   proyecta la inercia y se imanta al comienzo de la etapa más cercana.
+   ========================================================================== */
+const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const MONTHS_LONG = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+const initJourney = () => {
+    const box = $('[data-journey]');
+    if (!box) return;
+    const track = $('.journey-track', box);
+    const head = $('.journey-head', box);
+    const axis = $('.journey-axis', box);
+    const detail = $('.journey-detail', box);
+    const monthEl = $('[data-month]', box);
+    const yearEl = $('[data-year]', box);
+    const lanes = { work: $('[data-lane="work"] .journey-bars', box), study: $('[data-lane="study"] .journey-bars', box) };
+
+    const today = new Date();
+    const NOW = today.getFullYear() + today.getMonth() / 12;
+    const MIN = 2020.5;
+    const MAX = Math.max(2027, Math.ceil(NOW + 0.2));
+    const LO = 2020.6667;
+    const HI = NOW;
+
+    const entries = $$('.journey-data > li', box).map(li => ({
+        li,
+        lane: li.dataset.lane,
+        start: +li.dataset.start,
+        end: li.dataset.end === 'now' ? Infinity : +li.dataset.end,
+        short: li.dataset.short,
+        dates: li.dataset.dates
+    }));
+    box.classList.add('is-live');
+
+    const pct = t => ((t - MIN) / (MAX - MIN)) * 100;
+    entries.forEach(e => {
+        const bar = document.createElement('span');
+        bar.className = 'journey-bar';
+        if (e.end === Infinity) bar.classList.add('is-open');
+        bar.style.left = `${pct(e.start)}%`;
+        bar.style.width = `${pct(Math.min(e.end, MAX)) - pct(e.start)}%`;
+        bar.innerHTML = `<span>${e.short}</span>`;
+        lanes[e.lane].append(bar);
+        e.bar = bar;
+    });
+    for (let y = Math.ceil(MIN); y < MAX; y++) {
+        const tick = document.createElement('span');
+        tick.textContent = y;
+        tick.style.left = `${pct(y)}%`;
+        axis.append(tick);
+    }
+
+    let width = track.clientWidth;
+    const pxPerYear = () => width / (MAX - MIN);
+    const tAt = clientX => MIN + ((clientX - track.getBoundingClientRect().left) / width) * (MAX - MIN);
+    const fitLabels = () => entries.forEach(e => {
+        e.bar.classList.toggle('is-narrow', e.bar.clientWidth < e.bar.firstChild.scrollWidth + 22);
+    });
+
+    const activeAt = t => entries.filter(e => t >= e.start && t < e.end);
+    const html = list => list
+        .sort((a, b) => (a.lane === b.lane ? 0 : a.lane === 'work' ? -1 : 1))
+        .map(e => `<article class="jd jd--${e.lane}"><p class="jd-kind">${e.lane === 'work' ? 'Trabajo' : 'Estudios'} · ${e.dates}</p>${e.li.innerHTML}</article>`)
+        .join('');
+
+    // El panel reserva la altura de su combinación más alta: el resto de la página no salta
+    const reserve = () => {
+        detail.style.minHeight = '';
+        const seen = new Set();
+        let max = 0;
+        for (let t = LO; t <= HI; t += 1 / 12) {
+            const list = activeAt(t);
+            const key = list.map(e => e.short).join();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            detail.innerHTML = html(list);
+            max = Math.max(max, detail.offsetHeight);
+        }
+        detail.style.minHeight = `${max}px`;
+        shownKey = null;
+    };
+
+    // Detalle: cambia con un fundido corto e interrumpible
+    const fade = new Motion({ y: 0, o: 1 }, ({ y, o }) => {
+        detail.style.transform = y ? `translate3d(0,${y}px,0)` : '';
+        detail.style.opacity = o;
+    }, { precision: { y: 0.05, o: 0.002 } });
+
+    let shownKey = null;
+    let lastLabel = '';
+    let lastYear = 0;
+    const m = new Motion({ t: LO }, ({ t }) => {
+        head.style.transform = `translate3d(${(((t - MIN) / (MAX - MIN)) * width).toFixed(1)}px,0,0)`;
+        const tt = clamp(t, LO, HI);
+        const year = Math.floor(tt + 1e-6);
+        const month = clamp(Math.floor((tt - year) * 12 + 1e-4), 0, 11);
+        const label = `${MONTHS[month]} ${year}`;
+        if (label !== lastLabel) {
+            lastLabel = label;
+            monthEl.textContent = MONTHS[month];
+            yearEl.textContent = year;
+            track.setAttribute('aria-valuetext', `${MONTHS_LONG[month]} de ${year}`);
+            track.setAttribute('aria-valuenow', tt.toFixed(2));
+            if (dragging && year !== lastYear) haptic(3);
+            lastYear = year;
+        }
+        const list = activeAt(tt);
+        const key = list.map(e => e.short).join();
+        entries.forEach(e => e.bar.classList.toggle('is-active', list.includes(e)));
+        if (key !== shownKey) {
+            shownKey = key;
+            detail.innerHTML = html(list);
+            fade.set({ y: 8, o: 0.2 });
+            fade.to({ y: 0, o: 1 }, { response: 0.3, damping: 1 });
+        }
+    }, { response: 0.45, damping: 1, precision: 0.0005 });
+
+    track.setAttribute('aria-valuemin', LO.toFixed(2));
+    track.setAttribute('aria-valuemax', HI.toFixed(2));
+
+    // Arrastre del cabezal (se puede agarrar desde cualquier punto de la pista)
+    const tracker = new Tracker();
+    let dragging = false;
+    const follow = clientX => {
+        const raw = tAt(clientX);
+        const ppy = pxPerYear();
+        const t = rubberClamp(raw * ppy, LO * ppy, HI * ppy, width * 0.15) / ppy;
+        tracker.add(t * ppy, 0, performance.now());
+        m.to({ t }, { response: 0.07, damping: 1 });
+    };
+    draggable(track, {
         axis: 'x',
-        down: e => { m.stop(); base = m.get('pos'); tracker.reset(); tracker.add(base, 0, e.timeStamp); },
-        move: ({ dx, t }) => {
-            const unit = W + gap;
-            const pos = posRubber(base - dx / unit, unit);
-            m.set({ pos });
-            tracker.add(pos, 0, t);
+        threshold: 3,
+        down: e => {
+            dragging = true;
+            track.classList.add('is-held');
+            tracker.reset();
+            // Pulsar en la pista salta ahí con un spring (respuesta inmediata)
+            const t = clamp(tAt(e.clientX), LO, HI);
+            tracker.add(t * pxPerYear(), 0, e.timeStamp);
+            m.to({ t }, { response: 0.28, damping: 1 });
         },
-        end: ({ dragged, t }) => {
-            const pos = m.get('pos');
-            if (!dragged) { select(Math.round(pos)); return; }
-            const unit = W + gap;
-            const v = tracker.velocity(t).x; // en posiciones por segundo
-            const projected = pos + project(v * unit) / unit;
-            const from = Math.round(base);
-            // Como un pager: como mucho una página por gesto
-            const target = clamp(Math.round(projected), from - 1, from + 1);
-            select(target, v, Math.abs(v * unit) > 300);
+        move: ({ e }) => follow(e.clientX),
+        end: ({ dragged }) => {
+            dragging = false;
+            track.classList.remove('is-held');
+            const ppy = pxPerYear();
+            const t = m.s.t.target;
+            const v = dragged ? tracker.velocity(performance.now()).x : 0;
+            let target = clamp(t, LO, HI);
+            // Lanzamiento: se imanta al comienzo de la etapa más cercana al punto proyectado
+            if (Math.abs(v) > 250) {
+                const projected = t + project(v) / ppy;
+                const stops = [LO, ...entries.map(e => e.start), HI];
+                target = stops.reduce((best, s) => (Math.abs(s - projected) < Math.abs(best - projected) ? s : best), stops[0]) + 0.001;
+                target = clamp(target, LO, HI);
+            }
+            m.to({ t: target }, { velocity: v / ppy, response: 0.5, damping: Math.abs(v) > 250 ? 0.86 : 1 });
         }
     });
 
-    // Arrastrar el indicador del control segmentado
-    const thumbTracker = new Tracker();
-    let thumbBase = 0;
-    draggable(seg, {
-        axis: 'x',
-        threshold: 4,
-        canStart: e => e.target.closest('[role="tab"]') === tabs[index],
-        down: e => { m.stop(); thumbBase = m.get('pos'); thumbTracker.reset(); thumbTracker.add(thumbBase, 0, e.timeStamp); },
-        move: ({ dx, t }) => {
-            const unit = segs.reduce((a, s) => a + s.w, 0) / n;
-            const pos = posRubber(thumbBase + dx / unit, unit);
-            m.set({ pos });
-            thumbTracker.add(pos, 0, t);
-        },
-        end: ({ dragged, t }) => {
-            const pos = m.get('pos');
-            if (!dragged) { select(Math.round(pos)); return; }
-            const v = thumbTracker.velocity(t).x;
-            select(Math.round(pos + v * 0.08), v, false);
-        }
+    // Teclado: flechas = 1 mes, AvPág/RePág = 1 año
+    track.addEventListener('keydown', e => {
+        const t = m.s.t.target;
+        const map = { ArrowRight: 1 / 12, ArrowUp: 1 / 12, ArrowLeft: -1 / 12, ArrowDown: -1 / 12, PageUp: 1, PageDown: -1 };
+        let next;
+        if (e.key in map) next = t + map[e.key];
+        else if (e.key === 'Home') next = LO;
+        else if (e.key === 'End') next = HI;
+        else return;
+        e.preventDefault();
+        m.to({ t: clamp(next, LO, HI) }, { response: 0.3, damping: 1 });
     });
 
-    // Se observan los paneles (no el visor, cuya altura cambia en cada frame)
-    const remeasure = () => { measure(); m.flush(); };
-    const ro = new ResizeObserver(remeasure);
-    panels.forEach(p => ro.observe(p));
-    document.fonts?.ready.then(remeasure);
+    const layout = () => {
+        width = track.clientWidth;
+        fitLabels();
+        reserve();
+        m.flush();
+    };
+    new ResizeObserver(layout).observe(track);
+    document.fonts?.ready.then(layout);
+    layout();
+    m.set({ t: LO });
+
+    // Al entrar en pantalla el cabezal recorre la trayectoria hasta Accenture
+    const intro = entries.find(e => e.short === 'Accenture')?.start + 0.04 || HI;
+    const io = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        if (!dragging) setTimeout(() => m.to({ t: intro }, { response: 2.2, damping: 1 }), 250);
+    }, { threshold: 0.45 });
+    io.observe(track);
 };
 
 /* ==========================================================================
@@ -1292,7 +1572,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initNav();
     initPass();
     initCarousel();
-    $$('[data-tabs]').forEach(initTabs);
+    initPit();
+    initJourney();
     initKeyboard();
     initAnchors();
     initCopy();
