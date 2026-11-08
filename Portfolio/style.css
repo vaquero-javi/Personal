@@ -280,8 +280,6 @@ time, .counter, .entry-date { font-variant-numeric: tabular-nums; }
 .icon-btn:disabled { opacity: 0.35; cursor: default; }
 @media (hover: hover) { .icon-btn:not(:disabled):hover { background: var(--fill); } }
 
-.hint { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3); }
-.hint i { font-size: 1.05rem; }
 
 /* ==========================================================================
    Isla de navegación + efecto de borde
@@ -570,7 +568,6 @@ time, .counter, .entry-date { font-variant-numeric: tabular-nums; }
 .tabs-viewport { overflow: hidden; margin-top: 28px; touch-action: pan-y; }
 .tabs-track { display: flex; align-items: flex-start; gap: 24px; will-change: transform; }
 .tab-panel { flex: 0 0 100%; min-width: 0; }
-.tabs-hint { margin-top: 18px; }
 
 .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
 .skill {
@@ -746,7 +743,8 @@ time, .counter, .entry-date { font-variant-numeric: tabular-nums; }
    ========================================================================== */
 @media (max-width: 1080px) {
     .island-links, .island-cv { display: none; }
-    .island-current, .menu-btn { display: inline-flex; }
+    .island-current { display: inline-flex; }
+    .menu-btn { display: inline-grid; }
     .island-current { align-items: center; height: 36px; }
 }
 
@@ -795,7 +793,7 @@ time, .counter, .entry-date { font-variant-numeric: tabular-nums; }
     .island-current.is-swap { animation: none; }
     .toast, .scrim { transition: opacity 0.2s ease; }
     .pcard-inner { transform: none; }
-    .hint { display: none; }
+
 }
 
 @media (prefers-reduced-transparency: reduce) {
