@@ -276,3 +276,43 @@ describe('Desvincular desde la tablet', () => {
     expect((await pos.terminal(fresh))?.terminalId).toBe(terminal.terminalId);
   });
 });
+
+describe('Nombre del cliente y comanda', () => {
+  it('la mesa se abre con el nombre del cliente y la comanda lleva mesa, cliente y solo lo de cada envío', async () => {
+    const table = await freeTable();
+    const tabId = await pos.openTab(marta, terminal, { tableId: table.id, customerName: '  Laura  ', guests: 2 });
+    const tab = await pos.tab(marta, tabId);
+    expect(tab.customerName).toBe('Laura');
+    expect((await pos.floor(marta)).tables.find((t) => t.id === table.id)?.tab?.customerName).toBe('Laura');
+
+    await pos.setLineQuantity(marta, terminal, { lineId: randomUUID(), tabId, itemId: (await product('Caña')).itemId, quantity: 2 });
+    const first = await pos.sendToKitchen(marta, tabId);
+    expect(first.lines).toBe(1);
+    expect(first.sentAt).not.toBeNull();
+
+    const gin = randomUUID();
+    await pos.setLineQuantity(marta, terminal, { lineId: gin, tabId, itemId: (await product('Gin-tonic')).itemId, quantity: 1 });
+    await pos.setLineNote(marta, gin, 'Sin hielo');
+    const second = await pos.sendToKitchen(marta, tabId);
+
+    const ticket = await pos.kitchenTicket(marta, tabId, second.sentAt);
+    expect(ticket.tableName).toBe(table.name);
+    expect(ticket.customerName).toBe('Laura');
+    expect(ticket.lines).toEqual([{ description: 'Gin-tonic', quantity: '1.0000', note: 'Sin hielo' }]);
+    expect((await pos.kitchenTicket(marta, tabId, first.sentAt)).lines.map((l) => l.description)).toEqual(['Caña']);
+    // Sin envío indicado, el último.
+    expect((await pos.kitchenTicket(marta, tabId)).lines.map((l) => l.description)).toEqual(['Gin-tonic']);
+    // Sin nada pendiente, no hay comanda nueva.
+    expect(await pos.sendToKitchen(marta, tabId)).toEqual({ lines: 0, sentAt: null });
+
+    await pos.setCustomerName(marta, tabId, '');
+    expect((await pos.tab(marta, tabId)).customerName).toBeNull();
+    await pos.cancelTab(carmen, tabId, 'Prueba de comanda');
+  });
+
+  it('dejar el nombre en blanco abre la mesa sin nombre', async () => {
+    const tabId = await pos.openTab(marta, terminal, { tableId: (await freeTable()).id, customerName: '   ', guests: 2 });
+    expect((await pos.tab(marta, tabId)).customerName).toBeNull();
+    await pos.cancelTab(marta, tabId, 'Vacía');
+  });
+});

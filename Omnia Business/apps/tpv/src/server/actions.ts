@@ -85,7 +85,7 @@ export async function clockRegister(input: { qr: string; entryType: ClockEntryTy
 
 // ------------------------------------------------------------- cuentas
 
-export async function openTab(input: { tableId?: string; label?: string; guests?: number }): Promise<Result<string>> {
+export async function openTab(input: { tableId?: string; label?: string; customerName?: string; guests?: number }): Promise<Result<string>> {
   return run(async () => {
     const { ctx, terminal } = await shiftFor();
     const id = await container().pos.openTab(ctx, terminal, input);
@@ -118,12 +118,22 @@ export async function setLineNote(lineId: string, note: string): Promise<Result>
   });
 }
 
-export async function sendToKitchen(tabId: string): Promise<Result<number>> {
+/** Envía lo pendiente a barra/cocina; devuelve la marca del envío para imprimir su comanda. */
+export async function sendToKitchen(tabId: string): Promise<Result<{ lines: number; sentAt: string | null }>> {
   return run(async () => {
     const { ctx } = await shiftFor();
-    const n = await container().pos.sendToKitchen(ctx, tabId);
+    const sent = await container().pos.sendToKitchen(ctx, tabId);
     refresh();
-    return n;
+    return sent;
+  });
+}
+
+export async function setCustomerName(tabId: string, name: string): Promise<Result> {
+  return run(async () => {
+    const { ctx } = await shiftFor();
+    await container().pos.setCustomerName(ctx, tabId, name);
+    refresh();
+    return undefined;
   });
 }
 

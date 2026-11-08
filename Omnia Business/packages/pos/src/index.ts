@@ -63,6 +63,8 @@ export interface TabSummary {
   number: number;
   status: TabStatus;
   label: string | null;
+  /** Nombre de quien pide en la mesa (opcional). */
+  customerName: string | null;
   waiterId: string;
   waiterName: string;
   guests: number;
@@ -71,6 +73,19 @@ export interface TabSummary {
   total: string;
   items: number;
   unsent: number;
+}
+
+/** Comanda que se imprime en barra/cocina al enviar. */
+export interface KitchenTicket {
+  number: number;
+  label: string | null;
+  customerName: string | null;
+  guests: number;
+  waiterName: string;
+  tableName: string | null;
+  tableArea: string | null;
+  sentAt: Date | null;
+  lines: { description: string; quantity: string; note: string | null }[];
 }
 
 export interface FloorTable {
@@ -249,6 +264,8 @@ const OpenTabInput = z
   .object({
     tableId: z.uuid().optional(),
     label: z.string().trim().min(1).max(40).optional(),
+    /** Nombre de quien pide; vacío = sin nombre. */
+    customerName: z.string().trim().max(40).optional().transform((v) => v || null),
     guests: z.coerce.number().int().min(1).max(99).default(1),
   })
   .refine((v) => v.tableId || v.label, 'Elige una mesa o ponle nombre a la cuenta');
@@ -339,7 +356,7 @@ function totalsByTab(lines: RawLine[]) {
 }
 
 const tabSummarySelect = (tx: Tx) => tx`
-  select t.id, t.number::int, t.status, t.label, t.waiter_id, coalesce(u.full_name, u.email) as waiter_name, t.guests,
+  select t.id, t.number::int, t.status, t.label, t.customer_name, t.waiter_id, coalesce(u.full_name, u.email) as waiter_name, t.guests,
          t.opened_at, t.precheck_at, t.table_id,
          (select count(*)::int from pos_tab_lines l where l.tab_id = t.id) as items,
          (select count(*)::int from pos_tab_lines l where l.tab_id = t.id and l.sent_at is null) as unsent
@@ -671,8 +688,8 @@ export function createPosService(sql: Sql) {
           if (existing) return existing.id;
         }
         const [row] = await tx<{ id: string }[]>`
-          insert into pos_tabs (organization_id, table_id, label, terminal_id, guests)
-          values (${orgId}, ${input.tableId ?? null}, ${input.tableId ? null : input.label!}, ${terminal.terminalId}, ${input.guests})
+          insert into pos_tabs (organization_id, table_id, label, customer_name, terminal_id, guests)
+          values (${orgId}, ${input.tableId ?? null}, ${input.tableId ? null : input.label!}, ${input.customerName}, ${terminal.terminalId}, ${input.guests})
           returning id`;
         return row!.id;
       });
@@ -682,7 +699,7 @@ export function createPosService(sql: Sql) {
       const id = z.uuid().parse(tabId);
       return withTenant(sql, ctx, async (tx) => {
         const tab = asRow<Omit<TabDetail, 'staffDiscount'> & { tableId: string | null; tableName: string | null; tableArea: string | null; staffPct: string | null; staffHolder: string | null }>(await tx`
-          select t.id, t.number::int, t.status, t.label, t.waiter_id, coalesce(u.full_name, u.email) as waiter_name, t.guests,
+          select t.id, t.number::int, t.status, t.label, t.customer_name, t.waiter_id, coalesce(u.full_name, u.email) as waiter_name, t.guests,
                  t.opened_at, t.precheck_at, t.invoice_id, t.table_id, pt.name as table_name, pt.area as table_area,
                  t.staff_discount_pct::text as staff_pct, coalesce(h.full_name, h.email) as staff_holder
           from pos_tabs t join users u on u.id = t.waiter_id left join pos_tables pt on pt.id = t.table_id
@@ -753,12 +770,54 @@ export function createPosService(sql: Sql) {
       });
     },
 
-    /** Marca como enviado a cocina/barra lo pendiente. Devuelve cuántas líneas. */
-    async sendToKitchen(ctx: TenantContext, tabId: string): Promise<number> {
+    /** Cambia (o quita, con texto vacío) el nombre del cliente de una cuenta abierta. */
+    async setCustomerName(ctx: TenantContext, tabId: string, name: string) {
+      const value = z.string().trim().max(40).parse(name) || null;
+      await withTenant(sql, ctx, async (tx) => {
+        const rows = await tx`
+          update pos_tabs set customer_name = ${value}
+          where id = ${z.uuid().parse(tabId)} and status in ('open', 'billing') returning id`;
+        if (rows.length === 0) throw new DomainError('INVALID_STATE', 'La cuenta ya está cerrada');
+      });
+    },
+
+    /**
+     * Marca como enviado a cocina/barra lo pendiente. Devuelve cuántas líneas y
+     * la marca de tiempo del envío, que identifica la comanda a imprimir.
+     */
+    async sendToKitchen(ctx: TenantContext, tabId: string): Promise<{ lines: number; sentAt: string | null }> {
       return withTenant(sql, ctx, async (tx) => {
         await lockOpenTab(tx, z.uuid().parse(tabId));
-        const rows = await tx`update pos_tab_lines set sent_at = now() where tab_id = ${tabId} and sent_at is null returning id`;
-        return rows.length;
+        const rows = await tx<{ sent_at: Date }[]>`update pos_tab_lines set sent_at = now() where tab_id = ${tabId} and sent_at is null returning sent_at`;
+        return { lines: rows.length, sentAt: rows[0] ? rows[0].sent_at.toISOString() : null };
+      });
+    },
+
+    /**
+     * Comanda para barra/cocina: mesa, cliente y lo enviado en un envío
+     * (`sentAt`), o en el último si no se indica. Sin precios.
+     */
+    async kitchenTicket(ctx: TenantContext, tabId: string, sentAt?: string | null): Promise<KitchenTicket> {
+      const id = z.uuid().parse(tabId);
+      const at = sentAt ? z.iso.datetime({ offset: true }).parse(sentAt) : null;
+      return withTenant(sql, ctx, async (tx) => {
+        const tab = asRow<{ number: number; label: string | null; customerName: string | null; guests: number; waiterName: string; tableName: string | null; tableArea: string | null }>(await tx`
+          select t.number::int, t.label, t.customer_name, t.guests, coalesce(u.full_name, u.email) as waiter_name,
+                 pt.name as table_name, pt.area as table_area
+          from pos_tabs t join users u on u.id = t.waiter_id left join pos_tables pt on pt.id = t.table_id
+          where t.id = ${id}`);
+        if (!tab) throw new DomainError('NOT_FOUND', 'Cuenta no encontrada');
+        let sent: Date | null = at ? new Date(at) : null;
+        if (!sent) {
+          const [last] = await tx<{ sent_at: Date | null }[]>`select max(sent_at) as sent_at from pos_tab_lines where tab_id = ${id}`;
+          sent = last?.sent_at ?? null;
+        }
+        const lines = sent
+          ? asRows<{ description: string; quantity: string; note: string | null }>(await tx`
+              select description, quantity::text, note from pos_tab_lines
+              where tab_id = ${id} and sent_at = ${sent} order by created_at, id`)
+          : [];
+        return { ...tab, sentAt: sent, lines };
       });
     },
 

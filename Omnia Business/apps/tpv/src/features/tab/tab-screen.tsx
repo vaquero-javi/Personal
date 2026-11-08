@@ -3,11 +3,12 @@
 import { useCallback, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowLeftRight, BadgePercent, ChefHat, Minus, Plus, Printer, Trash2, Users, WifiOff, X } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, BadgePercent, ChefHat, Minus, Pencil, Plus, Printer, Trash2, UserRound, Users, WifiOff, X } from 'lucide-react';
 import type { CheckoutResult, MenuProduct, PosCategory, TabDetail } from '@omnia/pos/types';
 import { Button, Modal, Notice, useFlash } from '@/components/ui';
 import { elapsed, formatEuro, formatQty, formatTime } from '@/lib/format';
-import { cancelTab, moveTab, precheck, sendToKitchen, setGuests, setLineDiscount, setLineNote } from '@/server/actions';
+import { cancelTab, moveTab, precheck, sendToKitchen, setCustomerName, setGuests, setLineDiscount, setLineNote } from '@/server/actions';
+import { CustomerNameDialog } from './customer-name-dialog';
 import { CheckoutPanel } from './checkout-panel';
 import { ProductPicker } from './product-picker';
 import { SplitDialog } from './split-dialog';
@@ -35,6 +36,7 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
   const [paid, setPaid] = useState<CheckoutResult | null>(null);
   const [splitting, setSplitting] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [naming, setNaming] = useState(false);
   // Cobro de una parte: la cuenta sigue abierta con el resto.
   const partial = paid !== null && paid.tabId !== tab.id;
   const closed = tab.status === 'paid';
@@ -102,6 +104,18 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
               <p className="truncate text-xs text-ink-3" suppressHydrationWarning>
                 {tab.waiterName} · abierta a las {formatTime(tab.openedAt)} ({elapsed(tab.openedAt)}) · nº {tab.number}
               </p>
+              {tab.table && (
+                <button
+                  type="button"
+                  onClick={() => setNaming(true)}
+                  disabled={busy}
+                  className="pressable mt-1 -ml-1 inline-flex max-w-full items-center gap-1.5 rounded-full px-1.5 py-0.5 text-[14px] hover:bg-fill"
+                >
+                  <UserRound aria-hidden className="size-4 shrink-0 text-ink-3" />
+                  {tab.customerName ? <span className="truncate font-semibold">{tab.customerName}</span> : <span className="text-tint">Añadir nombre del cliente</span>}
+                  {tab.customerName && <Pencil aria-hidden className="size-3.5 shrink-0 text-tint" />}
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-1 rounded-full bg-fill p-0.5" aria-label="Comensales">
               <button type="button" className="pressable flex size-10 items-center justify-center rounded-full text-tint hover:bg-fill-strong disabled:opacity-40" aria-label="Un comensal menos" disabled={tab.guests <= 1 || busy} onClick={() => act(() => setGuests(tab.id, tab.guests - 1))}>
@@ -138,10 +152,15 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
               variant={unsent > 0 ? 'primary' : 'secondary'}
               className="ml-auto"
               disabled={unsent === 0 || pending > 0 || busy}
-              onClick={() => act(async () => {
-                const r = await sendToKitchen(tab.id);
-                return r.ok ? { ok: true, message: `${r.data} ${r.data === 1 ? 'línea enviada' : 'líneas enviadas'} a cocina` } : r;
-              })}
+              onClick={() =>
+                start(async () => {
+                  const r = await sendToKitchen(tab.id);
+                  if (!r.ok) return show(r.error, 'danger');
+                  // Se imprime la comanda de este envío: mesa, cliente y lo que hay que preparar.
+                  if (r.data.sentAt) router.push(`/imprimir/comanda/${tab.id}?envio=${encodeURIComponent(r.data.sentAt)}`);
+                  else router.refresh();
+                })
+              }
             >
               <ChefHat className="size-4" aria-hidden /> Enviar a cocina{unsent > 0 && ` (${unsent})`}
             </Button>
@@ -306,6 +325,14 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
           </div>
         )}
       </Modal>
+      <CustomerNameDialog
+        open={naming}
+        onClose={() => !busy && setNaming(false)}
+        title={tab.customerName ? 'Cambiar nombre del cliente' : 'Nombre del cliente'}
+        initial={tab.customerName ?? ''}
+        busy={busy}
+        onAccept={(name) => act(() => setCustomerName(tab.id, name), () => setNaming(false))}
+      />
       {flash}
     </div>
   );

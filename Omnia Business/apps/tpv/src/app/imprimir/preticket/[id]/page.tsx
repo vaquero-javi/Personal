@@ -17,6 +17,7 @@ export default async function PrecheckPrintPage({ params }: { params: Promise<{ 
         <header className="text-center">
           <p className="text-[14px] font-bold">{terminal.orgName}</p>
           <p className="mt-2 font-bold">CUENTA · {tab.table ? `MESA ${tab.table.name}` : tab.label}</p>
+          {tab.customerName && <p className="font-bold">{tab.customerName}</p>}
           <p>{formatDateTime(tab.precheckAt ?? new Date())} · {tab.guests} {tab.guests === 1 ? 'comensal' : 'comensales'}</p>
           <p>Le atendió {tab.waiterName}</p>
         </header>

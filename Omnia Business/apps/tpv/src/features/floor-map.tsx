@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Users } from 'lucide-react';
+import { Plus, UserRound, Users } from 'lucide-react';
 import type { FloorTable, TabSummary } from '@omnia/pos/types';
 import { Button, Modal, Notice, useFlash } from '@/components/ui';
 import { elapsed, formatEuro } from '@/lib/format';
 import { openTab } from '@/server/actions';
 import { useAutoRefresh } from './use-auto-refresh';
+import { CustomerNameDialog } from './tab/customer-name-dialog';
 
 const STATE = {
   free: { label: 'Libre', card: 'bg-sheet', pill: 'bg-ok-soft text-ok', dot: 'bg-sys-green' },
@@ -33,6 +34,8 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
   const [pending, start] = useTransition();
   const [counterOpen, setCounterOpen] = useState(false);
   const [label, setLabel] = useState('');
+  // Mesa libre que se va a abrir: antes se pregunta el nombre del cliente (opcional).
+  const [opening, setOpening] = useState<FloorTable | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
   const now = useNow();
   useAutoRefresh(5_000);
@@ -50,7 +53,7 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
   const zoneCounter = (name: string) => (COUNTER_ZONE.test(name) || name === 'Sin mesa' ? counterTabs : []);
   const busy = tables.filter((t) => t.tab).length + counterTabs.length;
 
-  const open = (input: { tableId?: string; label?: string }) =>
+  const open = (input: { tableId?: string; label?: string; customerName?: string }) =>
     start(async () => {
       const result = await openTab({ ...input, guests: input.tableId ? 2 : 1 });
       if (result.ok) router.push(`/cuenta/${result.data}`);
@@ -149,7 +152,7 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
                       <button
                         type="button"
                         disabled={pending}
-                        onClick={() => open({ tableId: t.id })}
+                        onClick={() => setOpening(t)}
                         className={`pressable flex h-full min-h-36 w-full flex-col justify-between rounded-[20px] p-4 text-left shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-raised)] ${STATE.free.card}`}
                       >
                         <span className="flex items-start justify-between gap-2">
@@ -193,6 +196,14 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
           </Button>
         </form>
       </Modal>
+      <CustomerNameDialog
+        open={opening !== null}
+        onClose={() => !pending && setOpening(null)}
+        title={opening ? `Abrir mesa ${opening.name}` : 'Abrir mesa'}
+        acceptLabel="Abrir mesa"
+        busy={pending}
+        onAccept={(customerName) => opening && open({ tableId: opening.id, customerName })}
+      />
       {flash}
     </div>
   );
@@ -207,6 +218,12 @@ function TableCard({ href, name, tab, now }: { href: string; name: string; tab: 
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-semibold ${s.pill}`}>{s.label}</span>
       </span>
       <span className="text-[14px] leading-snug">
+        {tab.customerName && (
+          <span className="flex items-center gap-1 truncate font-semibold text-ink">
+            <UserRound aria-hidden className="size-4 shrink-0 text-ink-3" />
+            <span className="truncate">{tab.customerName}</span>
+          </span>
+        )}
         <span className="block truncate text-ink-2">{tab.waiterName}</span>
         {tab.unsent > 0 && <span className="block text-xs font-semibold text-warning">{tab.unsent} sin enviar a cocina</span>}
         <span className="flex items-end justify-between gap-2">
