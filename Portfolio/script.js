@@ -774,6 +774,145 @@ const initTabs = tabsRoot => {
 };
 
 /* ==========================================================================
+   8b. TECLADO DE HABILIDADES: cada tecla se hunde al instante al pulsarla
+   (pointer-down) y rebota al soltarla; la información cambia con un spring.
+   También responde al teclado físico (inicial de cada tecnología).
+   ========================================================================== */
+const initKeyboard = () => {
+    const stage = $('.kb-stage');
+    if (!stage) return;
+    const kb = $('.kb', stage);
+    const plate = $('.kb-plate', kb);
+    const keys = $$('.key', kb);
+    const info = $('.skill-info-inner');
+    const [cat, name, text] = [...info.children];
+
+    // Volumen: capas apiladas en Z para la base y para cada tecla
+    for (let i = 1; i <= 6; i++) {
+        const l = document.createElement('i');
+        l.style.setProperty('--i', i);
+        plate.append(l);
+    }
+    keys.forEach(key => {
+        const label = key.textContent.trim();
+        key.dataset.name = label;
+        key.setAttribute('aria-label', label);
+        key.textContent = '';
+        for (let i = 1; i <= 5; i++) {
+            const l = document.createElement('span');
+            l.className = 'key-layer';
+            l.style.setProperty('--i', i);
+            key.append(l);
+        }
+        const cap = document.createElement('span');
+        cap.className = 'key-cap';
+        const mark = document.createElement('span');
+        if (key.dataset.logo) {
+            mark.className = 'key-logo';
+            mark.style.setProperty('--logo', `url("assets/logos/${key.dataset.logo}.svg")`);
+        } else {
+            mark.className = 'key-legend';
+            mark.textContent = key.dataset.legend || '';
+        }
+        cap.append(mark);
+        key.append(cap);
+        key.motion = new Motion({ z: 0 }, ({ z }) => key.style.setProperty('--z', z.toFixed(2)), { precision: 0.02 });
+    });
+
+    // Panel de información: sale y entra con un spring, interrumpible si cambias rápido
+    const infoM = new Motion({ y: 0, o: 1 }, ({ y, o }) => {
+        info.style.transform = y ? `translate3d(0,${y}px,0)` : '';
+        info.style.opacity = o;
+    }, { precision: { y: 0.05, o: 0.002 } });
+    let active = null;
+    const select = key => {
+        if (key === active) return;
+        active?.classList.remove('is-active');
+        active = key;
+        key.classList.add('is-active');
+        cat.textContent = key.dataset.cat;
+        name.textContent = key.dataset.name;
+        text.textContent = key.dataset.text;
+        infoM.set({ y: 10, o: 0 });
+        infoM.to({ y: 0, o: 1 }, { response: 0.35, damping: 1 });
+    };
+
+    // Física de cada tecla
+    let hovered = null;
+    const press = key => {
+        key.motion.to({ z: -9 }, { response: 0.1, damping: 1 });
+        select(key);
+        haptic(5);
+    };
+    const release = key => key.motion.to({ z: key === hovered ? 3 : 0 }, { response: 0.36, damping: 0.42 });
+    const tap = key => {
+        press(key);
+        setTimeout(() => release(key), 90);
+    };
+
+    keys.forEach(key => {
+        key.addEventListener('pointerdown', e => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            press(key);
+        });
+        key.addEventListener('pointerup', () => release(key));
+        key.addEventListener('pointercancel', () => release(key));
+        key.addEventListener('pointerenter', e => {
+            if (e.pointerType !== 'mouse') return;
+            hovered = key;
+            select(key);
+            key.motion.to({ z: 3 }, { response: 0.25, damping: 1 });
+        });
+        key.addEventListener('pointerleave', () => {
+            if (hovered === key) hovered = null;
+            key.motion.to({ z: 0 }, { response: 0.36, damping: 0.6 });
+        });
+        key.addEventListener('focus', () => select(key));
+        // Enter / Espacio con el foco en la tecla
+        key.addEventListener('click', e => { if (e.detail === 0) tap(key); });
+    });
+
+    // Teclado físico: la inicial pulsa esa tecnología; repetirla recorre las que coinciden
+    let visible = false;
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0.3 }).observe(stage);
+    }
+    const down = new Map();
+    document.addEventListener('keydown', e => {
+        if (!visible || e.repeat || e.metaKey || e.ctrlKey || e.altKey || sheet.isOpen()) return;
+        if (e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+        const letter = e.key.length === 1 ? e.key.toLowerCase() : '';
+        if (!/[a-zñ]/.test(letter)) return;
+        const matches = keys.filter(k => k.dataset.name.toLowerCase().startsWith(letter));
+        if (!matches.length) return;
+        const next = matches[(matches.indexOf(active) + 1) % matches.length];
+        down.set(e.code, next);
+        press(next);
+    });
+    document.addEventListener('keyup', e => {
+        const key = down.get(e.code);
+        if (!key) return;
+        down.delete(e.code);
+        release(key);
+    });
+
+    // El teclado se inclina un poco hacia el puntero
+    if (finePointer.matches) {
+        const tilt = new Motion({ rx: 50, rz: -36 }, ({ rx, rz }) => {
+            kb.style.transform = `rotateX(${rx}deg) rotateZ(${rz}deg)`;
+        }, { precision: 0.01 });
+        stage.addEventListener('pointermove', e => {
+            if (reduced) return;
+            const r = stage.getBoundingClientRect();
+            const px = (e.clientX - r.left) / r.width - 0.5;
+            const py = (e.clientY - r.top) / r.height - 0.5;
+            tilt.to({ rx: 50 - py * 8, rz: -36 + px * 8 }, { response: 0.8, damping: 1 });
+        });
+        stage.addEventListener('pointerleave', () => tilt.to({ rx: 50, rz: -36 }, { response: 0.9, damping: 1 }));
+    }
+};
+
+/* ==========================================================================
    9. TOAST: entra con un spring y se descarta deslizándolo hacia abajo
    ========================================================================== */
 const toast = (() => {
@@ -1154,6 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPass();
     initCarousel();
     $$('[data-tabs]').forEach(initTabs);
+    initKeyboard();
     initAnchors();
     initCopy();
     initContactForm();

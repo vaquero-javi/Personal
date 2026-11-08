@@ -196,70 +196,56 @@
                 </div>
             </section>
 
-            <!-- HABILIDADES: control segmentado + paneles que se deslizan -->
-            <section id="habilidades" class="section">
+            <!-- HABILIDADES: teclado 3D, cada tecla es una tecnología -->
+            <section id="habilidades" class="section skills">
                 <div class="container">
                     <div class="section-head section-head--stack">
                         <p class="eyebrow" data-reveal>Habilidades</p>
                         <h2 class="display-2" data-reveal>Las herramientas con las que trabajo a diario.</h2>
                     </div>
 
-                    <div class="tabs" data-tabs data-reveal>
-                        <div class="seg" role="tablist" aria-label="Categorías de habilidades">
-                            <span class="seg-thumb" aria-hidden="true"></span>
-                            <button role="tab" type="button" id="tab-lang" aria-controls="panel-lang" aria-selected="true">Lenguajes</button>
-                            <button role="tab" type="button" id="tab-web" aria-controls="panel-web" aria-selected="false" tabindex="-1">Web</button>
-                            <button role="tab" type="button" id="tab-apps" aria-controls="panel-apps" aria-selected="false" tabindex="-1">Apps</button>
-                            <button role="tab" type="button" id="tab-data" aria-controls="panel-data" aria-selected="false" tabindex="-1">Datos</button>
-                            <button role="tab" type="button" id="tab-team" aria-controls="panel-team" aria-selected="false" tabindex="-1">Equipo</button>
+                    <div class="skills-layout">
+                        <div class="skill-info" data-reveal>
+                            <div class="skill-info-inner" aria-live="polite">
+                                <p class="skill-info-cat">Stack</p>
+                                <p class="skill-info-name">18 tecnologías</p>
+                                <p class="skill-info-text">Lenguajes, frameworks y herramientas con los que he construido mis proyectos.</p>
+                            </div>
+                            <div class="soft">
+                                <p class="soft-title">Cómo trabajo</p>
+                                <ul class="soft-list">
+                                    <li>Adaptabilidad tecnológica</li>
+                                    <li>Resolución de problemas</li>
+                                    <li>Pensamiento estructurado</li>
+                                    <li>Trabajo colaborativo</li>
+                                </ul>
+                            </div>
                         </div>
 
-                        <div class="tabs-viewport">
-                            <div class="tabs-track">
-                                <div class="tab-panel" role="tabpanel" id="panel-lang" aria-labelledby="tab-lang">
-                                    <ul class="skill-grid">
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/java.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Java</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/kotlin.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Kotlin</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/python.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Python</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/javascript.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>JavaScript</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/typescript.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>TypeScript</li>
-                                    </ul>
-                                </div>
-                                <div class="tab-panel" role="tabpanel" id="panel-web" aria-labelledby="tab-web">
-                                    <ul class="skill-grid">
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/react.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>React</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/angular.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Angular</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/lit.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Lit</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/html5.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>HTML5</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/css3.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>CSS</li>
-                                    </ul>
-                                </div>
-                                <div class="tab-panel" role="tabpanel" id="panel-apps" aria-labelledby="tab-apps">
-                                    <ul class="skill-grid">
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/androidstudio.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Android Studio</li>
-                                        <li class="skill"><span class="skill-icon"><i class="ti ti-device-desktop" aria-hidden="true"></i></span>JavaFX</li>
-                                    </ul>
-                                </div>
-                                <div class="tab-panel" role="tabpanel" id="panel-data" aria-labelledby="tab-data">
-                                    <ul class="skill-grid">
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/nodejs.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Node.js</li>
-                                        <li class="skill"><span class="skill-icon"><i class="ti ti-api" aria-hidden="true"></i></span>REST API</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/mysql.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>MySQL</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/firebase.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Firebase</li>
-                                        <li class="skill"><span class="skill-icon"><img src="assets/logos/git.svg" alt="" width="28" height="28" loading="lazy" draggable="false"></span>Git</li>
-                                        <li class="skill"><span class="skill-icon"><svg class="logo-mono" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></span>GitHub</li>
-                                    </ul>
-                                </div>
-                                <div class="tab-panel" role="tabpanel" id="panel-team" aria-labelledby="tab-team">
-                                    <ul class="skill-grid">
-                                        <li class="skill"><span class="skill-icon"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i></span>Adaptabilidad tecnológica</li>
-                                        <li class="skill"><span class="skill-icon"><i class="ti ti-puzzle" aria-hidden="true"></i></span>Resolución de problemas</li>
-                                        <li class="skill"><span class="skill-icon"><i class="ti ti-hierarchy-2" aria-hidden="true"></i></span>Pensamiento estructurado</li>
-                                        <li class="skill"><span class="skill-icon"><i class="ti ti-users" aria-hidden="true"></i></span>Trabajo colaborativo</li>
-                                    </ul>
-                                </div>
+                        <div class="kb-stage" data-reveal>
+                            <div class="kb" role="group" aria-label="Tecnologías">
+                                <span class="kb-plate" aria-hidden="true"></span>
+                                <button class="key" type="button" style="--c:#E76F00" data-ink="light" data-logo="java" data-cat="Lenguaje" data-text="La base de mi formación en programación orientada a objetos, del backend a las aplicaciones de escritorio.">Java</button>
+                                <button class="key" type="button" style="--c:#7F52FF" data-ink="light" data-logo="kotlin" data-cat="Lenguaje" data-text="Con él construí PTD App para Android, con Jetpack Compose y Firebase.">Kotlin</button>
+                                <button class="key" type="button" style="--c:#3776AB" data-ink="light" data-logo="python" data-cat="Lenguaje" data-text="Lenguaje versátil para scripts, automatización y lógica de backend.">Python</button>
+                                <button class="key" type="button" style="--c:#F7DF1E" data-ink="dark" data-logo="javascript" data-cat="Lenguaje" data-text="Componentes frontend dinámicos con Lit durante mis prácticas en Accenture para BBVA.">JavaScript</button>
+                                <button class="key" type="button" style="--c:#3178C6" data-ink="light" data-logo="typescript" data-cat="Lenguaje" data-text="Tipado estático en Chronos, mi PWA hecha con React y Supabase.">TypeScript</button>
+                                <button class="key" type="button" style="--c:#61DAFB" data-ink="dark" data-logo="react" data-cat="Web" data-text="La base de Chronos: calendario, avisos push y apuntes con estudio por IA.">React</button>
+                                <button class="key" type="button" style="--c:#DD0031" data-ink="light" data-logo="angular" data-cat="Web" data-text="Framework para aplicaciones web estructuradas y escalables.">Angular</button>
+                                <button class="key" type="button" style="--c:#324FFF" data-ink="light" data-logo="lit" data-cat="Web" data-text="Web components en el entorno bancario de BBVA durante mis prácticas.">Lit</button>
+                                <button class="key" type="button" style="--c:#E34F26" data-ink="light" data-logo="html5" data-cat="Web" data-text="Marcado semántico y accesible como punto de partida de cada interfaz.">HTML5</button>
+                                <button class="key" type="button" style="--c:#1572B6" data-ink="light" data-logo="css3" data-cat="Web" data-text="Maquetación, temas y animación. Esta web está escrita a mano con él.">CSS</button>
+                                <button class="key" type="button" style="--c:#5FA04E" data-ink="light" data-logo="nodedotjs" data-cat="Datos y herramientas" data-text="Desarrollo, testing y mantenimiento de servicios backend en Accenture.">Node.js</button>
+                                <button class="key" type="button" style="--c:#FFCA28" data-ink="dark" data-logo="firebase" data-cat="Datos y herramientas" data-text="Datos en tiempo real, inicio de sesión y notificaciones en PTD App.">Firebase</button>
+                                <button class="key" type="button" style="--c:#3DDC84" data-ink="dark" data-logo="androidstudio" data-cat="Apps" data-text="El entorno con el que desarrollé PTD App para Android.">Android Studio</button>
+                                <button class="key" type="button" style="--c:#2C2C30" data-ink="light" data-legend="FX" data-cat="Apps" data-text="Aplicaciones de escritorio con interfaz gráfica en Java.">JavaFX</button>
+                                <button class="key" type="button" style="--c:#4479A1" data-ink="light" data-logo="mysql" data-cat="Datos y herramientas" data-text="Bases de datos relacionales: modelado y consultas SQL.">MySQL</button>
+                                <button class="key" type="button" style="--c:#5856D6" data-ink="light" data-legend="API" data-cat="Datos y herramientas" data-text="Diseño y consumo de APIs para conectar frontend y backend.">REST API</button>
+                                <button class="key" type="button" style="--c:#F05032" data-ink="light" data-logo="git" data-cat="Datos y herramientas" data-text="Control de versiones en todos mis proyectos.">Git</button>
+                                <button class="key" type="button" style="--c:#24292F" data-ink="light" data-logo="github" data-cat="Datos y herramientas" data-text="Donde vive mi código: github.com/vaquero-javi.">GitHub</button>
                             </div>
-                        </div>                    </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
