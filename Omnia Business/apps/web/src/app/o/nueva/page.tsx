@@ -1,17 +1,18 @@
 import { ActionForm, TextField } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import { createOrganization } from '@/server/session-actions';
+import { Window } from '@/components/shell/window';
 
 export const metadata = { title: 'Nueva sociedad · Omnia' };
 
 export default function NewOrganizationPage() {
   return (
-    <main className="flex min-w-0 flex-1 flex-col px-3 pt-3 md:px-6 md:pt-4">
-      <h1 className="text-lg font-bold md:text-xl">Nueva sociedad</h1>
-      <div className="mt-3.5 max-w-xl rounded-tr-lg border border-shelf-edge bg-sheet p-5">
-        <p className="mb-4 text-sm text-ink-2">
-          Cada sociedad es un archivador independiente: sus datos están aislados de las demás y tendrás el rol de propietario.
-        </p>
+    <Window>
+      <header className="pt-4 md:pt-10">
+        <h1 className="text-[28px] leading-[1.15] font-bold tracking-[-0.022em] md:text-[34px]">Nueva sociedad</h1>
+        <p className="mt-1 max-w-xl text-[15px] text-ink-3">Sus datos quedan aislados de las demás sociedades y tendrás el rol de propietario.</p>
+      </header>
+      <div className="max-w-xl rounded-[var(--radius-card)] bg-sheet p-5 shadow-[var(--shadow-card)]">
         <ActionForm action={createOrganization} className="flex flex-col gap-4">
           <TextField label="Razón social" name="legalName" required placeholder="Distribuciones Ejemplo S.L." />
           <TextField label="NIF" name="taxId" required placeholder="B12345678" />
@@ -27,6 +28,6 @@ export default function NewOrganizationPage() {
           </div>
         </ActionForm>
       </div>
-    </main>
+    </Window>
   );
 }

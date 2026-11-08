@@ -34,7 +34,7 @@ export default async function ReportsPage({ params, searchParams }: { params: Pr
         title="Informes de gestión"
         description="Cuánto se ha facturado y cobrado, cuánto se ha gastado y pagado, y qué liquidez queda, por mes o por trimestre."
         actions={
-          <a href={`/o/${org}/estadisticas/informes/csv?anio=${year}&agrupar=${groupBy}`} className="inline-flex h-[34px] items-center rounded-md border border-shelf-edge bg-sheet px-4 text-sm font-semibold hover:bg-sheet-head">
+          <a href={`/o/${org}/estadisticas/informes/csv?anio=${year}&agrupar=${groupBy}`} className="pressable inline-flex h-9 items-center rounded-full bg-fill px-4 text-sm font-semibold text-tint hover:bg-fill-strong">
             Descargar CSV
           </a>
         }

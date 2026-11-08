@@ -47,7 +47,7 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
                 <tr>
                   <th scope="col" className="w-40 border-b border-line bg-sheet-head px-2 py-2 pl-4 text-left text-xs font-semibold text-ink-3 md:pl-5">Persona</th>
                   {days.map((d) => (
-                    <th key={d} scope="col" className={`border-b border-l border-line px-2 py-2 text-left text-xs font-semibold ${d === today ? 'bg-ink text-white' : 'bg-sheet-head text-ink-3'}`}>
+                    <th key={d} scope="col" className={`border-b border-l border-line px-2 py-2 text-left text-xs font-semibold ${d === today ? 'bg-tint text-on-tint' : 'bg-sheet-head text-ink-3'}`}>
                       {capitalizeFirst(head.format(new Date(`${d}T00:00:00Z`)).replaceAll('.', ''))}
                     </th>
                   ))}

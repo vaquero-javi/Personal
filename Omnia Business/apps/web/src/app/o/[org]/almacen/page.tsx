@@ -43,16 +43,16 @@ export default async function StockPage({ params, searchParams }: { params: Prom
       />
       <Cell>
         <nav aria-label="Filtros" className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-          <Link href={query({ almacen: undefined })} aria-current={!almacen ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
+          <Link href={query({ almacen: undefined })} aria-current={!almacen ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint">
             Todos los almacenes
           </Link>
           {warehouses.map((w) => (
-            <Link key={w.id} href={query({ almacen: w.id })} aria-current={almacen === w.id ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
+            <Link key={w.id} href={query({ almacen: w.id })} aria-current={almacen === w.id ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint">
               {w.name}
             </Link>
           ))}
           <span className="mx-1 h-5 w-px bg-line" aria-hidden />
-          <Link href={query({ bajo: bajo === '1' ? undefined : '1' })} aria-current={bajo === '1' ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-danger aria-[current]:bg-danger-soft aria-[current]:text-danger">
+          <Link href={query({ bajo: bajo === '1' ? undefined : '1' })} aria-current={bajo === '1' ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-danger-soft aria-[current]:text-danger">
             Solo bajo mínimos
           </Link>
         </nav>

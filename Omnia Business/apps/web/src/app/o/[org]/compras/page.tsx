@@ -27,7 +27,7 @@ export default async function PurchaseOrdersPage({ params, searchParams }: { par
       <Cell>
         <nav aria-label="Estado" className="mb-3 flex flex-wrap gap-2 text-sm">
           {filters.map((f) => (
-            <Link key={f ?? 'all'} href={f ? `${base}?estado=${f}` : base} aria-current={estado === f ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
+            <Link key={f ?? 'all'} href={f ? `${base}?estado=${f}` : base} aria-current={estado === f ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint">
               {f ? purchaseOrderStatus[f]![0] : 'Todos'}
             </Link>
           ))}

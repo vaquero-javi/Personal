@@ -35,7 +35,7 @@ export function AdjustmentForm({ action, items, warehouses }: { action: FormActi
         setCost('');
       }}
     >
-      <fieldset className="flex gap-1 rounded-md bg-sheet-head p-1 text-sm">
+      <fieldset className="flex gap-1 rounded-[10px] bg-sheet-head p-1 text-sm">
         <legend className="sr-only">Tipo de movimiento</legend>
         {(['adjustment', 'transfer'] as const).map((k) => (
           <label key={k} className={`flex-1 cursor-pointer rounded px-3 py-1.5 text-center ${kind === k ? 'bg-sheet font-semibold shadow-sm' : 'text-ink-2'}`}>

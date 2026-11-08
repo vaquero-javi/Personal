@@ -72,7 +72,7 @@ export function ClockPanel({ state, clock, lateSince }: { state: ClockState; clo
         ))}
       </div>
       <label className="flex items-start gap-2 text-sm text-ink-2">
-        <input type="checkbox" className="mt-0.5 size-4 accent-ink" checked={geo} onChange={(e) => setGeo(e.target.checked)} />
+        <input type="checkbox" className="mt-0.5 size-4 accent-tint" checked={geo} onChange={(e) => setGeo(e.target.checked)} />
         <span>
           <MapPin aria-hidden className="mr-1 inline size-4 align-text-bottom" />
           Adjuntar mi ubicación a este fichaje. Solo se guarda si lo marcas; tu empresa no puede activarlo por ti.

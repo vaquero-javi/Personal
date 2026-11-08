@@ -16,16 +16,16 @@ const MODULE_LABEL: Record<string, string> = {
 function PermissionGrid({ catalog, selected, disabled }: { catalog: Permission[]; selected: string[]; disabled?: boolean }) {
   const modules = [...new Set(catalog.map((p) => p.module))];
   return (
-    <div className="-mx-4 grid grid-cols-[minmax(0,1fr)] gap-px border-y border-line bg-line md:-mx-5 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))]">
       {modules.map((m) => (
-        <fieldset key={m} className="min-w-0 bg-sheet px-4 py-3 md:px-5" disabled={disabled}>
+        <fieldset key={m} className="min-w-0 rounded-xl bg-fill/50 px-4 py-3" disabled={disabled}>
           <legend className="sr-only">{MODULE_LABEL[m] ?? m}</legend>
           <p aria-hidden className="mb-1.5 text-xs font-semibold text-ink-3">{MODULE_LABEL[m] ?? m}</p>
           {catalog
             .filter((p) => p.module === m)
             .map((p) => (
               <label key={p.code} className="flex items-start gap-2 py-1 text-sm">
-                <input type="checkbox" name="permissions" value={p.code} defaultChecked={selected.includes(p.code)} className="mt-0.5 size-4 shrink-0 accent-ink" />
+                <input type="checkbox" name="permissions" value={p.code} defaultChecked={selected.includes(p.code)} className="mt-0.5 size-4 shrink-0 accent-tint" />
                 <span>
                   {p.description}
                   <code className="ml-1 text-xs text-ink-3">{p.code}</code>

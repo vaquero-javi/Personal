@@ -13,10 +13,10 @@ export interface ShelfOrg {
 
 /** Los colores de la casa (los mismos que --color-spine-* en globals.css). */
 export const SPINE_PRESETS = [
-  { value: 'red', label: 'Rojo', hex: '#d23b2e' },
-  { value: 'blue', label: 'Azul', hex: '#1f6fb2' },
-  { value: 'yellow', label: 'Amarillo', hex: '#f1c232' },
-  { value: 'green', label: 'Verde', hex: '#3a8c4a' },
+  { value: 'red', label: 'Rojo', hex: '#ff3b30' },
+  { value: 'blue', label: 'Azul', hex: '#007aff' },
+  { value: 'yellow', label: 'Amarillo', hex: '#ffcc00' },
+  { value: 'green', label: 'Verde', hex: '#34c759' },
 ] as const;
 
 /** Color CSS de un lomo: los de la casa, por su token; los elegidos, tal cual. */

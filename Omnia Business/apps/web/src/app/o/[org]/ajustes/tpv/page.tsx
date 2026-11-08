@@ -74,7 +74,7 @@ export default async function PosSettingsPage({ params }: { params: Promise<{ or
         title="TPV"
         description="Terminales de sala, PIN del personal, mesas y carta. El TPV es una app aparte que usa los mismos datos: el stock, los tickets y la caja se ven aquí."
         actions={
-          <a href={tpvUrl} target="_blank" rel="noreferrer" className="inline-flex h-[34px] items-center rounded-md bg-ink px-4 text-sm font-bold text-white hover:bg-[#2c3038]">
+          <a href={tpvUrl} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center pressable rounded-full bg-tint px-4 text-sm font-semibold text-on-tint hover:bg-tint-hover">
             Abrir el TPV
           </a>
         }
@@ -181,7 +181,7 @@ export default async function PosSettingsPage({ params }: { params: Promise<{ or
                           autoComplete="new-password"
                           aria-label={`Nuevo PIN de ${p.fullName}`}
                           placeholder="4–6 cifras"
-                          className="h-8 w-28 rounded-md border border-shelf-edge bg-sheet px-2 text-sm"
+                          className="h-8 w-28 rounded-lg bg-fill px-2 text-sm"
                         />
                         <SubmitButton variant="secondary" className="h-8 px-3">Guardar</SubmitButton>
                       </ActionForm>

@@ -7,9 +7,9 @@ export function Kpi({ label, value, delta, invert = false, note }: { label: stri
   // invert: en gastos, subir es malo.
   const good = delta == null ? null : invert ? delta <= 0 : delta >= 0;
   return (
-    <div className="flex min-w-0 flex-col gap-1 bg-sheet px-4 py-4 md:px-5">
-      <p className="text-xs font-semibold text-ink-3">{label}</p>
-      <p className="text-2xl font-bold tabular-nums">{value}</p>
+    <div className="flex min-w-0 flex-col gap-1 rounded-[var(--radius-card)] bg-sheet px-4 py-4 shadow-[var(--shadow-card)] md:px-5">
+      <p className="text-[13px] font-medium text-ink-3">{label}</p>
+      <p className="text-[22px] leading-tight font-bold tracking-[-0.02em] tabular-nums">{value}</p>
       {delta != null && (
         <p className={`text-xs font-semibold ${good ? 'text-ok' : 'text-danger'}`}>
           {delta > 0 ? '▲' : delta < 0 ? '▼' : '='} {Math.abs(delta).toLocaleString('es-ES')} % <span className="font-normal text-ink-3">vs. periodo anterior</span>
@@ -25,7 +25,7 @@ export function Pills({ items, current, href }: { items: readonly { value: strin
   return (
     <nav aria-label="Periodo" className="flex flex-wrap gap-2 text-sm">
       {items.map((i) => (
-        <Link key={i.value} href={href(i.value)} aria-current={current === i.value ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
+        <Link key={i.value} href={href(i.value)} aria-current={current === i.value ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint">
           {i.label}
         </Link>
       ))}

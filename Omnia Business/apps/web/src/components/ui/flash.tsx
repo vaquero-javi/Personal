@@ -18,13 +18,17 @@ export function FlashHost() {
     return () => clearTimeout(t);
   }, [message]);
   return (
-    <div aria-live="polite" className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex justify-end md:inset-x-6 md:bottom-6">
+    <div aria-live="polite" className="pointer-events-none fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 flex justify-center md:bottom-6">
       {message && (
-        <p key={message.id} role="status" className="pointer-events-auto flex max-w-md items-start gap-2 rounded-md bg-ink px-4 py-3 text-sm text-white shadow-[0_6px_20px_rgba(0,0,0,0.25)]">
-          <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-[#8fd19e]" />
+        <p
+          key={message.id}
+          role="status"
+          className="material pointer-events-auto flex max-w-md animate-[toast-in_360ms_var(--ease-spring)] items-center gap-2.5 rounded-full py-2.5 pr-2.5 pl-3.5 text-[14px] font-medium text-ink shadow-[var(--shadow-float)]"
+        >
+          <CircleCheck aria-hidden className="size-5 shrink-0 text-ok" />
           <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} aria-label="Cerrar aviso" className="-mr-1 ml-2 rounded p-0.5 text-white/70 hover:text-white">
-            <X aria-hidden className="size-4" />
+          <button type="button" onClick={() => setMessage(null)} aria-label="Cerrar aviso" className="pressable ml-1 flex size-6 items-center justify-center rounded-full bg-fill text-ink-3 hover:text-ink">
+            <X aria-hidden className="size-3.5" strokeWidth={2.5} />
           </button>
         </p>
       )}

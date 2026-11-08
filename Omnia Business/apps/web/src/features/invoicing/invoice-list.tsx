@@ -21,7 +21,7 @@ const TYPES = [
   { value: 'tickets', label: 'Tickets TPV' },
 ];
 
-const chipClass = 'rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white';
+const chipClass = 'pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint';
 
 export function InvoiceList({ page, cursor, base, direction, estado, tipo, q }: { page: InvoicePage<InvoiceSummary>; cursor?: string | undefined; base: string; direction: 'issued' | 'received'; estado?: string | undefined; tipo?: string | undefined; q?: string | undefined }) {
   const invoices = page.items;

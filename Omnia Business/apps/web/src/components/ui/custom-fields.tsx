@@ -37,8 +37,8 @@ export function CustomFieldInputs({ definitions, initial = {} }: { definitions: 
             switch (def.dataType) {
               case 'boolean':
                 return (
-                  <label className="flex h-[34px] items-center gap-2 text-sm">
-                    <input id={p.id} type="checkbox" className="size-4 accent-ink" checked={value === true} onChange={(e) => set(def.key, e.target.checked || undefined)} />
+                  <label className="flex h-9 items-center gap-2 text-sm">
+                    <input id={p.id} type="checkbox" className="size-4 accent-tint" checked={value === true} onChange={(e) => set(def.key, e.target.checked || undefined)} />
                     Sí
                   </label>
                 );
@@ -63,7 +63,7 @@ export function CustomFieldInputs({ definitions, initial = {} }: { definitions: 
                       <label key={o} className="flex items-center gap-1.5">
                         <input
                           type="checkbox"
-                          className="size-4 accent-ink"
+                          className="size-4 accent-tint"
                           checked={selected.includes(o)}
                           onChange={(e) => set(def.key, e.target.checked ? [...selected, o] : selected.filter((x) => x !== o))}
                         />

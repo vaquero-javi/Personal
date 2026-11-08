@@ -81,7 +81,7 @@ export default async function DashboardPage({ params, searchParams }: { params: 
                       <span className="font-semibold tabular-nums">{formatEuro(c.base)}</span>
                     </span>
                     <span aria-hidden className="h-1.5 rounded-full bg-line-soft">
-                      <span className="block h-full rounded-full bg-ink" style={{ width: `${Math.max(2, share)}%` }} />
+                      <span className="block h-full rounded-full bg-tint" style={{ width: `${Math.max(2, share)}%` }} />
                     </span>
                   </li>
                 );

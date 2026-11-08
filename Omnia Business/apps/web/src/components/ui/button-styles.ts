@@ -2,16 +2,17 @@
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'info' | 'caution' | 'destructive';
 
+// Botones en cápsula, como en las apps de Apple. Respuesta inmediata al pulsar (scale 0.97).
 const base =
-  'inline-flex h-[34px] items-center justify-center gap-1.5 rounded-md px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50';
+  'pressable inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-[14px] font-semibold whitespace-nowrap select-none disabled:cursor-not-allowed disabled:opacity-40';
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-ink text-white hover:bg-[#2c3038]',
-  secondary: 'border border-shelf-edge bg-sheet text-ink hover:bg-sheet-head',
-  danger: 'border border-danger/40 bg-sheet text-danger hover:bg-danger-soft',
-  ghost: 'text-ink-2 hover:bg-sheet-head hover:text-ink',
-  info: 'bg-[#1f6fb2] text-white hover:bg-[#195c94]',
-  caution: 'bg-[#ea580c] text-white hover:bg-[#c2410c]',
-  destructive: 'bg-[#b8291d] text-white hover:bg-[#962117]',
+  primary: 'bg-tint text-on-tint hover:bg-tint-hover',
+  secondary: 'bg-fill text-tint hover:bg-fill-strong',
+  danger: 'bg-danger-soft text-danger hover:bg-[color-mix(in_srgb,var(--color-danger)_18%,transparent)]',
+  ghost: 'text-tint hover:bg-fill',
+  info: 'bg-sys-indigo text-white hover:brightness-110',
+  caution: 'bg-sys-orange text-white hover:brightness-105',
+  destructive: 'bg-sys-red text-white hover:brightness-105',
 };
 
 export const buttonClass = (variant: ButtonVariant = 'secondary', extra = '') => `${base} ${variants[variant]} ${extra}`;

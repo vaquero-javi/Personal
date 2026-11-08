@@ -120,7 +120,7 @@ export function ReceiptEntry({
       role="tab"
       aria-selected={mode === value}
       onClick={() => setMode(value)}
-      className={`flex items-center gap-2 rounded px-4 py-2 text-sm transition-colors ${mode === value ? 'bg-ink font-semibold text-white' : 'text-ink-2 hover:text-ink'}`}
+      className={`pressable flex items-center gap-2 rounded-[8px] px-4 py-1.5 text-sm ${mode === value ? 'bg-sheet font-semibold text-ink shadow-[var(--shadow-raised)] dark:bg-fill-strong' : 'text-ink-2 hover:text-ink'}`}
     >
       <Icon aria-hidden className="size-4" />
       {label}
@@ -129,7 +129,7 @@ export function ReceiptEntry({
 
   return (
     <div className="flex flex-col gap-5">
-      <div role="tablist" aria-label="Forma de registrar el albarán" className="inline-flex self-start rounded-md border border-shelf-edge p-0.5">
+      <div role="tablist" aria-label="Forma de registrar el albarán" className="inline-flex self-start rounded-[10px] bg-fill p-0.5">
         {tab('manual', result ? 'Revisar y guardar' : 'Escribirlo a mano', Keyboard)}
         {tab('scan', 'Escanear foto', Camera)}
       </div>
@@ -146,8 +146,8 @@ export function ReceiptEntry({
           )}
           {error && <Notice tone="danger">{error}</Notice>}
           <label
-            className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-8 text-center text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-ink/30 ${
-              file ? 'border-ink bg-sheet' : 'border-shelf-edge bg-sheet-head hover:border-ink'
+            className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[10px] border-2 border-dashed px-4 py-8 text-center text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-tint/45 ${
+              file ? 'border-tint bg-tint-soft' : 'border-shelf-edge bg-fill/60 hover:border-tint'
             }`}
           >
             <input

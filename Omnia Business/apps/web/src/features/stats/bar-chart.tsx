@@ -3,9 +3,9 @@
 import { useState } from 'react';
 
 /** Colores del sistema: tinta y gris (los lomos no se usan en gráficos) y rojo de estado para pérdidas. */
-export const CHART_INK = '#16181d';
-export const CHART_GRAY = '#868c94';
-export const CHART_LOSS = '#b8291d';
+export const CHART_INK = 'var(--color-tint)';
+export const CHART_GRAY = 'var(--color-sys-gray)';
+export const CHART_LOSS = 'var(--color-sys-red)';
 
 const euro = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 const compact = new Intl.NumberFormat('es-ES', { notation: 'compact', maximumFractionDigits: 1 });
@@ -79,7 +79,7 @@ export function BarChart({ title, labels, series, lossColor, height = 220 }: {
         <svg viewBox={`0 0 ${W} ${height}`} role="img" aria-label={title} className="w-full overflow-visible" onMouseLeave={() => setHover(null)}>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={left} x2={W} y1={y(t)} y2={y(t)} stroke={t === 0 ? '#bfc3c8' : '#eef0f2'} strokeWidth={1} />
+              <line x1={left} x2={W} y1={y(t)} y2={y(t)} stroke={t === 0 ? 'var(--color-line)' : 'var(--color-line-soft)'} strokeWidth={1} />
               <text x={left - 6} y={y(t)} dy="0.32em" textAnchor="end" className="fill-ink-3 text-[10px]">{compact.format(t)}</text>
             </g>
           ))}
@@ -114,7 +114,7 @@ export function BarChart({ title, labels, series, lossColor, height = 220 }: {
         {hover !== null && (
           <div
             role="status"
-            className="pointer-events-none absolute top-0 z-10 min-w-36 -translate-x-1/2 rounded-md border border-shelf-edge bg-sheet px-3 py-2 text-xs shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
+            className="pointer-events-none absolute top-0 z-10 min-w-36 -translate-x-1/2 material rounded-[10px] px-3 py-2 text-xs shadow-[var(--shadow-float)]"
             style={{ left: `${((left + hover * band + band / 2) / W) * 100}%` }}
           >
             <p className="mb-1 font-semibold text-ink">{labels[hover]}</p>

@@ -44,7 +44,7 @@ export default async function TasksPage({ params, searchParams }: { params: Prom
         <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center">
           <nav aria-label="Filtro" className="flex flex-wrap gap-2 text-sm">
             {FILTERS.map((f) => (
-              <Link key={f.value} href={query(f.value)} aria-current={ver === f.value ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
+              <Link key={f.value} href={query(f.value)} aria-current={ver === f.value ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint">
                 {f.label}
               </Link>
             ))}
@@ -57,7 +57,7 @@ export default async function TasksPage({ params, searchParams }: { params: Prom
                 <option value="">Todas las personas</option>
                 {people.map((p) => <option key={p.userId} value={p.userId}>{p.name}</option>)}
               </select>
-              <button type="submit" className="h-[34px] rounded-md border border-shelf-edge px-3 text-sm font-semibold hover:bg-sheet-head">Ver</button>
+              <button type="submit" className="h-9 pressable rounded-full bg-fill px-4 text-sm font-semibold text-tint hover:bg-fill-strong">Ver</button>
             </form>
           )}
         </div>

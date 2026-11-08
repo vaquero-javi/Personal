@@ -119,21 +119,21 @@ export function InvoiceEditor({
   const noTaxId = type === 'F1' && customer && !customer.taxId;
 
   return (
-    <ActionForm action={action} errorPlacement="manual" className="grid grid-cols-[minmax(0,1fr)] gap-px border-b border-line bg-line xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
+    <ActionForm action={action} errorPlacement="manual" className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 md:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
       <input type="hidden" name="invoiceType" value={type} />
-      <div className="flex min-w-0 flex-col gap-px">
+      <div className="flex min-w-0 flex-col gap-4 md:gap-5">
         <Section title="Tipo y cliente">
           {!rectifying && (
             <fieldset className="mb-4">
               <legend className="mb-1.5 text-xs font-semibold text-ink-3">Tipo de factura</legend>
-              <div className="inline-grid grid-cols-2 rounded-md border border-shelf-edge p-0.5 text-sm">
+              <div className="inline-grid grid-cols-2 rounded-[10px] bg-fill p-0.5 text-sm">
                 {(
                   [
                     ['F1', 'Completa'],
                     ['F2', 'Simplificada'],
                   ] as const
                 ).map(([value, label]) => (
-                  <label key={value} className={`cursor-pointer rounded px-4 py-1.5 text-center transition-colors has-focus-visible:ring-2 has-focus-visible:ring-ink/30 ${type === value ? 'bg-ink font-semibold text-white' : 'text-ink-2 hover:text-ink'}`}>
+                  <label key={value} className={`pressable cursor-pointer rounded-[8px] px-4 py-1.5 text-center has-focus-visible:ring-2 has-focus-visible:ring-tint/45 ${type === value ? 'bg-sheet font-semibold text-ink shadow-[var(--shadow-raised)] dark:bg-fill-strong' : 'text-ink-2 hover:text-ink'}`}>
                     <input
                       type="radio"
                       name="_type"
@@ -162,7 +162,7 @@ export function InvoiceEditor({
               options={customers.map((c) => ({ value: c.id, label: c.taxId ? `${c.legalName} · ${c.taxId}` : c.legalName }))}
               required={type !== 'F2'}
             />
-            <a href={newCustomerHref} target="_blank" rel="noreferrer" className="inline-flex h-[34px] items-center gap-1.5 text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
+            <a href={newCustomerHref} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 text-sm text-ink-2 underline-offset-2 hover:text-ink hover:underline">
               Dar de alta un cliente
               <ExternalLink aria-hidden className="size-3.5" />
               <span className="sr-only">(se abre en otra pestaña)</span>
@@ -224,7 +224,7 @@ export function InvoiceEditor({
           </div>
         </Section>
 
-        <section aria-label="Guardar o emitir" className="sticky bottom-0 z-10 flex flex-col gap-3 bg-sheet px-4 py-4 shadow-[0_-6px_12px_-10px_rgb(22_24_29/0.35)] md:px-5">
+        <section aria-label="Guardar o emitir" className="material sticky bottom-3 z-10 flex flex-col gap-3 rounded-[var(--radius-card)] px-4 py-4 shadow-[var(--shadow-float)] md:px-5">
           <FormError />
           <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
             <p className="mr-auto flex flex-col">
@@ -273,9 +273,9 @@ export function InvoiceEditor({
         </section>
       </div>
 
-      <aside aria-label="Vista previa" className="bg-sheet-head px-4 py-5 md:px-5">
-        <div className="xl:sticky xl:top-14">
-          <h3 className="mb-3 text-sm font-bold">Así se verá</h3>
+      <aside aria-label="Vista previa" className="xl:sticky xl:top-16">
+        <div>
+          <h3 className="mb-3 px-1 text-[13px] font-semibold text-ink-3 uppercase">Así se verá</h3>
           <Preview
             issuer={issuer}
             type={type}
@@ -297,8 +297,8 @@ export function InvoiceEditor({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="min-w-0 bg-sheet px-4 py-4 md:px-5">
-      <h3 className="mb-3 text-sm font-bold">{title}</h3>
+    <section className="min-w-0 rounded-[var(--radius-card)] bg-sheet shadow-[var(--shadow-card)] px-4 py-4 md:px-5">
+      <h3 className="mb-3 text-[17px] font-semibold">{title}</h3>
       {children}
     </section>
   );

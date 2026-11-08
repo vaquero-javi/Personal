@@ -48,7 +48,7 @@ export default async function ClockPage({ params }: { params: Promise<{ org: str
           </div>
           <h4 className="mt-6 mb-2 text-sm font-bold">Fichajes de hoy</h4>
           {day.entries.length === 0 ? (
-            <p className="rounded bg-sheet-head px-3 py-3 text-sm text-ink-2">Aún no hay fichajes hoy. Aparecerán aquí con su hora.</p>
+            <p className="rounded-xl bg-fill/60 px-3.5 py-3 text-sm text-ink-2">Aún no hay fichajes hoy. Aparecerán aquí con su hora.</p>
           ) : (
             <ol className="divide-y divide-line-soft text-sm">
               {day.entries.map((e) => (

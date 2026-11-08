@@ -18,7 +18,7 @@ export function PriceEditor({ action, value, label }: { action: FormAction; valu
         placeholder="—"
         onBlur={(e) => e.currentTarget.form?.requestSubmit()}
         aria-invalid={state.error ? true : undefined}
-        className="h-8 w-28 rounded-md border border-shelf-edge px-2 text-right text-sm focus:border-ink focus:ring-2 focus:ring-ink/15 focus:outline-none aria-[invalid=true]:border-danger"
+        className="h-8 w-28 rounded-lg bg-fill px-2 text-right text-sm focus:ring-[3px] focus:ring-tint/45 focus:outline-none aria-[invalid=true]:border-danger"
       />
     </form>
   );

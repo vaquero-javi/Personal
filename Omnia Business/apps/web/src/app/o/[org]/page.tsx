@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { CircleCheck } from 'lucide-react';
+import { Bell, CircleCheck } from 'lucide-react';
+import { LinkButton } from '@/components/ui/button';
 import { EmptyNote, Gauge, LimitBar, Panel } from '@/features/home/panels';
-import { formatDate, formatEuro, formatQty, formatShortDate, formatTime, percent } from '@/lib/format';
+import { formatDate, formatEuro, formatLongDate, formatQty, formatShortDate, formatTime, percent } from '@/lib/format';
 import { homeSummary } from '@/server/queries/home';
 import { requireOrg } from '@/server/session';
 
@@ -59,34 +60,33 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
   const attendancePct = percent(home.staff.present, Math.max(1, home.staff.staff - home.staff.on_leave));
 
   return (
-    <div className="grid flex-1 grid-cols-[minmax(0,1fr)] gap-px bg-line md:grid-cols-[repeat(2,minmax(0,1fr))] md:grid-rows-[repeat(6,auto)_1fr] xl:grid-cols-[repeat(4,minmax(0,1fr))] xl:grid-rows-[auto_auto_auto_1fr]">
+    <>
+    <header className="pt-2 md:pt-4">
+      <p className="text-[13px] font-semibold tracking-[0.01em] text-ink-3 uppercase">{formatLongDate(new Date())}</p>
+      <h2 className="mt-0.5 text-[28px] leading-[1.15] font-bold tracking-[-0.022em] md:text-[34px]">Inicio</h2>
+    </header>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))] md:gap-5 xl:grid-cols-[repeat(4,minmax(0,1fr))]">
       {next ? (
-        <div className="flex flex-col gap-3 bg-warning-soft px-4 py-3 md:col-span-2 md:flex-row md:items-center md:px-5 xl:col-span-4">
-          <p className="text-sm">
-            <b>Siguiente:</b> {next.text}
+        <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-sheet px-4 py-3.5 shadow-[var(--shadow-card)] md:col-span-2 md:flex-row md:items-center md:px-5 xl:col-span-4">
+          <span aria-hidden className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-sys-orange text-white md:flex">
+            <Bell className="size-[18px]" strokeWidth={2.2} />
+          </span>
+          <p className="text-[15px]">
+            <span className="block text-[13px] font-semibold text-warning">Siguiente</span>
+            {next.text}
           </p>
           <div className="flex gap-2 md:ml-auto">
-            <Link
-              href={next.primary.href}
-              className="inline-flex h-[34px] items-center rounded-md bg-ink px-4 text-sm font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#2c3038]"
-            >
+            <LinkButton href={next.primary.href} variant="primary">
               {next.primary.label}
-            </Link>
-            {next.secondary && (
-              <Link
-                href={next.secondary.href}
-                className="inline-flex h-[34px] items-center rounded-md border border-shelf-edge bg-sheet px-4 text-sm font-semibold whitespace-nowrap transition-colors hover:bg-sheet-head"
-              >
-                {next.secondary.label}
-              </Link>
-            )}
+            </LinkButton>
+            {next.secondary && <LinkButton href={next.secondary.href}>{next.secondary.label}</LinkButton>}
           </div>
         </div>
       ) : (
-        <p className="flex items-center gap-2 bg-sheet-head px-4 py-3 text-sm md:col-span-2 md:px-5 xl:col-span-4">
-          <CircleCheck aria-hidden className="size-4 text-ok" />
+        <p className="flex items-center gap-3 rounded-[var(--radius-card)] bg-sheet px-4 py-3.5 text-[15px] shadow-[var(--shadow-card)] md:col-span-2 md:px-5 xl:col-span-4">
+          <CircleCheck aria-hidden className="size-6 shrink-0 text-ok" />
           <span>
-            <b>Al día.</b> No hay nada urgente en esta sociedad.
+            <b className="font-semibold">Al día.</b> <span className="text-ink-2">No hay nada urgente en esta sociedad.</span>
           </span>
         </p>
       )}
@@ -114,11 +114,11 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
             <LimitBar value={collectedPct} tone="ok" label="Cobrado sobre emitido" />
           </Gauge>
           <Gauge label="VeriFactu" value={String(home.money.fiscal_accepted)} detail="registros aceptados este mes">
-            <ul className="mt-2 flex justify-end gap-1.5 text-xs">
-              <li className={`rounded-full px-2 py-0.5 ${home.money.fiscal_pending ? 'bg-warning-soft font-semibold text-warning ring-1 ring-warning-line' : 'bg-carton text-ink-2'}`}>
+            <ul className="mt-2 flex gap-1.5 text-xs">
+              <li className={`rounded-full px-2 py-0.5 font-medium ${home.money.fiscal_pending ? 'bg-warning-soft font-semibold text-warning' : 'bg-fill text-ink-2'}`}>
                 {home.money.fiscal_pending} {home.money.fiscal_pending === 1 ? 'pendiente' : 'pendientes'}
               </li>
-              <li className={`rounded-full px-2 py-0.5 ${home.money.fiscal_rejected ? 'bg-danger font-semibold text-white' : 'bg-carton text-ink-2'}`}>
+              <li className={`rounded-full px-2 py-0.5 font-medium ${home.money.fiscal_rejected ? 'bg-danger-soft font-semibold text-danger' : 'bg-fill text-ink-2'}`}>
                 {home.money.fiscal_rejected} {home.money.fiscal_rejected === 1 ? 'rechazado' : 'rechazados'}
               </li>
             </ul>
@@ -190,17 +190,17 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
               <div className="-mx-1 hidden md:block">
                 <table className="w-full border-collapse text-sm whitespace-nowrap">
                   <thead>
-                    <tr className="bg-sheet-head text-left text-xs text-ink-3">
-                      <th scope="col" className="border-b border-line px-2 py-[7px] font-semibold">Factura</th>
-                      <th scope="col" className="border-b border-line px-2 py-[7px] font-semibold">Cliente</th>
-                      <th scope="col" className="border-b border-line px-2 py-[7px] font-semibold">Venció</th>
-                      <th scope="col" className="border-b border-line px-2 py-[7px] text-right font-semibold">Días</th>
-                      <th scope="col" className="border-b border-line px-2 py-[7px] text-right font-semibold">Pendiente</th>
+                    <tr className="text-left text-[12px] text-ink-3">
+                      <th scope="col" className="border-b border-line-soft px-2 pb-2 font-medium">Factura</th>
+                      <th scope="col" className="border-b border-line-soft px-2 pb-2 font-medium">Cliente</th>
+                      <th scope="col" className="border-b border-line-soft px-2 pb-2 font-medium">Venció</th>
+                      <th scope="col" className="border-b border-line-soft px-2 pb-2 text-right font-medium">Días</th>
+                      <th scope="col" className="border-b border-line-soft px-2 pb-2 text-right font-medium">Pendiente</th>
                     </tr>
                   </thead>
                   <tbody>
                     {home.overdue.map((invoice) => (
-                      <tr key={invoice.id} className="relative hover:bg-sheet-head">
+                      <tr key={invoice.id} className="relative hover:bg-fill/60">
                         <td className="border-b border-line-soft px-2 py-[9px] font-medium">
                           <Link href={`${base}/facturacion/${invoice.id}`} className="underline-offset-2 after:absolute after:inset-0 hover:underline">
                             {invoice.fullNumber}
@@ -323,5 +323,6 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
         </Panel>
       )}
     </div>
+    </>
   );
 }

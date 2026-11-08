@@ -32,9 +32,9 @@ export function MinimumEditor({ action, warehouseId, itemId, value }: { action: 
         aria-label="Nuevo mínimo"
         aria-invalid={state.error ? true : undefined}
         onKeyDown={(e) => e.key === 'Escape' && setEditing(false)}
-        className="h-8 w-20 rounded-md border border-shelf-edge px-2 text-right text-sm focus:border-ink focus:ring-2 focus:ring-ink/15 focus:outline-none aria-[invalid=true]:border-danger"
+        className="h-8 w-20 rounded-lg bg-fill px-2 text-right text-sm focus:ring-[3px] focus:ring-tint/45 focus:outline-none aria-[invalid=true]:border-danger"
       />
-      <button type="submit" disabled={pending} aria-label="Guardar mínimo" className="flex size-8 items-center justify-center rounded-md bg-ink text-white disabled:opacity-50">
+      <button type="submit" disabled={pending} aria-label="Guardar mínimo" className="flex size-8 items-center justify-center rounded-full bg-tint text-on-tint disabled:opacity-50">
         <Check aria-hidden className="size-4" />
       </button>
       {state.error && <span className="sr-only" role="alert">{state.error}</span>}

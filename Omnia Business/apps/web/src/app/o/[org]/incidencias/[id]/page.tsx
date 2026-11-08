@@ -26,7 +26,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ org: 
           <ol className="flex flex-col gap-4">
             {inc.comments.map((c) => (
               <li key={c.id} className="flex gap-3">
-                <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-carton text-xs font-semibold text-ink-2">{initials(c.authorName)}</span>
+                <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-fill text-xs font-semibold text-ink-2">{initials(c.authorName)}</span>
                 <div className="min-w-0">
                   <p className="text-xs text-ink-3"><b className="text-ink">{c.authorName}</b> · {formatDateTime(c.createdAt)}</p>
                   <p className="mt-0.5 max-w-prose text-sm whitespace-pre-line">{c.body}</p>

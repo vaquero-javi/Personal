@@ -44,12 +44,12 @@ export default async function MembersPage({ params }: { params: Promise<{ org: s
                         <span className="text-sm">{m.roleName}</span>
                       ) : (
                         <ActionForm action={updateMember.bind(null, org, m.userId)} className="flex flex-wrap items-end gap-2">
-                          <select name="roleId" defaultValue={m.roleId} aria-label={`Rol de ${m.fullName}`} className="h-8 rounded-md border border-shelf-edge bg-sheet px-2 text-sm">
+                          <select name="roleId" defaultValue={m.roleId} aria-label={`Rol de ${m.fullName}`} className="h-8 rounded-lg bg-fill px-2 text-sm">
                             {roleOptions.map((r) => (
                               <option key={r.value} value={r.value}>{r.label}</option>
                             ))}
                           </select>
-                          <select name="status" defaultValue={m.status === 'invited' ? 'active' : m.status} aria-label={`Estado de ${m.fullName}`} className="h-8 rounded-md border border-shelf-edge bg-sheet px-2 text-sm">
+                          <select name="status" defaultValue={m.status === 'invited' ? 'active' : m.status} aria-label={`Estado de ${m.fullName}`} className="h-8 rounded-lg bg-fill px-2 text-sm">
                             <option value="active">Activo</option>
                             <option value="suspended">Suspendido</option>
                           </select>

@@ -144,7 +144,7 @@ export function LineItems({
     <div className="flex min-w-0 flex-col gap-3">
       <input type="hidden" name={name} value={JSON.stringify(payload)} />
       <div className="-mx-4 md:-mx-5" role="table" aria-label="Líneas">
-        <div role="row" className={`hidden gap-3 bg-sheet-head px-4 py-2 text-xs font-semibold text-ink-3 md:grid md:px-5 ${cols}`}>
+        <div role="row" className={`hidden gap-3 border-b border-line-soft px-4 pb-2 text-[12px] font-medium text-ink-3 md:grid md:px-5 ${cols}`}>
           <span role="columnheader">Artículo{allowFreeText ? ' o concepto' : ''}</span>
           <span role="columnheader" className="text-right">Cantidad</span>
           <span role="columnheader" className="text-right">{mode === 'cost' ? (packs ? 'Coste' : 'Coste ud.') : 'Precio ud.'}</span>

@@ -11,7 +11,7 @@ type CodeResult = { ok: true; code: string; expiresAt: Date } | { ok: false; err
 /** El código solo se puede leer ahora: se guarda su hash, no el código. */
 function CodeBox({ code, expiresAt }: { code: string; expiresAt: Date }) {
   return (
-    <div className="rounded-md border border-ink bg-sheet-head p-4 text-center" role="status">
+    <div className="rounded-xl border border-tint/40 bg-tint-soft p-4 text-center" role="status">
       <p className="text-xs font-semibold text-ink-3">Código de vinculación</p>
       <p className="my-1 font-mono text-3xl font-bold tracking-[0.15em]">{code}</p>
       <p className="text-xs text-ink-2">

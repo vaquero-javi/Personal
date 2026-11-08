@@ -9,7 +9,7 @@ import { googleSignIn, passwordSignIn, passwordSignUp } from '@/server/session-a
 export function SignIn({ oauthError }: { oauthError: boolean }) {
   const [mode, setMode] = useState<'in' | 'up'>('in');
   return (
-    <div className="flex flex-col gap-4 px-5 py-5">
+    <div className="flex flex-col gap-4 p-5">
       {oauthError && <Notice tone="danger">No se pudo completar el acceso con Google. Inténtalo de nuevo.</Notice>}
       <form action={googleSignIn}>
         <button type="submit" className={buttonClass('secondary', 'h-10 w-full')}>
@@ -41,7 +41,7 @@ export function SignIn({ oauthError }: { oauthError: boolean }) {
       )}
       <p className="text-center text-sm text-ink-2">
         {mode === 'in' ? '¿Aún no tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-        <button type="button" onClick={() => setMode(mode === 'in' ? 'up' : 'in')} className="font-semibold text-ink underline underline-offset-2">
+        <button type="button" onClick={() => setMode(mode === 'in' ? 'up' : 'in')} className="font-semibold text-tint hover:underline">
           {mode === 'in' ? 'Créala' : 'Entra'}
         </button>
       </p>

@@ -33,7 +33,7 @@ export default async function ReceiptsPage({ params, searchParams }: { params: P
       <Cell>
         <nav aria-label="Estado" className="mb-3 flex flex-wrap gap-2 text-sm">
           {FILTERS.map((f) => (
-            <Link key={f.label} href={f.value ? `${base}?estado=${f.value}` : base} aria-current={estado === f.value ? 'true' : undefined} className="rounded-full border border-line px-3 py-1 aria-[current]:border-ink aria-[current]:bg-ink aria-[current]:text-white">
+            <Link key={f.label} href={f.value ? `${base}?estado=${f.value}` : base} aria-current={estado === f.value ? 'true' : undefined} className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint">
               {f.label}
             </Link>
           ))}

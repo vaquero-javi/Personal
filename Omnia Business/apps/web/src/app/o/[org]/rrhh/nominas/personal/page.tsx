@@ -58,7 +58,7 @@ export default async function StaffPayslipsPage({ params, searchParams }: { para
           actions={
             <form className="flex items-center gap-2">
               <label htmlFor="persona" className="sr-only">Persona</label>
-              <select id="persona" name="persona" defaultValue={selected?.userId ?? ''} className="h-8 max-w-56 rounded-md border border-shelf-edge bg-sheet px-2 text-sm">
+              <select id="persona" name="persona" defaultValue={selected?.userId ?? ''} className="h-8 max-w-56 rounded-lg bg-fill px-2 text-sm">
                 <option value="">Todo el personal</option>
                 {employees.map((e) => (
                   <option key={e.userId} value={e.userId}>{e.name}</option>

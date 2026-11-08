@@ -88,13 +88,13 @@ export function ActionForm({
 
 export function Notice({ tone, children }: { tone: 'danger' | 'ok' | 'warning'; children: ReactNode }) {
   const styles = {
-    danger: 'border-danger/30 bg-danger-soft text-danger',
-    ok: 'border-ok/30 bg-[#e9f4ec] text-ok',
-    warning: 'border-warning-line bg-warning-soft text-warning',
+    danger: 'bg-danger-soft text-danger',
+    ok: 'bg-ok-soft text-ok',
+    warning: 'bg-warning-soft text-warning',
   }[tone];
   const Icon = tone === 'ok' ? CircleCheck : CircleAlert;
   return (
-    <p role={tone === 'danger' ? 'alert' : 'status'} className={`mb-4 flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm ${styles}`}>
+    <p role={tone === 'danger' ? 'alert' : 'status'} className={`mb-4 flex items-start gap-2.5 rounded-xl px-3.5 py-3 text-[14px] font-medium ${styles}`}>
       <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
       <span>{children}</span>
     </p>
@@ -102,7 +102,7 @@ export function Notice({ tone, children }: { tone: 'danger' | 'ok' | 'warning'; 
 }
 
 export const inputClass =
-  'h-[34px] w-full rounded-md border border-shelf-edge bg-sheet px-3 text-sm text-ink placeholder:text-ink-3 focus:border-ink focus:ring-2 focus:ring-ink/15 focus:outline-none aria-[invalid=true]:border-danger disabled:bg-sheet-head disabled:text-ink-3';
+  'h-9 w-full rounded-[10px] border-0 bg-fill px-3 text-[15px] text-ink transition-shadow duration-150 placeholder:text-ink-3 focus:bg-sheet focus:ring-[3px] focus:ring-tint/45 focus:outline-none aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-danger/70 disabled:text-ink-3 disabled:opacity-60';
 
 /** Etiqueta + control + ayuda + error. El control recibe id y aria-* automáticamente. */
 export function Field({
@@ -124,17 +124,17 @@ export function Field({
   const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ') || undefined;
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
-      <label htmlFor={id} className="text-xs font-semibold text-ink-3">
+      <label htmlFor={id} className="px-0.5 text-[13px] font-medium text-ink-2">
         {label}
       </label>
       {children({ id, name, ...(error ? { 'aria-invalid': true } : {}), ...(describedBy ? { 'aria-describedby': describedBy } : {}) })}
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-xs text-ink-3">
+        <p id={`${id}-hint`} className="px-0.5 text-[12px] text-ink-3">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className="text-xs font-medium text-danger">
+        <p id={`${id}-error`} className="px-0.5 text-[12px] font-medium text-danger">
           {error}
         </p>
       )}
@@ -195,12 +195,12 @@ export function CheckboxField({ label, name, hint, ...props }: { label: string; 
   const errors = useContext(FieldErrors);
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="flex items-center gap-2 text-sm">
-        <input id={id} name={name} type="checkbox" className="size-4 accent-ink" {...props} />
+      <label htmlFor={id} className="flex items-center gap-2.5 text-[15px]">
+        <input id={id} name={name} type="checkbox" className="size-[18px] rounded accent-tint" {...props} />
         {label}
       </label>
-      {hint && <p className="pl-6 text-xs text-ink-3">{hint}</p>}
-      {errors[name] && <p className="pl-6 text-xs font-medium text-danger">{errors[name]}</p>}
+      {hint && <p className="pl-7 text-[12px] text-ink-3">{hint}</p>}
+      {errors[name] && <p className="pl-7 text-[12px] font-medium text-danger">{errors[name]}</p>}
     </div>
   );
 }

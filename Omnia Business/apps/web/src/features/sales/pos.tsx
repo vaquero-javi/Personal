@@ -111,10 +111,10 @@ export function PointOfSale({
   };
 
   return (
-    <div className="grid flex-1 grid-cols-[minmax(0,1fr)] gap-px bg-line lg:grid-cols-[minmax(0,1fr)_380px]">
-      <section className="flex min-w-0 flex-col gap-3 bg-sheet p-4 md:p-5" aria-label="Catálogo">
+    <div className="grid flex-1 grid-cols-[minmax(0,1fr)] items-start gap-4 md:gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="flex min-w-0 flex-col gap-3 rounded-[var(--radius-card)] bg-sheet shadow-[var(--shadow-card)] p-4 md:p-5" aria-label="Catálogo">
         <div className="flex flex-wrap gap-2">
-          <label className="flex min-w-60 flex-1 items-center gap-2 rounded-md border border-shelf-edge px-3 focus-within:border-ink focus-within:ring-2 focus-within:ring-ink/15">
+          <label className="flex min-w-60 flex-1 items-center gap-2 rounded-lg bg-fill px-3 focus-within:ring-[3px] focus-within:ring-tint/45">
             <ScanBarcode aria-hidden className="size-4 text-ink-3" />
             <span className="sr-only">Buscar o escanear</span>
             <input
@@ -123,7 +123,7 @@ export function PointOfSale({
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={onSearchKey}
               placeholder="Escanea o busca por nombre o referencia"
-              className="h-[34px] w-full bg-transparent text-sm outline-none"
+              className="h-9 w-full bg-transparent text-sm outline-none"
             />
           </label>
           {warehouses.length > 1 && (
@@ -135,25 +135,25 @@ export function PointOfSale({
           )}
         </div>
         {catalog.isPending ? (
-          <div className="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-3 xl:grid-cols-4" aria-busy="true">
-            {Array.from({ length: 8 }, (_, i) => <div key={i} className="h-24 animate-pulse bg-sheet-head" />)}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4" aria-busy="true">
+            {Array.from({ length: 8 }, (_, i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-fill" />)}
           </div>
         ) : catalog.isError ? (
           <Notice tone="danger">{catalog.error.message}</Notice>
         ) : (
-          <ul className="grid grid-cols-2 border-t border-l border-line sm:grid-cols-3 xl:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
             {visible.map((p) => {
               const stockable = p.itemType === 'stockable';
               const inCart = cart.get(p.id) ?? 0;
               const left = Number(p.onHand) - inCart;
               const noPrice = Number(p.unitPrice) === 0;
               return (
-                <li key={p.id} className="border-r border-b border-line bg-sheet">
+                <li key={p.id}>
                   <button
                     type="button"
                     onClick={() => add(p.id)}
                     disabled={noPrice || (stockable && left <= 0)}
-                    className="flex h-full w-full flex-col items-start gap-1 p-3 text-left transition-colors hover:bg-sheet-head disabled:cursor-not-allowed disabled:opacity-50 md:px-4"
+                    className="pressable flex h-full w-full flex-col items-start gap-1 rounded-xl bg-fill/60 p-3 text-left hover:bg-fill disabled:cursor-not-allowed disabled:opacity-50 md:px-4"
                   >
                     <span className="line-clamp-2 text-sm font-semibold">{p.name}</span>
                     <span className="text-xs text-ink-3">{p.sku}</span>
@@ -170,10 +170,10 @@ export function PointOfSale({
         )}
       </section>
 
-      <aside className="flex flex-col bg-sheet p-4 md:p-5" aria-label="Ticket">
+      <aside className="flex flex-col rounded-[var(--radius-card)] bg-sheet shadow-[var(--shadow-card)] p-4 md:p-5 lg:sticky lg:top-16" aria-label="Ticket">
         <h3 className="mb-3 text-sm font-bold">Ticket</h3>
         {ticket && (
-          <div className="mb-4 rounded-md border border-ok/30 bg-[#e9f4ec] p-3 text-sm text-ok" role="status">
+          <div className="mb-4 rounded-[10px] border border-ok/30 bg-ok-soft p-3 text-sm text-ok" role="status">
             <p className="font-semibold">Cobrado · {ticket.fullNumber}</p>
             <p>
               Total {formatEuro(ticket.total)}
@@ -186,7 +186,7 @@ export function PointOfSale({
         )}
         {error && <Notice tone="danger">{error}</Notice>}
         {lines.length === 0 ? (
-          <p className="rounded bg-sheet-head px-3 py-6 text-center text-sm text-ink-2">Toca un artículo o escanea su código para empezar.</p>
+          <p className="rounded-xl bg-fill/60 px-3.5 py-6 text-center text-sm text-ink-2">Toca un artículo o escanea su código para empezar.</p>
         ) : (
           <ul className="divide-y divide-line-soft">
             {lines.map((l) => (
@@ -212,10 +212,10 @@ export function PointOfSale({
             <span className="text-sm text-ink-2">Total (IVA incl.)</span>
             <b className="text-2xl">{formatEuro(total)}</b>
           </p>
-          <fieldset className="grid grid-cols-2 gap-2">
+          <fieldset className="grid grid-cols-2 gap-0.5 rounded-[10px] bg-fill p-0.5">
             <legend className="sr-only">Forma de pago</legend>
             {(['card', 'cash'] as const).map((m) => (
-              <label key={m} className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm ${method === m ? 'border-ink bg-ink text-white' : 'border-shelf-edge'}`}>
+              <label key={m} className={`pressable flex cursor-pointer items-center justify-center gap-2 rounded-[8px] px-3 py-2 text-sm has-focus-visible:ring-[3px] has-focus-visible:ring-tint/45 ${method === m ? 'bg-sheet font-semibold text-ink shadow-[var(--shadow-raised)] dark:bg-fill-strong' : 'text-ink-2 hover:text-ink'}`}>
                 <input type="radio" name="method" value={m} checked={method === m} onChange={() => setMethod(m)} className="sr-only" />
                 {m === 'card' ? <CreditCard aria-hidden className="size-4" /> : <Banknote aria-hidden className="size-4" />}
                 {m === 'card' ? 'Tarjeta' : 'Efectivo'}

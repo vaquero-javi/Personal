@@ -15,14 +15,16 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   if (process.env.AUTH_MODE !== 'dev') {
     const { error } = await searchParams;
     return (
-      <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-12 md:items-center">
-        <div className="w-full max-w-sm rounded-lg border border-shelf-edge bg-sheet">
-          <div className="border-b border-line px-5 py-4">
-            <Image src="/brand/logo.png" alt="" width={56} height={56} priority className="mb-2 -ml-1" />
-          <h1 className="text-lg font-bold">Entrar en Omnia</h1>
-            <p className="mt-1 text-sm text-ink-3">Gestión de todas tus sociedades en un solo sitio.</p>
+      <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-16 md:items-center">
+        <div className="w-full max-w-sm">
+          <div className="flex flex-col items-center px-5 pb-6 text-center">
+            <Image src="/brand/logo.png" alt="" width={72} height={72} priority className="mb-4 rounded-[18px] shadow-[var(--shadow-raised)]" />
+            <h1 className="text-[28px] font-bold tracking-[-0.022em]">Entrar en Omnia</h1>
+            <p className="mt-1 text-[15px] text-ink-3">Gestión de todas tus sociedades en un solo sitio.</p>
           </div>
+          <div className="rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
           <SignIn oauthError={error === 'oauth'} />
+          </div>
         </div>
       </main>
     );
@@ -40,25 +42,25 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   if (!users) redirect('/entrar?error=db');
 
   return (
-    <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-12 md:items-center">
-      <div className="w-full max-w-lg rounded-lg border border-shelf-edge bg-sheet">
-        <div className="border-b border-line px-5 py-4">
-          <Image src="/brand/logo.png" alt="" width={56} height={56} priority className="mb-2 -ml-1" />
-          <h1 className="text-lg font-bold">Entrar en Omnia</h1>
-          <p className="mt-1 text-sm text-ink-3">
+    <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-16 md:items-center">
+      <div className="w-full max-w-lg">
+        <div className="flex flex-col items-center px-5 pb-6 text-center">
+          <Image src="/brand/logo.png" alt="" width={72} height={72} priority className="mb-4 rounded-[18px] shadow-[var(--shadow-raised)]" />
+          <h1 className="text-[28px] font-bold tracking-[-0.022em]">Entrar en Omnia</h1>
+          <p className="mt-1 text-[15px] text-ink-3">
             Entorno de desarrollo: elige con qué persona de ejemplo quieres entrar. Cada una tiene un rol distinto en cada sociedad.
           </p>
         </div>
-        <ul className="divide-y divide-line">
+        <ul className="overflow-hidden rounded-[var(--radius-card)] bg-sheet shadow-[var(--shadow-card)]">
           {users.map((u) => (
-            <li key={u.id}>
+            <li key={u.id} className="border-b border-line-soft last:border-b-0">
               <form action={devSignIn}>
                 <input type="hidden" name="userId" value={u.id} />
-                <button type="submit" className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-sheet-head">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white">
+                <button type="submit" className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-fill/60 active:bg-fill">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#a1a1a6] to-[#6e6e73] text-sm font-semibold text-white">
                     {initials(u.full_name)}
                   </span>
-                  <span className="min-w-0">
+                  <span className="min-w-0 flex-1">
                     <span className="block font-semibold">{u.full_name}</span>
                     <span className="block truncate text-sm text-ink-3">
                       {u.roles.join(', ')} · {u.orgs.join(', ')}
