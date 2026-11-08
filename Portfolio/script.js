@@ -1461,96 +1461,269 @@ const initCopy = () => {
 };
 
 /* ==========================================================================
-   13. FORMULARIO (Formspree): validación en línea y "sacudida" con spring
+   13. CONTACTO COMO CONVERSACIÓN: el formulario es un chat. Te pregunto el
+   nombre, el correo y el mensaje; cada respuesta se valida en línea y al
+   final se envía a Formspree con los mismos campos que el formulario anterior.
    ========================================================================== */
-const initContactForm = () => {
-    const form = $('#contact-form');
-    if (!form) return;
-    const submitBtn = $('#form-btn');
-    const status = $('.form-status', form);
-    const btnLabel = submitBtn.innerHTML;
+const initChat = () => {
+    const chat = $('[data-chat]');
+    if (!chat) return;
+    const log = $('.chat-log', chat);
+    const chipsEl = $('.chat-chips', chat);
+    const form = $('.composer', chat);
+    const input = $('.composer-input', form);
+    const area = $('.composer-area', form);
+    const send = $('.send', form);
+    const honey = $('[name="_gotcha"]', form);
+    const EMAIL = 'javiervaquerovila@gmail.com';
 
-    // Un spring con velocidad inicial y poca amortiguación oscila y se calma solo
-    const shakers = new Map();
-    const shake = field => {
-        let m = shakers.get(field);
-        if (!m) {
-            const input = $('input, textarea', field);
-            m = new Motion({ x: 0 }, ({ x }) => { input.style.transform = x ? `translate3d(${x}px,0,0)` : ''; }, { precision: 0.05 });
-            shakers.set(field, m);
+    const data = { nombre: '', _replyto: '', mensaje: '' };
+    let step = null;
+    let busy = false;
+    let engaged = false;
+    let lastRow = null;
+
+    const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+    const scrollDown = () => log.scrollTo({ top: log.scrollHeight, behavior: reduced ? 'auto' : 'smooth' });
+    const firstName = () => data.nombre.trim().split(/\s+/)[0];
+
+    // Cada burbuja nace de su lado (las mías desde el avatar, las tuyas desde el campo de texto)
+    const pop = el => {
+        if (reduced) return;
+        const m = new Motion({ s: 0.55, y: 14, o: 0 }, ({ s, y, o }) => {
+            el.style.transform = `translate3d(0,${y}px,0) scale(${s})`;
+            el.style.opacity = o;
+        }, { precision: { s: 0.0005, y: 0.05, o: 0.002 } });
+        m.flush();
+        m.to({ s: 1, y: 0, o: 1 }, { response: 0.42, damping: 0.72 }, () => {
+            el.style.transform = '';
+            el.style.opacity = '';
+        });
+    };
+
+    const newRow = who => {
+        const row = document.createElement('div');
+        row.className = `msg-row msg-row--${who}`;
+        if (who === 'me') {
+            // El avatar solo acompaña al último mensaje seguido
+            if (lastRow?.classList.contains('msg-row--me')) lastRow.classList.remove('has-avatar');
+            row.classList.add('has-avatar');
+            row.innerHTML = '<span class="msg-avatar" aria-hidden="true">JV</span>';
         }
-        m.to({ x: 0 }, { velocity: 900, response: 0.25, damping: 0.22 });
+        log.append(row);
+        lastRow = row;
+        return row;
     };
 
-    const setFieldError = (input, message) => {
-        const error = $(`#${input.id}-error`);
-        const field = input.closest('.field');
-        field.classList.toggle('has-error', Boolean(message));
-        input.setAttribute('aria-invalid', message ? 'true' : 'false');
-        if (message) input.setAttribute('aria-describedby', error.id);
-        else input.removeAttribute('aria-describedby');
-        error.textContent = message;
+    const addMsg = (who, text) => {
+        const row = newRow(who);
+        const bubble = document.createElement('p');
+        bubble.className = `msg msg--${who}`;
+        bubble.textContent = text;
+        row.append(bubble);
+        pop(bubble);
+        scrollDown();
+        return row;
     };
 
-    const validate = () => {
-        let firstInvalid = null;
-        $$('[required]', form).forEach(input => {
-            let message = '';
-            if (!input.value.trim()) message = 'Este campo es obligatorio.';
-            else if (input.type === 'email' && !input.validity.valid) message = 'Introduce un correo válido.';
-            setFieldError(input, message);
-            if (message) {
-                shake(input.closest('.field'));
-                if (!firstInvalid) firstInvalid = input;
+    const showTyping = () => {
+        const row = newRow('me');
+        row.setAttribute('aria-hidden', 'true');
+        row.insertAdjacentHTML('beforeend', '<span class="msg msg--me typing"><i></i><i></i><i></i></span>');
+        pop(row.lastElementChild);
+        scrollDown();
+        return () => {
+            row.remove();
+            lastRow = log.lastElementChild?.classList.contains('msg-row') ? log.lastElementChild : null;
+        };
+    };
+
+    // Escribe "como una persona": indicador de escritura proporcional al texto
+    const say = async text => {
+        const stop = showTyping();
+        await wait(Math.min(450 + text.length * 14, 1400));
+        stop();
+        addMsg('me', text);
+        await wait(160);
+    };
+
+    const setChips = list => {
+        chipsEl.innerHTML = '';
+        list.forEach(({ label, onClick }, i) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip';
+            b.textContent = label;
+            b.addEventListener('click', onClick);
+            chipsEl.append(b);
+            setTimeout(() => pop(b), i * 60);
+        });
+    };
+
+    const field = () => (STEPS[step]?.type === 'area' ? area : input);
+    const autosize = () => {
+        area.style.height = 'auto';
+        area.style.height = `${Math.min(area.scrollHeight, 140)}px`;
+    };
+    const updateSend = () => { send.disabled = busy || !step || !field().value.trim(); };
+
+    const STEPS = {
+        name: {
+            field: 'nombre', type: 'text', placeholder: 'Escribe tu nombre', autocomplete: 'name',
+            ask: () => ['¿Cómo te llamas?'],
+            check: v => (v.trim().length >= 2 ? '' : 'Necesito al menos tu nombre.')
+        },
+        email: {
+            field: '_replyto', type: 'email', placeholder: 'tu@correo.com', autocomplete: 'email',
+            ask: () => [`Encantado, ${firstName()}.`, '¿A qué correo te respondo?'],
+            check: v => (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Ese correo no parece válido. ¿Lo revisas?')
+        },
+        message: {
+            field: 'mensaje', type: 'area', placeholder: 'Escribe tu mensaje',
+            ask: () => ['¿Qué me quieres contar?'],
+            chips: ['Tengo una oferta de trabajo', 'Quiero proponerte un proyecto', 'Solo quería saludarte'],
+            check: v => (v.trim().length >= 5 ? '' : 'Cuéntame un poco más.')
+        }
+    };
+
+    const setComposer = key => {
+        const s = STEPS[key];
+        step = s ? key : null;
+        if (!s) {
+            input.disabled = area.disabled = true;
+            input.hidden = false;
+            area.hidden = true;
+            input.value = '';
+            input.placeholder = '…';
+            chipsEl.innerHTML = '';
+            updateSend();
+            return;
+        }
+        const isArea = s.type === 'area';
+        input.hidden = isArea;
+        area.hidden = !isArea;
+        const f = field();
+        f.disabled = false;
+        f.value = '';
+        f.placeholder = s.placeholder;
+        if (!isArea) {
+            input.type = s.type;
+            input.autocomplete = s.autocomplete;
+            input.inputMode = s.type === 'email' ? 'email' : 'text';
+        }
+        autosize();
+        setChips((s.chips || []).map(label => ({
+            label,
+            onClick: () => {
+                area.value = `${label}. `;
+                autosize();
+                updateSend();
+                area.focus();
+                area.setSelectionRange(area.value.length, area.value.length);
             }
-        });
-        if (firstInvalid) haptic([8, 40, 8]);
-        firstInvalid?.focus();
-        return !firstInvalid;
+        })));
+        updateSend();
+        // Solo roba el foco si la persona ya está escribiendo (evita saltos de scroll)
+        if (engaged) f.focus({ preventScroll: true });
     };
 
-    $$('[required]', form).forEach(input => {
-        input.addEventListener('input', () => {
-            if (input.closest('.field').classList.contains('has-error')) setFieldError(input, '');
-        });
-        input.addEventListener('blur', () => {
-            if (input.type === 'email' && input.value.trim() && !input.validity.valid) setFieldError(input, 'Introduce un correo válido.');
-        });
-    });
-
-    const setStatus = (text, type = '') => {
-        status.textContent = text;
-        status.className = `form-status${type ? ` is-${type}` : ''}`;
+    const ask = async key => {
+        setComposer(null);
+        for (const t of STEPS[key].ask()) await say(t);
+        setComposer(key);
     };
 
-    form.addEventListener('submit', async event => {
-        event.preventDefault();
-        setStatus('');
-        if (!validate()) return;
+    // Sacudida con spring cuando falta algo
+    const shake = new Motion({ x: 0 }, ({ x }) => { form.style.transform = x ? `translate3d(${x}px,0,0)` : ''; }, { precision: 0.05 });
 
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Enviando…';
+    const deliver = async () => {
+        setComposer(null);
+        busy = true;
+        updateSend();
+        const stop = showTyping();
         try {
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: { Accept: 'application/json' }
-            });
-            if (response.ok) {
-                form.reset();
-                setStatus('');
-                haptic(12);
-                sheet.close(0, () => toast.show('Mensaje enviado. ¡Gracias!'));
-            } else {
-                setStatus('No se pudo enviar el mensaje. Inténtalo de nuevo.', 'error');
-            }
-        } catch (error) {
-            setStatus('Error de conexión. Revisa tu red e inténtalo de nuevo.', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = btnLabel;
+            const body = new FormData();
+            body.append('nombre', data.nombre);
+            body.append('_replyto', data._replyto);
+            body.append('mensaje', data.mensaje);
+            body.append('_subject', 'Nuevo mensaje desde tu Portfolio Web');
+            body.append('_gotcha', honey.value);
+            const res = await fetch(form.action, { method: 'POST', body, headers: { Accept: 'application/json' } });
+            stop();
+            if (!res.ok) throw new Error('envío fallido');
+            const sent = [...log.querySelectorAll('.msg-row--you')].pop();
+            sent?.insertAdjacentHTML('afterend', '<p class="msg-status">Entregado</p>');
+            haptic(12);
+            await say(`¡Recibido, ${firstName()}! Te responderé a ${data._replyto} lo antes posible.`);
+            busy = false;
+            setChips([{ label: 'Escribir otro mensaje', onClick: () => { chipsEl.innerHTML = ''; ask('message'); } }]);
+        } catch (err) {
+            stop();
+            await say(`Vaya, no se ha podido enviar. Prueba otra vez o escríbeme a ${EMAIL}.`);
+            busy = false;
+            setChips([
+                { label: 'Reintentar', onClick: () => { chipsEl.innerHTML = ''; deliver(); } },
+                { label: 'Copiar correo', onClick: () => navigator.clipboard?.writeText(EMAIL).then(() => toast.show('Correo copiado'), () => toast.show('No se pudo copiar', 'error')) }
+            ]);
+        }
+    };
+
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (busy || !step) return;
+        const s = STEPS[step];
+        const f = field();
+        const value = f.value.trim();
+        if (!value) {
+            shake.to({ x: 0 }, { velocity: 700, response: 0.25, damping: 0.22 });
+            return;
+        }
+        engaged = true;
+        busy = true;
+        addMsg('you', value);
+        f.value = '';
+        autosize();
+        chipsEl.innerHTML = '';
+        const error = s.check(value);
+        if (error) {
+            setComposer(null);
+            haptic([8, 40, 8]);
+            await say(error);
+            busy = false;
+            setComposer(step || Object.keys(STEPS).find(k => STEPS[k] === s));
+            return;
+        }
+        data[s.field] = value;
+        busy = false;
+        if (s.field === 'nombre') await ask('email');
+        else if (s.field === '_replyto') await ask('message');
+        else await deliver();
+    });
+
+    [input, area].forEach(f => f.addEventListener('input', () => { autosize(); updateSend(); }));
+    area.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            form.requestSubmit();
         }
     });
+    input.addEventListener('focus', () => { engaged = true; });
+    area.addEventListener('focus', () => { engaged = true; });
+
+    // La conversación empieza cuando la sección aparece en pantalla
+    const start = async () => {
+        await say('¡Hola! Soy Javier.');
+        await say('Si tienes un proyecto o una oportunidad, cuéntamelo por aquí y te respondo por correo.');
+        await ask('name');
+    };
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(([entry]) => {
+            if (!entry.isIntersecting) return;
+            io.disconnect();
+            start();
+        }, { threshold: 0.4 });
+        io.observe(chat);
+    } else start();
 };
 
 /* ==========================================================================
@@ -1571,5 +1744,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initKeyboard();
     initAnchors();
     initCopy();
-    initContactForm();
+    initChat();
 });

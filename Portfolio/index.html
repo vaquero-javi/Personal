@@ -318,39 +318,43 @@
 
             <!-- CONTACTO -->
             <section id="contacto" class="section contact">
-                <div class="container">
-                    <p class="eyebrow" data-reveal>Contacto</p>
-                    <h2 class="display-1 contact-title" data-reveal>¿Tienes un proyecto o una oportunidad? <span class="accent">Hablemos.</span></h2>
+                <div class="container contact-layout">
+                    <div class="contact-intro">
+                        <p class="eyebrow" data-reveal>Contacto</p>
+                        <h2 class="display-1 contact-title" data-reveal>¿Tienes un proyecto o una oportunidad? <span class="accent">Hablemos.</span></h2>
 
-                    <div class="contact-grid">
-                        <div class="tile tile--mail" data-reveal>
-                            <span class="tile-k">Correo</span>
-                            <a class="mail-link" href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
-                            <button class="btn btn-secondary btn-sm" type="button" data-copy="javiervaquerovila@gmail.com"><i class="ti ti-copy" aria-hidden="true"></i> Copiar</button>
+                        <div class="contact-direct" data-reveal>
+                            <div class="mail-line">
+                                <a class="mail-link" href="mailto:javiervaquerovila@gmail.com">javiervaquerovila@gmail.com</a>
+                                <button class="icon-btn copy-btn" type="button" data-copy="javiervaquerovila@gmail.com" aria-label="Copiar correo"><i class="ti ti-copy" aria-hidden="true"></i></button>
+                            </div>
+                            <p class="contact-links">
+                                <a href="https://github.com/vaquero-javi" target="_blank" rel="noopener">GitHub <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a>
+                                <a href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener">LinkedIn <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a>
+                                <a href="assets/CV%20JAVIER%20VAQUERO%20VILA.pdf" download="CV-Javier-Vaquero-Vila.pdf">CV <i class="ti ti-download" aria-hidden="true"></i></a>
+                            </p>
+                            <p class="contact-meta">Fuenlabrada, Madrid · <time data-clock>--:--</time></p>
                         </div>
-                        <button class="tile tile--action" type="button" data-sheet-open="contact" data-reveal>
-                            <span class="tile-icon"><i class="ti ti-message-circle" aria-hidden="true"></i></span>
-                            <strong class="tile-v">Escribir un mensaje</strong>
-                            <span class="tile-s">Te respondo en 24–48 h</span>
-                        </button>
-                        <a class="tile tile--link" href="https://github.com/vaquero-javi" target="_blank" rel="noopener" data-reveal>
-                            <span class="tile-icon"><i class="ti ti-brand-github" aria-hidden="true"></i></span>
-                            <span class="tile-k">GitHub</span>
-                            <strong class="tile-v">vaquero-javi</strong>
-                            <i class="ti ti-arrow-up-right tile-arrow" aria-hidden="true"></i>
-                        </a>
-                        <a class="tile tile--link" href="https://www.linkedin.com/in/javier-vaquero-vila" target="_blank" rel="noopener" data-reveal>
-                            <span class="tile-icon"><i class="ti ti-brand-linkedin" aria-hidden="true"></i></span>
-                            <span class="tile-k">LinkedIn</span>
-                            <strong class="tile-v">javier-vaquero-vila</strong>
-                            <i class="ti ti-arrow-up-right tile-arrow" aria-hidden="true"></i>
-                        </a>
-                        <div class="tile" data-reveal>
-                            <span class="tile-icon"><i class="ti ti-map-pin" aria-hidden="true"></i></span>
-                            <span class="tile-k">Ubicación</span>
-                            <strong class="tile-v">Fuenlabrada, Madrid</strong>
-                            <span class="tile-s">Hora local <time data-clock>--:--</time></span>
+                    </div>
+
+                    <!-- Conversación: el formulario de contacto convertido en un chat -->
+                    <div class="chat" data-chat data-reveal>
+                        <div class="chat-head">
+                            <span class="msg-avatar msg-avatar--lg" aria-hidden="true">JV</span>
+                            <div>
+                                <p class="chat-name">Javier Vaquero</p>
+                                <p class="chat-presence"><span class="status-dot" aria-hidden="true"></span>Disponible</p>
+                            </div>
                         </div>
+                        <div class="chat-log" role="log" aria-live="polite" aria-label="Conversación con Javier"></div>
+                        <div class="chat-chips"></div>
+                        <form class="composer mat mat--thin" action="https://formspree.io/f/mpqnvvdd" method="POST" novalidate>
+                            <label class="sr-only" for="chat-input">Tu respuesta</label>
+                            <input class="composer-input" id="chat-input" type="text" placeholder="…" disabled>
+                            <textarea class="composer-area" rows="1" placeholder="Escribe tu mensaje" aria-label="Tu mensaje" hidden></textarea>
+                            <input type="text" name="_gotcha" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true">
+                            <button class="send" type="submit" aria-label="Enviar" disabled><i class="ti ti-arrow-up" aria-hidden="true"></i></button>
+                        </form>
                     </div>
                 </div>
             </section>
@@ -411,30 +415,6 @@
                 <a href="https://github.com/vaquero-javi/Personal/tree/main/PTD-app" target="_blank" rel="noopener" class="btn btn-secondary mat mat--thin"><i class="ti ti-brand-github" aria-hidden="true"></i> Ver código <i class="ti ti-arrow-up-right" aria-hidden="true"></i></a>
             </article>
 
-            <div data-sheet="contact" data-title="Escribir un mensaje" hidden>
-                <form id="contact-form" action="https://formspree.io/f/mpqnvvdd" method="POST" class="form" novalidate>
-                    <div class="field">
-                        <label for="name">Nombre</label>
-                        <input type="text" name="nombre" id="name" autocomplete="name" required>
-                        <p class="field-error" id="name-error"></p>
-                    </div>
-                    <div class="field">
-                        <label for="email">Correo electrónico</label>
-                        <input type="email" name="_replyto" id="email" autocomplete="email" inputmode="email" required>
-                        <p class="field-error" id="email-error"></p>
-                    </div>
-                    <div class="field field--wide">
-                        <label for="message">Mensaje</label>
-                        <textarea name="mensaje" id="message" rows="5" required></textarea>
-                        <p class="field-error" id="message-error"></p>
-                    </div>
-                    <input type="hidden" name="_subject" value="Nuevo mensaje desde tu Portfolio Web">
-                    <div class="form-foot field--wide">
-                        <button type="submit" id="form-btn" class="btn btn-primary">Enviar mensaje <i class="ti ti-send" aria-hidden="true"></i></button>
-                        <p class="form-status" role="status" aria-live="polite"></p>
-                    </div>
-                </form>
-            </div>
         </div>
     </div>
 
