@@ -40,29 +40,29 @@ export function RecipeEditor({ product, ingredients, warehouseName }: { product:
     <div className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto flex max-w-4xl flex-col gap-4">
         <div className="flex items-center gap-3">
-          <Link href="/carta" aria-label="Volver a la carta" className="flex size-11 items-center justify-center rounded-lg border border-shelf-edge bg-sheet hover:bg-sheet-head">
+          <Link href="/carta" aria-label="Volver a la carta" className="pressable flex size-11 items-center justify-center rounded-full bg-fill text-tint hover:bg-fill-strong">
             <ArrowLeft className="size-5" aria-hidden />
           </Link>
           <div>
-            <p className="text-xs font-semibold text-ink-3">Escandallo · costes en {warehouseName}</p>
-            <h1 className="text-xl font-bold">{product.name}</h1>
+            <p className="text-[13px] font-medium text-ink-2">Escandallo · costes en {warehouseName}</p>
+            <h1 className="text-[30px] leading-[1.1] font-bold tracking-[-0.022em]">{product.name}</h1>
           </div>
         </div>
 
-        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-shelf-edge bg-line sm:grid-cols-5">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {[
             ['PVP', product.pvp ? formatEuro(product.pvp) : '—'],
             ['Sin IVA', product.netPrice ? formatEuro(product.netPrice) : '—'],
             ['Coste', live.unitCost === null ? '—' : formatEuro(live.unitCost)],
             ['Margen bruto', margin === null ? '—' : formatEuro(margin)],
           ].map(([label, value]) => (
-            <div key={label} className="bg-sheet px-4 py-3">
-              <dt className="text-xs font-semibold text-ink-3">{label}</dt>
+            <div key={label} className="rounded-[16px] bg-sheet px-4 py-3 shadow-[var(--shadow-card)]">
+              <dt className="text-[13px] font-medium text-ink-2">{label}</dt>
               <dd className="text-xl font-bold">{value}</dd>
             </div>
           ))}
-          <div className="bg-sheet px-4 py-3">
-            <dt className="text-xs font-semibold text-ink-3">Food cost</dt>
+          <div className="rounded-[16px] bg-sheet px-4 py-3 shadow-[var(--shadow-card)]">
+            <dt className="text-[13px] font-medium text-ink-2">Food cost</dt>
             <dd className="text-xl"><FoodCost pct={foodCostPct(live)} /></dd>
           </div>
         </dl>
@@ -73,9 +73,9 @@ export function RecipeEditor({ product, ingredients, warehouseName }: { product:
           </Notice>
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-shelf-edge bg-sheet">
+        <div className="overflow-x-auto rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-sheet-head text-xs text-ink-3">
+            <thead className="border-b border-line-soft text-[12px] text-ink-3">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold">Ingrediente</th>
                 <th className="px-3 py-2 text-right font-semibold">Cantidad por unidad</th>
@@ -100,7 +100,7 @@ export function RecipeEditor({ product, ingredients, warehouseName }: { product:
                       <select
                         value={r.ingredientId}
                         onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, ingredientId: e.target.value } : x)))}
-                        className="h-11 w-full rounded-md border border-shelf-edge bg-sheet px-2"
+                        className="h-11 w-full rounded-[10px] px-2.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45"
                         aria-label="Ingrediente"
                       >
                         <option value="">Elige un ingrediente…</option>
@@ -117,7 +117,7 @@ export function RecipeEditor({ product, ingredients, warehouseName }: { product:
                           value={r.quantity}
                           onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, quantity: e.target.value } : x)))}
                           inputMode="decimal"
-                          className="h-11 w-24 rounded-md border border-shelf-edge px-2 text-right"
+                          className="h-11 w-24 rounded-[10px] px-2.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-right"
                           aria-label={`Cantidad de ${ing?.name ?? 'ingrediente'}`}
                         />
                         <span className="w-8 text-left text-ink-3">{ing?.unit ?? ''}</span>

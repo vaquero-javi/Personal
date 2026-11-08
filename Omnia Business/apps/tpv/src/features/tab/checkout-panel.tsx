@@ -78,13 +78,13 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
     });
 
   return (
-    <div className="border-t-2 border-ink bg-sheet">
+    <div className="material border-t border-line-soft">
       <div className="flex items-end justify-between px-4 pt-3">
         <div>
-          <p className="text-xs font-semibold text-ink-3">{label}</p>
+          <p className="text-[13px] font-medium text-ink-2">{label}</p>
           <p className="text-xs text-ink-3">IVA incluido ({formatEuro(tax)})</p>
         </div>
-        <p className="text-4xl font-bold">{formatEuro(total)}</p>
+        <p className="text-[40px] leading-none font-bold tracking-[-0.03em]">{formatEuro(total)}</p>
       </div>
 
       {disabledReason && <p className="px-4 pt-2 text-right text-sm font-semibold text-warning">{disabledReason}</p>}
@@ -104,7 +104,7 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
       </div>
 
       {method === 'cash' && (
-        <div className="flex flex-col gap-2 border-t border-line px-3 py-3">
+        <div className="flex flex-col gap-2 border-t border-line-soft px-3 py-3">
           <div className="grid grid-cols-6 gap-2">
             {BILLS.map((b) => (
               <Button key={b} size="lg" onClick={() => { setTendered(String(b)); setKeypad(false); }} variant={tendered === String(b) ? 'primary' : 'secondary'} className="px-0 text-lg">
@@ -124,7 +124,7 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
                   type="button"
                   onClick={() => press(k)}
                   aria-label={k === 'del' ? 'Borrar' : k === ',' ? 'Coma decimal' : k}
-                  className="flex h-11 items-center justify-center rounded-lg border border-shelf-edge text-xl font-semibold hover:bg-sheet-head active:bg-line-soft"
+                  className="pressable flex h-12 items-center justify-center rounded-[12px] bg-fill text-xl font-semibold hover:bg-fill-strong"
                 >
                   {k === 'del' ? <Delete className="size-5" aria-hidden /> : k}
                 </button>
@@ -132,11 +132,11 @@ export function CheckoutPanel({ tabId, total, tax, disabledReason, onPaid, onErr
             </div>
           )}
           <dl className="grid grid-cols-2 gap-3">
-            <div className="flex items-baseline justify-between gap-2 rounded-lg bg-sheet-head px-3 py-2">
+            <div className="flex items-baseline justify-between gap-2 rounded-[12px] bg-fill px-3.5 py-2.5">
               <dt className="text-sm text-ink-3">Entregado</dt>
               <dd className="text-2xl font-bold">{tendered ? formatEuro(tenderedCents / 100) : '—'}</dd>
             </div>
-            <div className={`flex items-baseline justify-between gap-2 rounded-lg px-3 py-2 ${tendered && changeCents < 0 ? 'bg-danger-soft' : 'bg-ok-soft'}`}>
+            <div className={`flex items-baseline justify-between gap-2 rounded-[12px] px-3.5 py-2.5 ${tendered && changeCents < 0 ? 'bg-danger-soft' : 'bg-ok-soft'}`}>
               <dt className="text-sm text-ink-3">{tendered && changeCents < 0 ? 'Faltan' : 'Cambio'}</dt>
               <dd className={`text-2xl font-bold ${tendered && changeCents < 0 ? 'text-danger' : 'text-ok'}`} aria-live="polite">
                 {!tendered ? '—' : formatEuro(Math.abs(changeCents) / 100)}

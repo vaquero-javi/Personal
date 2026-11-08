@@ -36,7 +36,7 @@ export function Splash() {
       aria-hidden
       onClick={finish}
       onTransitionEnd={() => setPhase('off')}
-      className={`splash fixed inset-0 z-[100] flex items-center justify-center bg-white transition-opacity duration-300 ${phase === 'leaving' ? 'pointer-events-none opacity-0' : ''}`}
+      className={`splash fixed inset-0 z-[100] flex items-center justify-center bg-carton transition-opacity duration-300 ${phase === 'leaving' ? 'pointer-events-none opacity-0' : ''}`}
     >
       {/* Mismo tamaño que tenía el vídeo (1430×892, a pantalla completa). */}
       <BrandLoop className="w-[min(22.4vw,35.9vh)]" />

@@ -83,8 +83,8 @@ export function SplitDialog({ open, onClose, tabId, lines, disabledReason, onPai
           onToggle={(id) => toggle('left', id)}
           empty="Todo pasa a este cobro."
           footer={
-            <div className="flex items-end justify-between border-t-2 border-ink px-4 py-3">
-              <p className="text-xs font-semibold text-ink-3">Queda en la cuenta</p>
+            <div className="flex items-end justify-between border-t border-line px-4 py-3">
+              <p className="text-[13px] font-medium text-ink-2">Queda en la cuenta</p>
               <p className="text-3xl font-bold">{formatEuro(leftTotals.total)}</p>
             </div>
           }
@@ -96,7 +96,7 @@ export function SplitDialog({ open, onClose, tabId, lines, disabledReason, onPai
             onClick={() => shift('left')}
             disabled={marked.side !== 'left' || marked.ids.size === 0}
             aria-label="Pasar al cobro"
-            className="flex size-16 items-center justify-center rounded-xl bg-ink text-white disabled:opacity-30"
+            className="pressable flex size-16 items-center justify-center rounded-full bg-tint text-on-tint disabled:opacity-30"
           >
             <ChevronsRight className="size-8" aria-hidden />
           </button>
@@ -105,7 +105,7 @@ export function SplitDialog({ open, onClose, tabId, lines, disabledReason, onPai
             onClick={() => shift('right')}
             disabled={marked.side !== 'right' || marked.ids.size === 0}
             aria-label="Devolver a la cuenta"
-            className="flex size-16 items-center justify-center rounded-xl border border-shelf-edge disabled:opacity-30"
+            className="pressable flex size-16 items-center justify-center rounded-full bg-fill text-tint disabled:opacity-30"
           >
             <ChevronsLeft className="size-8" aria-hidden />
           </button>
@@ -152,8 +152,8 @@ function Column({ title, lines, marked, onToggle, empty, footer }: {
   footer: React.ReactNode;
 }) {
   return (
-    <section aria-label={title} className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-shelf-edge">
-      <h3 className="border-b border-line bg-sheet-head px-4 py-2 text-sm font-semibold text-ink-2">{title}</h3>
+    <section aria-label={title} className="flex min-h-0 flex-col overflow-hidden rounded-[16px] bg-sheet shadow-[var(--shadow-card)]">
+      <h3 className="border-b border-line-soft px-4 py-2.5 text-[13px] font-semibold text-ink-3 uppercase">{title}</h3>
       <ul className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
         {lines.length === 0 && <li className="p-6 text-center text-sm text-ink-3">{empty}</li>}
         {lines.map((l) => {
@@ -164,7 +164,7 @@ function Column({ title, lines, marked, onToggle, empty, footer }: {
                 type="button"
                 aria-pressed={on}
                 onClick={() => onToggle(l.id)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left aria-pressed:bg-ink aria-pressed:text-white"
+                className="flex w-full items-center gap-3 px-4 py-3 text-left aria-pressed:bg-tint-soft aria-pressed:text-tint"
               >
                 <span className="w-8 text-center text-base font-bold">{formatQty(l.quantity)}</span>
                 <span className="min-w-0 flex-1 truncate font-semibold">{l.description}</span>

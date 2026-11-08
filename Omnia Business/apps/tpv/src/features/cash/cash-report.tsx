@@ -18,10 +18,10 @@ export function CashReport({ session, movements }: { session: CashSession; movem
   const closed = session.status === 'closed';
   const diff = Number(session.difference ?? 0);
   return (
-    <article className="rounded-xl border border-shelf-edge bg-sheet print:rounded-none print:border-0">
+    <article className="rounded-[20px] bg-sheet shadow-[var(--shadow-card)] print:rounded-none print:shadow-none">
       <header className="border-b border-line px-5 py-4">
-        <p className="text-xs font-semibold text-ink-3">{closed ? 'Reporte Z · cierre de turno' : 'Reporte X · caja en curso'}</p>
-        <h1 className="text-xl font-bold">Caja nº {session.number} · {session.terminalName}</h1>
+        <p className="text-[13px] font-medium text-ink-2">{closed ? 'Reporte Z · cierre de turno' : 'Reporte X · caja en curso'}</p>
+        <h1 className="text-[24px] font-bold tracking-[-0.02em]">Caja nº {session.number} · {session.terminalName}</h1>
         <p className="mt-1 text-sm text-ink-2">
           Abierta {formatDateTime(session.openedAt)} por {session.openedByName}
           {closed && ` · cerrada ${formatDateTime(session.closedAt)} por ${session.closedByName}`}
@@ -29,7 +29,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
       </header>
       <div className="grid gap-px bg-line md:grid-cols-2">
         <section className="bg-sheet px-5 py-4">
-          <h2 className="mb-2 text-sm font-bold">Efectivo</h2>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Efectivo</h2>
           <dl className="text-sm">
             <Row label="Fondo inicial" value={formatEuro(s.openingFloat)} />
             <Row label="Ventas en efectivo" value={formatEuro(s.cashSales)} />
@@ -50,7 +50,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
           </dl>
         </section>
         <section className="bg-sheet px-5 py-4">
-          <h2 className="mb-2 text-sm font-bold">Ventas</h2>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Ventas</h2>
           <dl className="text-sm">
             <Row label="Tickets" value={String(s.tickets)} />
             <Row label="Ticket medio" value={formatEuro(s.averageTicket)} />
@@ -63,7 +63,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
           </dl>
         </section>
         <section className="bg-sheet px-5 py-4">
-          <h2 className="mb-2 text-sm font-bold">Impuestos</h2>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Impuestos</h2>
           {s.taxes.length === 0 ? (
             <p className="text-sm text-ink-3">Sin ventas.</p>
           ) : (
@@ -80,7 +80,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
           )}
         </section>
         <section className="bg-sheet px-5 py-4">
-          <h2 className="mb-2 text-sm font-bold">Por camarero</h2>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Por camarero</h2>
           {s.byWaiter.length === 0 ? (
             <p className="text-sm text-ink-3">Sin ventas.</p>
           ) : (
@@ -90,7 +90,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
           )}
         </section>
         <section className="bg-sheet px-5 py-4">
-          <h2 className="mb-2 text-sm font-bold">Lo más vendido</h2>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Lo más vendido</h2>
           {s.topProducts.length === 0 ? (
             <p className="text-sm text-ink-3">Sin ventas.</p>
           ) : (
@@ -100,7 +100,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
           )}
         </section>
         <section className="bg-sheet px-5 py-4">
-          <h2 className="mb-2 text-sm font-bold">Movimientos de caja</h2>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Movimientos de caja</h2>
           {movements.length === 0 ? (
             <p className="text-sm text-ink-3">Ninguno.</p>
           ) : (
@@ -113,7 +113,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
         </section>
         {closed && session.countDetail && (
           <section className="bg-sheet px-5 py-4 md:col-span-2">
-            <h2 className="mb-2 text-sm font-bold">Arqueo</h2>
+            <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Arqueo</h2>
             <dl className="grid grid-cols-2 gap-x-8 text-sm sm:grid-cols-3">
               {DENOMINATIONS.filter((d) => session.countDetail![String(d)]).map((d) => (
                 <Row key={d} label={`${session.countDetail![String(d)]} × ${denominationLabel(d)}`} value={formatEuro((session.countDetail![String(d)]! * d) / 100)} />

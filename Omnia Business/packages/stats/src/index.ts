@@ -43,7 +43,37 @@ export interface Snapshot {
   topCustomers: { name: string; base: number; invoices: number }[];
 }
 
+/** Cifras de un día (Estadísticas › Comparación). Importes con IVA salvo `base`. */
+export interface DayFigures {
+  day: string; // YYYY-MM-DD
+  isToday: boolean;
+  /** Hora actual (HH:MM, hora peninsular) en el momento de la consulta. */
+  now: string;
+  total: number;
+  base: number;
+  tax: number;
+  /** Tickets y facturas emitidos. */
+  count: number;
+  posTotal: number;
+  posCount: number;
+  /** Vendido con fecha de ese día pero sin hora fiable (no entra en `hourly`). */
+  untimedTotal: number;
+  /** Vendido hasta `until` (si se pidió). */
+  untilTotal: number | null;
+  untilCount: number | null;
+  /** Comensales de las cuentas del TPV cobradas ese día. */
+  guests: number;
+  cash: number;
+  card: number;
+  otherPayments: number;
+  /** Solo hoy: cuentas abiertas en mesas y su importe aproximado (con IVA). */
+  openTabs: number;
+  openTotal: number;
+  hourly: { hour: number; total: number; count: number }[];
+}
+
 const IsoDate = z.iso.date();
+const Clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 const num = (v: unknown) => Number(v ?? 0);
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -96,6 +126,37 @@ export function createStatsService(sql: Sql) {
           collected: num(r.collected),
           paidOut: num(r.paid_out),
         }));
+      });
+    },
+
+    /** Cifras de un día; con `until` (HH:MM), además lo vendido hasta esa hora. */
+    async day(ctx: TenantContext, day: string, until?: string | null): Promise<DayFigures> {
+      const orgId = singleOrganization(ctx);
+      const cutoff = until ? Clock.parse(until) : null;
+      return withTenant(sql, ctx, async (tx) => {
+        const [row] = await tx<{ d: Record<string, unknown> }[]>`select app.stats_day(${orgId}, ${IsoDate.parse(day)}, ${cutoff}::time) as d`;
+        const d = row!.d;
+        return {
+          day: String(d.day),
+          isToday: Boolean(d.isToday),
+          now: String(d.now),
+          total: num(d.total),
+          base: num(d.base),
+          tax: num(d.tax),
+          count: num(d.count),
+          posTotal: num(d.posTotal),
+          posCount: num(d.posCount),
+          untimedTotal: num(d.untimedTotal),
+          untilTotal: d.untilTotal == null ? null : num(d.untilTotal),
+          untilCount: d.untilCount == null ? null : num(d.untilCount),
+          guests: num(d.guests),
+          cash: num(d.cash),
+          card: num(d.card),
+          otherPayments: num(d.otherPayments),
+          openTabs: num(d.openTabs),
+          openTotal: num(d.openTotal),
+          hourly: ((d.hourly as { hour: unknown; total: unknown; count: unknown }[]) ?? []).map((h) => ({ hour: num(h.hour), total: num(h.total), count: num(h.count) })),
+        };
       });
     },
 

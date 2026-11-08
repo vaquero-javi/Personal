@@ -87,7 +87,7 @@ export function ClockDialog({ open, onClose }: { open: boolean; onClose: () => v
             <div className="text-center">
               <p className="text-xl font-bold">{step.info.holder.name}</p>
               <p className="text-sm text-ink-3">{step.info.holder.role}</p>
-              <p className="mt-2 inline-flex rounded-full bg-sheet-head px-3 py-1 text-sm font-semibold text-ink-2">
+              <p className="mt-2 inline-flex rounded-full bg-fill px-3 py-1 text-sm font-semibold text-ink-2">
                 {STATE_TEXT[step.info.state](step.info.lastEntryAt ? new Date(step.info.lastEntryAt) : null)}
               </p>
             </div>

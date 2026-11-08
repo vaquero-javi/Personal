@@ -1,10 +1,11 @@
+import { Trash2 } from 'lucide-react';
 import { Badge, Cell, PageHeader } from '@/components/ui/layout';
-import { ActionForm, TextField } from '@/components/ui/form';
+import { ActionForm, SelectField, TextField } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
-import { saveRole } from '../actions';
-import type { Permission } from '@omnia/organizations/types';
+import { deleteRole, saveRole } from '../actions';
+import type { Permission, Role } from '@omnia/organizations/types';
 
 export const metadata = { title: 'Roles y permisos · Omnia' };
 
@@ -43,6 +44,8 @@ export default async function RolesPage({ params }: { params: Promise<{ org: str
   const { ctx, can } = await requireOrg(org);
   const [roles, catalog] = await Promise.all([container().organizations.roles(ctx), container().organizations.permissionCatalog(ctx)]);
   const manage = can('roles.manage');
+  const remove = can('roles.delete');
+  const moveMembers = can('members.manage');
   return (
     <>
       <PageHeader title="Roles y permisos" description="Los permisos se comprueban en la propia base de datos, no solo en pantalla: aunque alguien manipule la app, no verá ni tocará lo que su rol no permite. «módulo.*» concede todo el módulo." />
@@ -55,7 +58,6 @@ export default async function RolesPage({ params }: { params: Promise<{ org: str
               {r.isSystem && <Badge tone="muted">Rol de sistema</Badge>}
             </span>
           }
-          className="border-b border-line"
         >
           {r.isSystem ? (
             <p className="text-sm text-ink-2">Acceso total. No se puede modificar para que siempre haya alguien capaz de administrar la sociedad.</p>
@@ -70,6 +72,7 @@ export default async function RolesPage({ params }: { params: Promise<{ org: str
               )}
             </ActionForm>
           )}
+          {remove && !r.isSystem && <DeleteRole org={org} role={r} others={roles.filter((o) => o.id !== r.id && !o.isSystem)} moveMembers={moveMembers} />}
         </Cell>
       ))}
       {manage && (
@@ -84,5 +87,50 @@ export default async function RolesPage({ params }: { params: Promise<{ org: str
         </Cell>
       )}
     </>
+  );
+}
+
+/**
+ * Eliminar un rol (permiso «Eliminar roles»). Si alguien lo tiene, se elige a
+ * qué rol pasa; mover personas de rol exige además poder cambiar roles de miembros.
+ */
+function DeleteRole({ org, role, others, moveMembers }: { org: string; role: Role; others: Role[]; moveMembers: boolean }) {
+  const people = role.memberCount === 1 ? '1 persona' : `${role.memberCount} personas`;
+  return (
+    <div className="mt-5 border-t border-line-soft pt-4">
+      {role.memberCount === 0 ? (
+        <ActionForm action={deleteRole.bind(null, org, role.id)} confirm={`¿Eliminar el rol «${role.name}»? Se borran sus permisos y no se puede deshacer.`}>
+          <SubmitButton variant="danger" pendingLabel="Eliminando…">
+            <Trash2 aria-hidden className="size-4" />
+            Eliminar rol
+          </SubmitButton>
+        </ActionForm>
+      ) : !moveMembers ? (
+        <p className="text-[13px] text-ink-3">
+          Este rol lo tiene{role.memberCount === 1 ? '' : 'n'} {people}. Para eliminarlo hay que pasarlas a otro rol, y para eso tu rol necesita también «Invitar, suspender y cambiar roles».
+        </p>
+      ) : others.length === 0 ? (
+        <p className="text-[13px] text-ink-3">Este rol lo tiene{role.memberCount === 1 ? '' : 'n'} {people}. Crea antes otro rol al que pasarlas para poder eliminarlo.</p>
+      ) : (
+        <ActionForm
+          action={deleteRole.bind(null, org, role.id)}
+          confirm={`¿Eliminar el rol «${role.name}»? ${role.memberCount === 1 ? 'La persona que lo tiene pasará' : `Las ${role.memberCount} personas que lo tienen pasarán`} al rol elegido. No se puede deshacer.`}
+          className="flex flex-wrap items-end gap-3"
+        >
+          <SelectField
+            label={role.memberCount === 1 ? '¿A qué rol pasa la persona que lo tiene?' : `¿A qué rol pasan sus ${people}?`}
+            name="replacementId"
+            required
+            placeholder="Elige un rol…"
+            options={others.map((o) => ({ value: o.id, label: o.name }))}
+            className="w-72"
+          />
+          <SubmitButton variant="danger" pendingLabel="Eliminando…">
+            <Trash2 aria-hidden className="size-4" />
+            Eliminar rol
+          </SubmitButton>
+        </ActionForm>
+      )}
+    </div>
   );
 }

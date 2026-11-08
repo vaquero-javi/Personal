@@ -11,7 +11,7 @@ import { formatEuro, formatQty } from '@/lib/format';
 import { createMenuItem, saveMenuItem } from '@/server/actions';
 import { FoodCost } from './food-cost';
 
-const cell = 'h-10 rounded-md border border-shelf-edge bg-sheet px-2';
+const cell = 'h-10 rounded-[10px] px-2.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45';
 
 export function MenuTable({ products, categories, candidates }: {
   products: CostedProduct[];
@@ -37,16 +37,16 @@ export function MenuTable({ products, categories, candidates }: {
       <div className="mx-auto flex max-w-6xl flex-col gap-4">
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <h1 className="text-lg font-bold">Carta y escandallos</h1>
+            <h1 className="text-[30px] leading-[1.1] font-bold tracking-[-0.022em]">Carta y escandallos</h1>
             <p className="text-sm text-ink-3">Coste según el coste medio de los ingredientes en este almacén. Food cost sobre el precio sin IVA.</p>
           </div>
           <Button variant="primary" className="ml-auto" onClick={() => setCreating(true)}>
             <Plus className="size-4" aria-hidden /> Nuevo producto
           </Button>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-shelf-edge bg-sheet">
+        <div className="overflow-x-auto rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[880px] text-sm">
-            <thead className="bg-sheet-head text-xs text-ink-3">
+            <thead className="border-b border-line-soft text-[12px] text-ink-3">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold">Producto</th>
                 <th className="px-3 py-2 text-left font-semibold">Categoría</th>
@@ -124,7 +124,7 @@ function ProductRow({ p, categories, disabled, onSave }: {
       <td className="px-3 py-2 text-right">{margin === null ? '—' : formatEuro(margin * sold)}</td>
       <td className="px-3 py-2">
         <div className="flex justify-end gap-2">
-          <Link href={`/carta/${p.id}`} className="inline-flex h-10 items-center rounded-md border border-shelf-edge px-3 font-semibold hover:bg-sheet-head">Escandallo</Link>
+          <Link href={`/carta/${p.id}`} className="pressable inline-flex h-10 items-center rounded-full bg-fill px-4 font-semibold text-tint hover:bg-fill-strong">Escandallo</Link>
           <Button size="sm" variant="primary" className="h-10" disabled={!dirty || disabled || !/^\d+([.,]\d{1,2})?$/.test(pvp.trim())} onClick={() => onSave({ itemId: p.id, categoryId: category || null, pvp: pvp.trim().replace(',', '.') })}>
             Guardar
           </Button>
@@ -149,8 +149,8 @@ function NewProductDialog({ open, onClose, categories, candidates, busy, onCreat
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? '');
   const [pvp, setPvp] = useState('');
   const [tax, setTax] = useState('10');
-  const field = 'flex flex-col gap-1.5 text-xs font-semibold text-ink-3';
-  const input = 'h-11 rounded-lg border border-shelf-edge px-3 text-base font-normal text-ink';
+  const field = 'flex flex-col gap-1.5 text-[13px] font-medium text-ink-2';
+  const input = 'h-11 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-base font-normal text-ink';
   const validPrice = /^\d+([.,]\d{1,2})?$/.test(pvp.trim());
   return (
     <Modal open={open} onClose={onClose} title="Nuevo producto en la carta">
@@ -169,7 +169,7 @@ function NewProductDialog({ open, onClose, categories, candidates, busy, onCreat
             ['stock', 'De unidad', 'Botellín, refresco nuevo'],
             ['existing', 'Del almacén', 'Un artículo que ya existe'],
           ] as const).map(([value, label, hint]) => (
-            <button key={value} type="button" role="radio" aria-checked={mode === value} onClick={() => setMode(value)} className="rounded-lg border border-shelf-edge p-2 text-left aria-checked:border-ink aria-checked:bg-ink aria-checked:text-white">
+            <button key={value} type="button" role="radio" aria-checked={mode === value} onClick={() => setMode(value)} className="pressable rounded-[12px] bg-fill p-2.5 text-left aria-checked:bg-tint aria-checked:text-white">
               <span className="block text-sm font-semibold">{label}</span>
               <span className="block text-xs opacity-80">{hint}</span>
             </button>

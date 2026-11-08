@@ -22,6 +22,7 @@ import {
   type LucideProps,
 } from 'lucide-react';
 import { MODULES, moduleLabel } from './modules';
+import { ThemePicker } from './theme-picker';
 import { spineCss, type SpineColor } from './spines';
 
 export interface SidebarOrg {
@@ -129,18 +130,11 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
         <Link href="/" aria-label="Omnia, inicio" className="flex items-center gap-2 rounded-lg">
-          {/* Anillos del logo (public/brand/logo.png, 256×256 con fondo blanco), recortados:
-              el blanco desaparece con multiply y en oscuro se invierte y se funde con screen. */}
-          <span aria-hidden className="relative block h-[26px] w-[39px] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/logo.png"
-              alt=""
-              width={53}
-              height={53}
-              className="absolute top-[-13.4px] left-[-7px] size-[53px] max-w-none mix-blend-multiply dark:mix-blend-screen dark:invert"
-            />
-          </span>
+          {/* Anillos del logo (public/brand/logo.png) en vectorial: nítidos y del color del texto en claro y oscuro. */}
+          <svg aria-hidden viewBox="34 65 187 126" className="h-[26px] w-auto text-ink" fill="none" stroke="currentColor" strokeWidth={12}>
+            <circle cx={97} cy={128} r={57} />
+            <circle cx={158} cy={128} r={57} />
+          </svg>
           <span className="font-display text-[19px] font-bold tracking-[-0.015em]">Omnia</span>
         </Link>
         {devMode && (
@@ -228,7 +222,10 @@ function SidebarContent({
         </ul>
       </nav>
 
-      <div className="flex items-center gap-2.5 border-t border-line-soft px-4 py-3">
+      <div className="border-t border-line-soft px-3 pt-3">
+        <ThemePicker />
+      </div>
+      <div className="flex items-center gap-2.5 px-4 py-3">
         <span
           aria-hidden
           className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#a1a1a6] to-[#6e6e73] text-[13px] font-semibold text-white"

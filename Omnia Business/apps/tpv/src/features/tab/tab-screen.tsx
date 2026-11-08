@@ -56,15 +56,15 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
   if (closed && paid === null) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <div className="flex max-w-md flex-col items-center gap-4 rounded-xl border border-shelf-edge bg-sheet p-6 text-center">
+        <div className="flex max-w-md flex-col items-center gap-4 rounded-[20px] bg-sheet shadow-[var(--shadow-card)] p-6 text-center">
           <p className="text-lg font-bold">{title} ya está cobrada</p>
           <div className="flex gap-3">
             {tab.invoiceId && (
-              <Link href={`/imprimir/ticket/${tab.invoiceId}`} className="inline-flex h-11 items-center gap-2 rounded-lg border border-shelf-edge px-4 text-sm font-semibold">
+              <Link href={`/imprimir/ticket/${tab.invoiceId}`} className="pressable inline-flex h-11 items-center gap-2 rounded-full bg-fill px-4.5 text-[15px] font-semibold text-tint">
                 <Printer className="size-4" aria-hidden /> Ticket
               </Link>
             )}
-            <Link href="/mesas" className="inline-flex h-11 items-center rounded-lg bg-ink px-4 text-sm font-semibold text-white">Volver a mesas</Link>
+            <Link href="/mesas" className="pressable inline-flex h-11 items-center rounded-full bg-tint px-4.5 text-[15px] font-semibold text-on-tint">Volver a mesas</Link>
           </div>
         </div>
       </div>
@@ -74,14 +74,14 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
   return (
     <div className="flex h-full flex-col">
       {/* Móvil: una mitad cada vez. Tablet y escritorio: pantalla dividida. */}
-      <div className="flex border-b border-shelf-edge bg-sheet p-2 md:hidden" role="tablist">
+      <div className="mx-3 mt-3 flex rounded-[11px] bg-fill p-0.5 md:hidden" role="tablist">
         {(['ticket', 'menu'] as const).map((v) => (
           <button
             key={v}
             role="tab"
             aria-selected={view === v}
             onClick={() => setView(v)}
-            className="h-10 flex-1 rounded-lg text-sm font-semibold aria-selected:bg-ink aria-selected:text-white"
+            className="pressable h-9 flex-1 rounded-[9px] text-[14px] font-medium text-ink-2 aria-selected:bg-sheet aria-selected:font-semibold aria-selected:text-ink aria-selected:shadow-[var(--shadow-raised)] dark:aria-selected:bg-fill-strong"
           >
             {v === 'ticket' ? `Cuenta · ${formatEuro(totals.total)}` : 'Carta'}
           </button>
@@ -89,13 +89,13 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
       </div>
 
       <div className="grid min-h-0 flex-1 md:grid-cols-2">
-        <section aria-label="Cuenta" className={`min-h-0 flex-col border-shelf-edge bg-sheet md:flex md:border-r ${view === 'ticket' ? 'flex' : 'hidden'}`}>
-          <header className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2">
-            <Link href="/mesas" aria-label="Volver a mesas" className="flex size-11 items-center justify-center rounded-lg hover:bg-sheet-head">
+        <section aria-label="Cuenta" className={`min-h-0 flex-col border-line-soft bg-sheet md:flex md:border-r ${view === 'ticket' ? 'flex' : 'hidden'}`}>
+          <header className="flex flex-wrap items-center gap-2 px-3 pt-3 pb-2">
+            <Link href="/mesas" aria-label="Volver a mesas" className="pressable flex size-11 items-center justify-center rounded-full text-tint hover:bg-fill">
               <ArrowLeft className="size-5" aria-hidden />
             </Link>
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-lg font-bold leading-tight">
+              <h1 className="truncate text-[22px] leading-tight font-bold tracking-[-0.02em]">
                 {title}
                 {tab.status === 'billing' && <span className="ml-2 rounded-full bg-warning-soft px-2 py-0.5 align-middle text-xs font-semibold text-warning">Pre-ticket impreso</span>}
               </h1>
@@ -103,20 +103,20 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
                 {tab.waiterName} · abierta a las {formatTime(tab.openedAt)} ({elapsed(tab.openedAt)}) · nº {tab.number}
               </p>
             </div>
-            <div className="flex items-center gap-1 rounded-lg border border-shelf-edge" aria-label="Comensales">
-              <button type="button" className="flex size-10 items-center justify-center disabled:opacity-40" aria-label="Un comensal menos" disabled={tab.guests <= 1 || busy} onClick={() => act(() => setGuests(tab.id, tab.guests - 1))}>
+            <div className="flex items-center gap-1 rounded-full bg-fill p-0.5" aria-label="Comensales">
+              <button type="button" className="pressable flex size-10 items-center justify-center rounded-full text-tint hover:bg-fill-strong disabled:opacity-40" aria-label="Un comensal menos" disabled={tab.guests <= 1 || busy} onClick={() => act(() => setGuests(tab.id, tab.guests - 1))}>
                 <Minus className="size-4" aria-hidden />
               </button>
               <span className="flex min-w-10 items-center justify-center gap-1 text-sm font-semibold">
                 <Users className="size-4" aria-hidden /> {tab.guests}
               </span>
-              <button type="button" className="flex size-10 items-center justify-center disabled:opacity-40" aria-label="Un comensal más" disabled={busy} onClick={() => act(() => setGuests(tab.id, tab.guests + 1))}>
+              <button type="button" className="pressable flex size-10 items-center justify-center rounded-full text-tint hover:bg-fill-strong disabled:opacity-40" aria-label="Un comensal más" disabled={busy} onClick={() => act(() => setGuests(tab.id, tab.guests + 1))}>
                 <Plus className="size-4" aria-hidden />
               </button>
             </div>
           </header>
 
-          <div className="flex flex-wrap gap-2 border-b border-line px-3 py-2">
+          <div className="flex flex-wrap gap-2 border-b border-line-soft px-3 pb-3">
             <Button
               size="sm"
               disabled={lines.length === 0 || pending > 0 || busy}
@@ -186,7 +186,7 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
               const t = lineTotals(l);
               return (
                 <li key={l.id} className="flex items-center gap-2 px-3 py-2">
-                  <div className="flex items-center rounded-lg border border-shelf-edge">
+                  <div className="flex items-center rounded-full bg-fill p-0.5">
                     <button type="button" onClick={() => setQuantity(l.id, l.quantity - 1)} aria-label={`Quitar un ${l.description}`} className="flex size-11 items-center justify-center">
                       <Minus className="size-4" aria-hidden />
                     </button>
@@ -195,7 +195,7 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
                       <Plus className="size-4" aria-hidden />
                     </button>
                   </div>
-                  <button type="button" onClick={() => setEditing(l)} className="min-w-0 flex-1 rounded-md px-1 py-1 text-left hover:bg-sheet-head">
+                  <button type="button" onClick={() => setEditing(l)} className="min-w-0 flex-1 rounded-md px-1 py-1 text-left hover:bg-fill/70">
                     <span className="block truncate font-semibold">{l.description}</span>
                     <span className="block truncate text-xs text-ink-3">
                       {formatEuro(t.unitGross)}/ud
@@ -288,7 +288,7 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
               <p className="text-4xl font-bold">{formatEuro(paid.total)}</p>
             </div>
             {paid.change !== null && (
-              <div className="rounded-xl bg-ok-soft p-4 text-ok">
+              <div className="rounded-[16px] bg-ok-soft p-4 text-ok">
                 <p className="text-sm font-semibold">Cambio a devolver</p>
                 <p className="text-5xl font-bold">{formatEuro(paid.change)}</p>
               </div>
@@ -336,9 +336,9 @@ function LineDialog({ line, manager, onClose, onRemove, onNote, onDiscount }: {
               onNote(line, note);
             }}
           >
-            <label htmlFor="note" className="text-xs font-semibold text-ink-3">Nota para cocina</label>
+            <label htmlFor="note" className="text-[13px] font-medium text-ink-2">Nota para cocina</label>
             <div className="flex gap-2">
-              <input id="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} placeholder="Sin hielo, poco hecha…" className="h-11 min-w-0 flex-1 rounded-lg border border-shelf-edge px-3" />
+              <input id="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} placeholder="Sin hielo, poco hecha…" className="h-11 min-w-0 flex-1 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45" />
               <Button type="submit" variant="primary">Guardar</Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -348,7 +348,7 @@ function LineDialog({ line, manager, onClose, onRemove, onNote, onDiscount }: {
             </div>
           </form>
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold text-ink-3">Descuento</p>
+            <p className="text-[13px] font-medium text-ink-2">Descuento</p>
             {manager ? (
               <div className="flex flex-wrap gap-2">
                 {['0', '10', '20', '50', '100'].map((p) => (
@@ -385,8 +385,8 @@ function CancelDialog({ open, needsManager, onClose, onConfirm, busy }: { open: 
             onConfirm(reason);
           }}
         >
-          <label htmlFor="reason" className="text-xs font-semibold text-ink-3">Motivo</label>
-          <input id="reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} placeholder="Mesa abierta por error, cliente se marcha…" className="h-11 rounded-lg border border-shelf-edge px-3" />
+          <label htmlFor="reason" className="text-[13px] font-medium text-ink-2">Motivo</label>
+          <input id="reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} placeholder="Mesa abierta por error, cliente se marcha…" className="h-11 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45" />
           <Button type="submit" variant="danger" size="lg" disabled={busy}>Anular cuenta</Button>
         </form>
       )}

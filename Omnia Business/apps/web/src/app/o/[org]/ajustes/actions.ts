@@ -44,6 +44,16 @@ export async function saveRole(org: string, id: string | null, _: ActionState, f
   });
 }
 
+export async function deleteRole(org: string, id: string, _: ActionState, formData: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'roles.delete');
+    const replacementId = formData.get('replacementId');
+    await container().organizations.deleteRole(ctx, id, typeof replacementId === 'string' && replacementId ? replacementId : null);
+    revalidate(org);
+    return 'Rol eliminado';
+  });
+}
+
 export async function createCustomField(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
     const { ctx } = await requirePermission(org, 'org.manage');

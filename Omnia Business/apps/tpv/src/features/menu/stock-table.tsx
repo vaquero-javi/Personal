@@ -33,20 +33,20 @@ export function StockTable({ ingredients, warehouseName, allowNegative }: { ingr
       <div className="mx-auto flex max-w-6xl flex-col gap-4">
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <h1 className="text-lg font-bold">Materia prima · {warehouseName}</h1>
+            <h1 className="text-[30px] leading-[1.1] font-bold tracking-[-0.022em]">Materia prima · {warehouseName}</h1>
             <p className="text-sm text-ink-3">
               {ingredients.filter(low).length} bajo mínimo · valor del stock {formatEuro(value)}. Las entradas se registran con albaranes en el backoffice.
             </p>
           </div>
-          <label className="ml-auto flex items-center gap-2 text-sm font-medium">
-            <input type="checkbox" checked={onlyLow} onChange={(e) => setOnlyLow(e.target.checked)} className="size-5 accent-ink" />
+          <label className="ml-auto flex items-center gap-2.5 text-[15px] font-medium">
             Solo bajo mínimo
+            <input type="checkbox" role="switch" checked={onlyLow} onChange={(e) => setOnlyLow(e.target.checked)} className="switch" />
           </label>
         </div>
         {allowNegative && <Notice>Esta empresa permite stock negativo: se puede vender aunque el inventario diga que no queda. Recuenta para corregirlo.</Notice>}
-        <div className="overflow-x-auto rounded-xl border border-shelf-edge bg-sheet">
+        <div className="overflow-x-auto rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[820px] text-sm">
-            <thead className="bg-sheet-head text-xs text-ink-3">
+            <thead className="border-b border-line-soft text-[12px] text-ink-3">
               <tr>
                 <th className="px-3 py-2 text-left font-semibold">Ingrediente</th>
                 <th className="px-3 py-2 text-right font-semibold">Stock</th>
@@ -110,14 +110,14 @@ export function StockTable({ ingredients, warehouseName, allowNegative }: { ingr
               <p className="text-sm text-ink-2">Stock teórico: <b>{formatQty(counting.onHand)} {counting.unit}</b>. Se registra un ajuste por la diferencia.</p>
               <div className={`grid gap-3 ${pack ? 'grid-cols-2' : ''}`}>
                 {pack > 0 && (
-                  <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+                  <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
                     {counting.purchaseUnit} llenas (de {formatQty(pack)})
-                    <input value={packs} onChange={(e) => setPacks(e.target.value)} inputMode="decimal" autoFocus className="h-12 rounded-lg border border-shelf-edge px-3 text-right text-lg font-semibold text-ink" />
+                    <input value={packs} onChange={(e) => setPacks(e.target.value)} inputMode="decimal" autoFocus className="h-12 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-right text-lg font-semibold text-ink" />
                   </label>
                 )}
-                <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+                <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
                   {pack ? `${counting.unit} sueltas` : `Cantidad contada (${counting.unit})`}
-                  <input value={counted} onChange={(e) => setCounted(e.target.value)} inputMode="decimal" autoFocus={!pack} className="h-12 rounded-lg border border-shelf-edge px-3 text-right text-lg font-semibold text-ink" />
+                  <input value={counted} onChange={(e) => setCounted(e.target.value)} inputMode="decimal" autoFocus={!pack} className="h-12 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-right text-lg font-semibold text-ink" />
                 </label>
               </div>
               {pack > 0 && ready && <p className="text-right text-sm font-semibold text-ok">Total: {formatQty(total)} {counting.unit}</p>}
@@ -137,7 +137,7 @@ function MinimumField({ item, disabled, onSave }: { item: Ingredient; disabled: 
   const dirty = value.replace(',', '.') !== Number(item.minQuantity).toString();
   return (
     <span className="inline-flex items-center gap-1">
-      <input value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" className="h-10 w-20 rounded-md border border-shelf-edge px-2 text-right" aria-label={`Mínimo de ${item.name}`} />
+      <input value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" className="h-10 w-20 rounded-[10px] px-2.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-right" aria-label={`Mínimo de ${item.name}`} />
       {dirty && (
         <Button size="sm" variant="primary" className="h-10" disabled={disabled || !/^\d+([.,]\d{1,4})?$/.test(value.trim())} onClick={() => onSave(value.trim().replace(',', '.'))}>
           OK

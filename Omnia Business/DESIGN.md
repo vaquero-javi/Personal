@@ -48,7 +48,7 @@ rounded:
 - **Sistema** (`sys-*`): solo para las baldosas de iconos de la barra lateral, barras de progreso y gráficos.
 - **Colores de sociedad** (`spine-*`, o un hex elegido): el círculo con la inicial de cada sociedad en la barra lateral y el punto junto a su nombre en la barra de herramientas.
 
-Modo oscuro: todos los tokens se redefinen en `@media (prefers-color-scheme: dark)`. No escribas hex sueltos en componentes: usa tokens o `var(--color-…)` (los gráficos incluidos).
+Modo oscuro: los tokens se redefinen para `prefers-color-scheme: dark` (salvo `<html data-theme="light">`) y para `<html data-theme="dark">`. La apariencia se elige al pie de la barra lateral (`ThemePicker`: Automático · Claro · Oscuro), se guarda en `localStorage` (`omnia-theme`) y un script previo al pintado (`components/theme.ts`) la aplica sin destello. La variante `dark:` de Tailwind sigue la misma regla. No escribas hex sueltos en componentes: usa tokens o `var(--color-…)` (los gráficos incluidos).
 
 ## Tipografía
 
@@ -85,6 +85,19 @@ Fuente del sistema (SF Pro en Apple). Tracking por tamaño: títulos grandes neg
 - Respuesta al pulsar inmediata (`.pressable`), transiciones cortas con `--ease-spring` (`cubic-bezier(0.32, 0.72, 0, 1)`). Hoja móvil: entra desde la izquierda en 320ms; el scrim se funde.
 - `prefers-reduced-motion`: sin escalas ni desplazamientos. `prefers-reduced-transparency`: los materiales pasan a sólidos.
 - Foco visible con anillo `tint` de 3px. Contraste AA en todos los textos de `ink-3` y estados.
+
+## TPV (apps/tpv)
+
+Mismo sistema y tokens que el backoffice (`apps/tpv/src/app/globals.css` los replica), con el aspecto de una app de iPad y tamaños táctiles:
+
+- **Barra del turno** (`features/shift-bar.tsx`): material translúcido de 60px; pestañas en cápsula flotante centrada (la activa en blanco con texto tint); a la derecha estado de caja (chip), apariencia (solo en pantallas muy anchas), avatar y «Bloquear».
+- **Pantalla de bloqueo**: título grande con la hora, personal en tarjetas con avatar (la elegida con anillo tint) y teclado de código circular como el de iPhone; aquí vive siempre el selector de apariencia del terminal.
+- **Mesas**: título grande, zonas como segmentado grande, mesas como tarjetas de 20px de radio; el estado se dice con una píldora (Libre / Ocupada / Cobrando) y un anillo rojo o naranja en las ocupadas.
+- **Cuenta**: vista dividida tipo iPad (cuenta en blanco a la izquierda, carta sobre el fondo agrupado); categorías en cápsulas, productos en tarjetas; panel de cobro en material translúcido.
+- **Botones** (`components/ui.tsx`): `sm`/`md` en cápsula, `lg`/`xl` con radio 14–18px para dedos; `ok` y `danger` con verde y rojo del sistema.
+- **Hojas** (`Modal`): radio 22px, título centrado, cerrar con círculo gris arriba a la derecha, entrada con subida y escala; el fondo se atenúa y desenfoca.
+- **Interruptores**: los filtros de sí/no son `.switch` (interruptor de iOS sobre un checkbox nativo).
+- **Tickets impresos** (`app/imprimir`): siempre papel blanco y tinta negra, en cualquier modo.
 
 ## Excepciones
 

@@ -13,6 +13,8 @@ export default async function StatsLayout({ children, params }: { children: Reac
         base={`/o/${org}/estadisticas`}
         items={[
           { href: '', label: 'Cuadro de mando' },
+          // Un día frente a otro, también hoy en tiempo real.
+          { href: 'comparar', label: 'Comparación' },
           { href: 'resultados', label: 'Cuenta de resultados' },
           { href: 'estados', label: 'Estados financieros' },
           { href: 'informes', label: 'Informes de gestión' },

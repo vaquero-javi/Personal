@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, Delete, LockKeyhole, Unlink } from 'lucide-react';
+import { ThemePicker } from './theme-picker';
 import type { PosStaffMember } from '@omnia/pos/types';
 import { BrandLoop } from '@/components/brand-loop';
 import { Button, Modal, Notice } from '@/components/ui';
@@ -69,24 +70,24 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
       <section className="flex flex-col gap-6 p-5 md:p-8">
         <header className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-ink-3">{terminalName}</p>
-            <h1 className="text-2xl font-bold">{orgName}</h1>
+            <p className="text-[13px] font-semibold text-ink-3 uppercase">{terminalName}</p>
+            <h1 className="text-[34px] leading-[1.1] font-bold tracking-[-0.022em]">{orgName}</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button size="lg" variant="primary" onClick={() => setClocking(true)}>
               <Clock className="size-5" aria-hidden /> Fichar con tarjeta
             </Button>
-            <p className="text-3xl font-bold tabular-nums" suppressHydrationWarning>
+            <p className="text-[44px] leading-none font-semibold tracking-[-0.03em] tabular-nums" suppressHydrationWarning>
               {now ? formatTime(now) : ''}
             </p>
           </div>
         </header>
         <div>
-          <h2 className="mb-3 text-sm font-bold">¿Quién eres?</h2>
+          <h2 className="mb-3 text-[20px] font-semibold tracking-[-0.01em]">¿Quién eres?</h2>
           {staff.length === 0 ? (
             <Notice tone="warning">Nadie puede usar este terminal todavía: en Ajustes › Roles da el permiso «Usar el TPV» a un rol, y asigna PIN en Ajustes › TPV.</Notice>
           ) : (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {staff.map((s) => {
                 const active = selected?.userId === s.userId;
                 return (
@@ -99,15 +100,19 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
                         setError(null);
                       }}
                       aria-pressed={active}
-                      className={`flex h-full min-h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border p-4 text-center transition-colors ${
-                        active ? 'border-ink bg-ink text-white' : 'border-shelf-edge bg-sheet hover:bg-sheet-head'
+                      className={`pressable flex h-full min-h-36 w-full flex-col items-center justify-center gap-2 rounded-[20px] bg-sheet p-4 text-center shadow-[var(--shadow-card)] ${
+                        active ? 'ring-[3px] ring-tint' : 'hover:shadow-[var(--shadow-raised)]'
                       }`}
                     >
-                      <span className={`flex size-14 items-center justify-center rounded-full text-lg font-bold ${active ? 'bg-white text-ink' : 'bg-ink text-white'}`}>
+                      <span
+                        className={`flex size-16 items-center justify-center rounded-full text-[22px] font-semibold text-white ${
+                          active ? 'bg-tint' : 'bg-gradient-to-b from-[#a1a1a6] to-[#6e6e73]'
+                        }`}
+                      >
                         {initials(s.fullName)}
                       </span>
-                      <span className="font-semibold leading-tight">{s.fullName}</span>
-                      <span className={`text-xs ${active ? 'text-white/80' : 'text-ink-3'}`}>
+                      <span className="text-[16px] leading-tight font-semibold">{s.fullName}</span>
+                      <span className="text-[13px] text-ink-3">
                         {s.roleName}
                         {!s.hasPin && ' · sin PIN'}
                       </span>
@@ -124,21 +129,22 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
         </div>
       </section>
 
-      <section aria-label="Teclado de PIN" className="flex flex-col gap-5 border-t border-shelf-edge bg-sheet p-5 md:border-t-0 md:border-l md:p-8">
+      <section aria-label="Teclado de PIN" className="material flex flex-col gap-5 border-t border-line-soft p-5 md:border-t-0 md:border-l md:p-8">
         <div className="my-auto flex flex-col gap-5">
           {selected ? (
             <>
               <div className="text-center">
-                <p className="text-sm text-ink-3">PIN de</p>
-                <p className="text-xl font-bold">{selected.fullName}</p>
+                <p className="text-[15px] text-ink-3">Introduce el PIN de</p>
+                <p className="text-[22px] font-semibold tracking-[-0.01em]">{selected.fullName}</p>
               </div>
-              <div className="flex justify-center gap-3" aria-live="polite" aria-label={`${pin.length} cifras tecleadas`}>
+              <div className="flex justify-center gap-5" aria-live="polite" aria-label={`${pin.length} cifras tecleadas`}>
                 {Array.from({ length: Math.max(4, pin.length) }, (_, i) => (
-                  <span key={i} className={`size-4 rounded-full border-2 border-ink ${i < pin.length ? 'bg-ink' : ''}`} />
+                  <span key={i} className={`size-3.5 rounded-full border-[1.5px] border-ink transition-colors duration-100 ${i < pin.length ? 'bg-ink' : ''}`} />
                 ))}
               </div>
               {error && <Notice tone="danger" className="text-center">{error}</Notice>}
-              <div className="mx-auto grid w-full max-w-xs grid-cols-3 gap-3">
+              {/* Teclado de código de iPhone: teclas circulares, sin bordes. */}
+              <div className="mx-auto grid w-fit grid-cols-3 gap-x-6 gap-y-4">
                 {KEYS.map((k) => (
                   <button
                     key={k}
@@ -146,11 +152,15 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
                     disabled={pending || (k === 'ok' && pin.length < 4)}
                     onClick={() => press(k)}
                     aria-label={k === 'del' ? 'Borrar' : k === 'ok' ? 'Entrar' : k}
-                    className={`flex h-18 items-center justify-center rounded-xl text-2xl font-semibold transition-colors disabled:opacity-40 ${
-                      k === 'ok' ? 'bg-ink text-base text-white hover:bg-[#2c3038]' : 'border border-shelf-edge bg-sheet hover:bg-sheet-head active:bg-line-soft'
+                    className={`pressable flex size-20 items-center justify-center rounded-full disabled:opacity-35 ${
+                      k === 'ok'
+                        ? 'bg-tint text-[16px] font-semibold text-on-tint hover:bg-tint-hover'
+                        : k === 'del'
+                          ? 'text-ink hover:bg-fill active:bg-fill-strong'
+                          : 'bg-fill text-[34px] font-normal hover:bg-fill-strong active:bg-ink-3/40'
                     }`}
                   >
-                    {k === 'del' ? <Delete className="size-6" aria-hidden /> : k === 'ok' ? (pending ? '…' : 'Entrar') : k}
+                    {k === 'del' ? <Delete className="size-7" strokeWidth={1.8} aria-hidden /> : k === 'ok' ? (pending ? '…' : 'Entrar') : k}
                   </button>
                 ))}
               </div>
@@ -161,6 +171,9 @@ export function LockScreen({ orgName, terminalName, staff }: { orgName: string; 
               <p>Elige tu nombre para desbloquear el terminal.</p>
             </div>
           )}
+        </div>
+        <div className="mx-auto">
+          <ThemePicker />
         </div>
         <Button variant="ghost" size="sm" onClick={() => setConfirmUnpair(true)} className="mx-auto text-ink-3">
           <Unlink className="size-4" aria-hidden />

@@ -26,7 +26,7 @@ export function PairForm() {
         });
       }}
     >
-      <label htmlFor="code" className="text-xs font-semibold text-ink-3">
+      <label htmlFor="code" className="text-[13px] font-medium text-ink-2">
         Código de vinculación
       </label>
       <input
@@ -37,7 +37,7 @@ export function PairForm() {
         autoCapitalize="characters"
         spellCheck={false}
         placeholder="XXXX-XXXX"
-        className="h-16 rounded-lg border border-shelf-edge bg-sheet px-4 text-center font-mono text-3xl font-bold tracking-[0.2em] uppercase"
+        className="h-16 rounded-[14px] px-4 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-center font-mono text-3xl font-bold tracking-[0.2em] uppercase"
         autoFocus
       />
       {error && <Notice tone="danger">{error}</Notice>}

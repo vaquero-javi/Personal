@@ -11,9 +11,9 @@ import { openTab } from '@/server/actions';
 import { useAutoRefresh } from './use-auto-refresh';
 
 const STATE = {
-  free: { label: 'Libre', card: 'border-ok-line bg-ok-soft hover:border-ok', dot: 'bg-ok' },
-  open: { label: 'Ocupada', card: 'border-danger/60 bg-danger-soft hover:border-danger', dot: 'bg-danger' },
-  billing: { label: 'Cobrando', card: 'border-warning-line bg-warning-soft hover:border-warning', dot: 'bg-warning-line' },
+  free: { label: 'Libre', card: 'bg-sheet', pill: 'bg-ok-soft text-ok', dot: 'bg-sys-green' },
+  open: { label: 'Ocupada', card: 'bg-sheet ring-2 ring-inset ring-sys-red/55', pill: 'bg-danger-soft text-danger', dot: 'bg-sys-red' },
+  billing: { label: 'Cobrando', card: 'bg-sheet ring-2 ring-inset ring-sys-orange/65', pill: 'bg-warning-soft text-warning', dot: 'bg-sys-orange' },
 } as const;
 
 const COUNTER_ZONE = /^barra$/i;
@@ -59,20 +59,22 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
-      <div className="flex flex-wrap items-center gap-3 border-b border-shelf-edge bg-sheet px-4 py-3 md:px-6">
-        <h1 className="text-lg font-bold">{current?.name ?? 'Mesas'}</h1>
-        <p className="text-sm text-ink-3">{busy} abiertas en total</p>
-        <ul className="ml-auto flex flex-wrap items-center gap-4 text-sm text-ink-2" aria-label="Leyenda">
+      <div className="flex flex-wrap items-end gap-x-5 gap-y-3 px-4 pt-6 md:px-6">
+        <div className="mr-auto">
+          <p className="text-[13px] font-semibold text-ink-3 uppercase">{busy} abiertas en total</p>
+          <h1 className="text-[34px] leading-[1.1] font-bold tracking-[-0.022em]">{current?.name ?? 'Mesas'}</h1>
+        </div>
+        <ul className="flex flex-wrap items-center gap-4 pb-2 text-[14px] text-ink-2" aria-label="Leyenda">
           {Object.values(STATE).map((s) => (
             <li key={s.label} className="flex items-center gap-1.5">
-              <span aria-hidden className={`size-3 rounded-full ${s.dot}`} />
+              <span aria-hidden className={`size-2.5 rounded-full ${s.dot}`} />
               {s.label}
             </li>
           ))}
         </ul>
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="size-5 accent-ink" />
+        <label className="flex items-center gap-2.5 pb-1 text-[15px] font-medium">
           Solo las mías
+          <input type="checkbox" role="switch" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} className="switch" />
         </label>
         <Button variant="primary" onClick={() => setCounterOpen(true)} disabled={pending}>
           <Plus className="size-4" aria-hidden />
@@ -85,7 +87,7 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
           <Notice tone="warning">
             La caja de este terminal está cerrada: se pueden tomar comandas, pero no cobrar.{' '}
             {manager ? (
-              <Link href="/caja" className="font-semibold underline">Abrir caja</Link>
+              <Link href="/caja" className="font-semibold text-tint">Abrir caja</Link>
             ) : (
               'Avisa a un encargado para que la abra.'
             )}
@@ -95,7 +97,7 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
         {zones.length === 0 ? (
           <Notice>No hay mesas todavía. {manager ? 'Créalas en el backoffice: Ajustes › TPV › Mesas.' : 'Un encargado puede crearlas en el backoffice.'}</Notice>
         ) : (
-          <nav aria-label="Zonas" className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(zones.length, 4)}, minmax(0, 1fr))` }}>
+          <nav aria-label="Zonas" className="grid gap-1 rounded-[16px] bg-fill p-1" style={{ gridTemplateColumns: `repeat(${Math.min(zones.length, 4)}, minmax(0, 1fr))` }}>
             {zones.map((z) => {
               const counters = zoneCounter(z.name);
               const occupied = z.tables.filter((t) => t.tab).length;
@@ -106,12 +108,12 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
                   type="button"
                   onClick={() => setZone(z.name)}
                   aria-pressed={active}
-                  className={`flex min-h-20 flex-col items-start justify-center rounded-xl border-2 px-4 py-3 text-left transition-colors ${
-                    active ? 'border-ink bg-ink text-white' : 'border-shelf-edge bg-sheet hover:border-ink'
+                  className={`pressable flex min-h-16 flex-col items-center justify-center rounded-[12px] px-4 py-2 text-center ${
+                    active ? 'bg-sheet shadow-[var(--shadow-raised)] dark:bg-fill-strong' : 'hover:bg-fill'
                   }`}
                 >
-                  <span className="text-xl font-bold">{z.name}</span>
-                  <span className={`text-sm ${active ? 'text-white/80' : 'text-ink-3'}`}>
+                  <span className={`text-[17px] ${active ? 'font-semibold text-ink' : 'font-medium text-ink-2'}`}>{z.name}</span>
+                  <span className="text-[13px] text-ink-3">
                     {z.tables.length > 0 ? `${occupied} de ${z.tables.length} ocupadas` : `${counters.length} cuentas abiertas`}
                     {counters.length > 0 && z.tables.length > 0 && ` · ${counters.length} sin mesa`}
                   </span>
@@ -124,7 +126,7 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
         {current && (
           <section aria-label={current.name} className="flex flex-col gap-4">
             {zoneCounter(current.name).length > 0 && (
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6" aria-label="Cuentas sin mesa">
+              <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6" aria-label="Cuentas sin mesa">
                 {zoneCounter(current.name)
                   .filter((t) => !onlyMine || t.waiterId === userId)
                   .map((t) => (
@@ -134,7 +136,7 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
                   ))}
               </ul>
             )}
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
               {current.tables
                 .filter((t) => !onlyMine || t.tab?.waiterId === userId || !t.tab)
                 .map((t) =>
@@ -148,13 +150,13 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
                         type="button"
                         disabled={pending}
                         onClick={() => open({ tableId: t.id })}
-                        className={`flex h-full min-h-32 w-full flex-col justify-between rounded-xl border-2 p-3 text-left transition-colors ${STATE.free.card}`}
+                        className={`pressable flex h-full min-h-36 w-full flex-col justify-between rounded-[20px] p-4 text-left shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-raised)] ${STATE.free.card}`}
                       >
                         <span className="flex items-start justify-between gap-2">
-                          <span className="text-xl font-bold">{t.name}</span>
-                          <span className="text-xs font-semibold text-ok">Libre</span>
+                          <span className="text-[24px] leading-tight font-bold tracking-[-0.02em]">{t.name}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${STATE.free.pill}`}>Libre</span>
                         </span>
-                        <span className="flex items-center gap-1 text-sm text-ink-3">
+                        <span className="flex items-center gap-1 text-[14px] text-ink-3">
                           <Users className="size-4" aria-hidden />
                           {t.seats}
                         </span>
@@ -182,9 +184,9 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
               </Button>
             ))}
           </div>
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+          <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
             Nombre de la cuenta
-            <input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Barra, nombre del cliente…" className="h-12 rounded-lg border border-shelf-edge px-3 text-base font-normal text-ink" autoFocus />
+            <input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={40} placeholder="Barra, nombre del cliente…" className="h-12 rounded-[12px] bg-fill px-4 text-[17px] font-normal text-ink outline-none focus:ring-[3px] focus:ring-tint/45" autoFocus />
           </label>
           <Button type="submit" variant="primary" size="lg" disabled={!label.trim() || pending}>
             Abrir cuenta
@@ -199,19 +201,19 @@ export function FloorMap({ tables, counterTabs, cashOpen, manager, userId }: {
 function TableCard({ href, name, tab, now }: { href: string; name: string; tab: TabSummary; now: number }) {
   const s = STATE[stateOf(tab)];
   return (
-    <Link href={href} className={`flex h-full min-h-32 flex-col justify-between gap-2 rounded-xl border-2 p-3 transition-colors ${s.card}`}>
+    <Link href={href} className={`pressable flex h-full min-h-36 flex-col justify-between gap-2 rounded-[20px] p-4 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-raised)] ${s.card}`}>
       <span className="flex items-start justify-between gap-2">
-        <span className="min-w-0 truncate text-xl font-bold">{name}</span>
-        <span className="shrink-0 text-xs font-semibold">{s.label}</span>
+        <span className="min-w-0 truncate text-[24px] leading-tight font-bold tracking-[-0.02em]">{name}</span>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-semibold ${s.pill}`}>{s.label}</span>
       </span>
-      <span className="text-sm leading-snug">
+      <span className="text-[14px] leading-snug">
         <span className="block truncate text-ink-2">{tab.waiterName}</span>
         {tab.unsent > 0 && <span className="block text-xs font-semibold text-warning">{tab.unsent} sin enviar a cocina</span>}
         <span className="flex items-end justify-between gap-2">
           <span className="text-ink-3" suppressHydrationWarning>
             {elapsed(tab.openedAt, now)}
           </span>
-          <span className="text-lg font-bold">{formatEuro(tab.total)}</span>
+          <span className="text-[19px] font-bold tracking-[-0.01em]">{formatEuro(tab.total)}</span>
         </span>
       </span>
     </Link>

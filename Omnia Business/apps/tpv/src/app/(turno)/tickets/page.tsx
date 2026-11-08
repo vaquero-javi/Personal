@@ -13,12 +13,12 @@ export default async function TicketsPage() {
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-lg font-bold">Últimos tickets de {terminal.terminalName}</h1>
+        <h1 className="text-[30px] leading-[1.1] font-bold tracking-[-0.022em]">Últimos tickets de {terminal.terminalName}</h1>
         <p className="mb-4 text-sm text-ink-3">El histórico completo está en el backoffice: Facturación › Tickets TPV.</p>
         {tickets.length === 0 ? (
-          <p className="rounded-lg bg-sheet-head p-4 text-sm text-ink-2">Aún no se ha cobrado nada en este terminal.</p>
+          <p className="rounded-[16px] bg-fill p-4 text-[15px] text-ink-2">Aún no se ha cobrado nada en este terminal.</p>
         ) : (
-          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-shelf-edge bg-sheet">
+          <ul className="divide-y divide-line-soft overflow-hidden rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
             {tickets.map((t) => (
               <li key={t.invoiceId} className="flex items-center gap-4 px-4 py-3">
                 <span className="w-14 text-sm text-ink-3">{formatTime(t.closedAt)}</span>
@@ -29,7 +29,7 @@ export default async function TicketsPage() {
                   </span>
                 </span>
                 <span className="text-lg font-bold">{formatEuro(t.total)}</span>
-                <Link href={`/imprimir/ticket/${t.invoiceId}?volver=tickets`} className="flex size-11 items-center justify-center rounded-lg border border-shelf-edge hover:bg-sheet-head" aria-label={`Reimprimir ${t.fullNumber}`}>
+                <Link href={`/imprimir/ticket/${t.invoiceId}?volver=tickets`} className="flex size-11 items-center justify-center rounded-lg border border-shelf-edge hover:bg-fill/70" aria-label={`Reimprimir ${t.fullNumber}`}>
                   <Printer className="size-5" aria-hidden />
                 </Link>
               </li>

@@ -128,7 +128,7 @@ export function ScanStep({ busy, onCode }: { busy: boolean; onCode: (qr: string)
           type="button"
           disabled={busy || blocked !== null}
           onClick={() => setCamera(true)}
-          className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-shelf-edge bg-sheet-head p-6 text-center transition-colors enabled:hover:border-ink enabled:hover:bg-line-soft disabled:cursor-default"
+          className="flex flex-col items-center gap-3 pressable rounded-[20px] border-2 border-dashed border-line bg-fill/60 p-6 text-center enabled:hover:border-tint enabled:hover:bg-tint-soft disabled:cursor-default"
         >
           <span className="flex items-center gap-3 text-ink-2">
             <ScanLine className="size-10" aria-hidden />
@@ -157,7 +157,7 @@ export function ScanStep({ busy, onCode }: { busy: boolean; onCode: (qr: string)
           autoCapitalize="off"
           spellCheck={false}
           placeholder="OMN1:… (el lector lo escribe aquí)"
-          className="h-11 min-w-0 flex-1 rounded-lg border border-shelf-edge px-3 font-mono text-sm"
+          className="h-11 min-w-0 flex-1 rounded-[12px] bg-fill px-3.5 font-mono text-sm outline-none focus:ring-[3px] focus:ring-tint/45"
         />
         <Button type="submit" variant="primary" disabled={busy || !value.trim()}>{busy ? 'Validando…' : 'Validar'}</Button>
       </form>
@@ -287,10 +287,10 @@ export function PinStep({ holder, busy, onPin, onBack, prompt = 'Que teclee su P
       </div>
       <div className="flex justify-center gap-3" aria-live="polite" aria-label={`${pin.length} cifras tecleadas`}>
         {Array.from({ length: Math.max(4, pin.length) }, (_, i) => (
-          <span key={i} className={`size-4 rounded-full border-2 border-ink ${i < pin.length ? 'bg-ink' : ''}`} />
+          <span key={i} className={`size-3.5 rounded-full border-[1.5px] border-ink ${i < pin.length ? 'bg-ink' : ''}`} />
         ))}
       </div>
-      <div className="mx-auto grid w-full max-w-xs grid-cols-3 gap-3">
+      <div className="mx-auto grid w-fit grid-cols-3 gap-x-5 gap-y-3">
         {KEYS.map((k) => (
           <button
             key={k}
@@ -298,8 +298,12 @@ export function PinStep({ holder, busy, onPin, onBack, prompt = 'Que teclee su P
             disabled={busy || (k === 'ok' && pin.length < 4)}
             onClick={() => press(k)}
             aria-label={k === 'del' ? 'Borrar' : k === 'ok' ? 'Aceptar' : k}
-            className={`flex h-16 items-center justify-center rounded-xl text-2xl font-bold transition-colors disabled:opacity-40 ${
-              k === 'ok' ? 'bg-ink text-base text-white' : 'border border-shelf-edge bg-sheet hover:bg-sheet-head active:bg-line-soft'
+            className={`pressable flex size-[72px] items-center justify-center rounded-full disabled:opacity-35 ${
+              k === 'ok'
+                ? 'bg-tint text-[15px] font-semibold text-on-tint'
+                : k === 'del'
+                  ? 'text-ink hover:bg-fill'
+                  : 'bg-fill text-[30px] font-normal hover:bg-fill-strong active:bg-ink-3/40'
             }`}
           >
             {k === 'del' ? <Delete className="size-6" aria-hidden /> : k === 'ok' ? (busy ? '…' : okLabel) : k}
@@ -333,11 +337,11 @@ function AppliedCard({ result, onClose }: { result: Applied; onClose: () => void
         </div>
       </div>
       <ul className="grid grid-cols-2 gap-3 text-sm">
-        <li className="rounded-lg bg-sheet-head p-3">
+        <li className="rounded-[14px] bg-fill p-3">
           <p className="text-xs text-ink-3">Usos hoy</p>
           <p className="font-bold tabular-nums">{limits.usesToday}{limits.maxUsesPerDay ? ` de ${limits.maxUsesPerDay}` : ''}</p>
         </li>
-        <li className="rounded-lg bg-sheet-head p-3">
+        <li className="rounded-[14px] bg-fill p-3">
           <p className="text-xs text-ink-3">Descontado este mes</p>
           <p className="font-bold tabular-nums">
             {Number(limits.discountThisMonth).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}

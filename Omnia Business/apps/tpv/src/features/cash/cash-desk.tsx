@@ -21,7 +21,7 @@ interface HistoryRow {
   difference: string | null;
 }
 
-const amountInput = 'h-12 w-full rounded-lg border border-shelf-edge px-3 text-right text-lg font-semibold';
+const amountInput = 'h-12 w-full rounded-[12px] px-3.5 text-right text-lg font-semibold bg-fill outline-none focus:ring-[3px] focus:ring-tint/45';
 const toDecimal = (text: string) => text.trim().replace(',', '.');
 
 export function CashDesk({ terminalName, session, movements, history, openTabs }: {
@@ -52,17 +52,17 @@ export function CashDesk({ terminalName, session, movements, history, openTabs }
       <div className="h-full overflow-y-auto p-4 md:p-6">
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <form
-            className="flex flex-col gap-4 rounded-xl border border-shelf-edge bg-sheet p-5"
+            className="flex flex-col gap-4 rounded-[20px] bg-sheet shadow-[var(--shadow-card)] p-5"
             onSubmit={(e) => {
               e.preventDefault();
               act(() => openCash(toDecimal(float)));
             }}
           >
             <div>
-              <h1 className="text-lg font-bold">Abrir caja · {terminalName}</h1>
+              <h1 className="text-[22px] font-bold tracking-[-0.02em]">Abrir caja · {terminalName}</h1>
               <p className="text-sm text-ink-3">Cuenta el cambio con el que empiezas el turno.</p>
             </div>
-            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
               Fondo de caja inicial (€)
               <input value={float} onChange={(e) => setFloat(e.target.value)} inputMode="decimal" className={amountInput} />
             </label>
@@ -92,7 +92,7 @@ export function CashDesk({ terminalName, session, movements, history, openTabs }
           <Button size="lg" onClick={() => setMove({ kind: 'deposit', amount: '', reason: '' })}>
             <Plus className="size-5" aria-hidden /> Entrada
           </Button>
-          <Link href={`/caja/${session.id}`} className="inline-flex h-14 items-center rounded-lg border border-shelf-edge bg-sheet px-5 font-semibold hover:bg-sheet-head">
+          <Link href={`/caja/${session.id}`} className="pressable inline-flex h-14 items-center rounded-[14px] bg-fill px-5 font-semibold text-tint hover:bg-fill-strong">
             Imprimir reporte X
           </Link>
           <Button size="lg" variant="primary" className="ml-auto" onClick={() => setClosing(true)}>
@@ -111,13 +111,13 @@ export function CashDesk({ terminalName, session, movements, history, openTabs }
               act(() => addCashMovement(session.id, { ...move, amount: toDecimal(move.amount) }), () => setMove(null));
             }}
           >
-            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
               Importe (€)
               <input value={move.amount} onChange={(e) => setMove({ ...move, amount: e.target.value })} inputMode="decimal" className={amountInput} autoFocus />
             </label>
-            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
               Motivo
-              <input value={move.reason} onChange={(e) => setMove({ ...move, reason: e.target.value })} maxLength={200} className="h-12 rounded-lg border border-shelf-edge px-3 text-base font-normal text-ink" />
+              <input value={move.reason} onChange={(e) => setMove({ ...move, reason: e.target.value })} maxLength={200} className="h-12 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-base font-normal text-ink" />
             </label>
             <div className="flex flex-wrap gap-2">
               {(move.kind === 'withdrawal' ? ['Pago a proveedor', 'Ingreso en banco', 'Compra de hielo'] : ['Cambio adicional']).map((r) => (
@@ -150,8 +150,8 @@ export function CashDesk({ terminalName, session, movements, history, openTabs }
 
 function History({ history }: { history: HistoryRow[] }) {
   return (
-    <section className="rounded-xl border border-shelf-edge bg-sheet">
-      <h2 className="border-b border-line px-5 py-3 text-sm font-bold">Cierres anteriores</h2>
+    <section className="overflow-hidden rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
+      <h2 className="px-5 pt-4 pb-2 text-[17px] font-semibold">Cierres anteriores</h2>
       {history.length === 0 ? (
         <p className="px-5 py-4 text-sm text-ink-3">Todavía no hay cierres en este terminal.</p>
       ) : (
@@ -160,7 +160,7 @@ function History({ history }: { history: HistoryRow[] }) {
             const diff = Number(h.difference ?? 0);
             return (
               <li key={h.id}>
-                <Link href={`/caja/${h.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-sheet-head">
+                <Link href={`/caja/${h.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-fill/70">
                   <span>
                     <span className="block font-semibold">Caja nº {h.number}</span>
                     <span className="block text-xs text-ink-3">{formatDateTime(h.closedAt ?? h.openedAt)}</span>
@@ -206,7 +206,7 @@ function CloseDialog({ open, onClose, expected, openTabs, busy, onConfirm }: {
           {DENOMINATIONS.map((d) => (
             <div key={d} className="flex items-center gap-2">
               <span className={`w-20 text-sm font-semibold ${isBill(d) ? '' : 'text-ink-2'}`}>{denominationLabel(d)}</span>
-              <button type="button" className="flex size-11 items-center justify-center rounded-lg border border-shelf-edge" aria-label={`Una ${denominationLabel(d)} menos`} onClick={() => set(d, (counts[String(d)] ?? 0) - 1)}>
+              <button type="button" className="pressable flex size-11 items-center justify-center rounded-full bg-fill text-tint hover:bg-fill-strong" aria-label={`Una ${denominationLabel(d)} menos`} onClick={() => set(d, (counts[String(d)] ?? 0) - 1)}>
                 <Minus className="size-4" aria-hidden />
               </button>
               <input
@@ -214,35 +214,35 @@ function CloseDialog({ open, onClose, expected, openTabs, busy, onConfirm }: {
                 inputMode="numeric"
                 value={counts[String(d)] ?? ''}
                 onChange={(e) => set(d, Number(e.target.value.replace(/\D/g, '') || 0))}
-                className="h-11 w-16 rounded-lg border border-shelf-edge text-center text-base font-semibold"
+                className="h-11 w-16 rounded-[12px] text-center bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-base font-semibold"
               />
-              <button type="button" className="flex size-11 items-center justify-center rounded-lg border border-shelf-edge" aria-label={`Una ${denominationLabel(d)} más`} onClick={() => set(d, (counts[String(d)] ?? 0) + 1)}>
+              <button type="button" className="pressable flex size-11 items-center justify-center rounded-full bg-fill text-tint hover:bg-fill-strong" aria-label={`Una ${denominationLabel(d)} más`} onClick={() => set(d, (counts[String(d)] ?? 0) + 1)}>
                 <Plus className="size-4" aria-hidden />
               </button>
               <span className="ml-auto text-right text-sm text-ink-2">{formatEuro((d * (counts[String(d)] ?? 0)) / 100)}</span>
             </div>
           ))}
         </div>
-        <dl className="grid grid-cols-3 gap-3 rounded-xl bg-sheet-head p-4 text-center">
+        <dl className="grid grid-cols-3 gap-3 rounded-[16px] bg-fill p-4 text-center">
           <div>
-            <dt className="text-xs font-semibold text-ink-3">Contado</dt>
+            <dt className="text-[13px] font-medium text-ink-2">Contado</dt>
             <dd className="text-2xl font-bold">{formatEuro(countedCents / 100)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold text-ink-3">Esperado</dt>
+            <dt className="text-[13px] font-medium text-ink-2">Esperado</dt>
             <dd className="text-2xl font-bold">{formatEuro(expected)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold text-ink-3">Diferencia</dt>
+            <dt className="text-[13px] font-medium text-ink-2">Diferencia</dt>
             <dd className={`text-2xl font-bold ${diffCents === 0 ? 'text-ok' : 'text-danger'}`}>
               {diffCents > 0 ? '+' : ''}
               {formatEuro(diffCents / 100)}
             </dd>
           </div>
         </dl>
-        <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink-3">
+        <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
           Notas del cierre
-          <input value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} placeholder="Explica el descuadre si lo hay" className="h-11 rounded-lg border border-shelf-edge px-3 text-base font-normal text-ink" />
+          <input value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} placeholder="Explica el descuadre si lo hay" className="h-11 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-base font-normal text-ink" />
         </label>
         <Button
           variant="primary"

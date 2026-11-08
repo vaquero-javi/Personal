@@ -300,6 +300,44 @@ export function createOrganizationsService(sql: Sql) {
       });
     },
 
+    /**
+     * Borra un rol propio de la sociedad (permiso 'roles.delete'; la RLS lo
+     * impone). Los de sistema no se borran. Si alguien tiene el rol, se pasa
+     * antes a `replacementId` en la misma transacción: eso es cambiar roles de
+     * miembros y exige además 'members.manage', y el destino no puede ser un rol
+     * de sistema. Sus permisos y su política de descuento se borran con él.
+     */
+    async deleteRole(ctx: TenantContext, id: string, replacementId?: string | null) {
+      const roleId = z.uuid().parse(id);
+      const orgId = singleOrganization(ctx);
+      await withTenant(sql, ctx, async (tx) => {
+        const [role] = await tx<{ is_system: boolean; members: number; can_delete: boolean; can_move: boolean }[]>`
+          select r.is_system,
+                 (select count(*)::int from user_organizations uo where uo.role_id = r.id) as members,
+                 app.has_permission(${orgId}, 'roles.delete') as can_delete,
+                 app.has_permission(${orgId}, 'members.manage') as can_move
+          from roles r where r.id = ${roleId} and r.organization_id = ${orgId}`;
+        if (!role) throw new DomainError('NOT_FOUND', 'El rol ya no existe');
+        if (role.is_system) throw new DomainError('FORBIDDEN', 'El rol de propietario no se puede eliminar');
+        if (!role.can_delete) throw new DomainError('FORBIDDEN', 'Tu rol no incluye el permiso «Eliminar roles»');
+
+        if (role.members > 0) {
+          if (!role.can_move) {
+            throw new DomainError('FORBIDDEN', 'Este rol tiene personas: para pasarlas a otro rol necesitas también el permiso «Invitar, suspender y cambiar roles»');
+          }
+          const target = replacementId ? z.uuid().parse(replacementId) : null;
+          if (!target || target === roleId) throw new DomainError('VALIDATION', 'Elige a qué rol pasan las personas que tienen este');
+          const [dest] = await tx<{ is_system: boolean }[]>`select is_system from roles where id = ${target} and organization_id = ${orgId}`;
+          if (!dest) throw new DomainError('VALIDATION', 'El rol de destino ya no existe');
+          if (dest.is_system) throw new DomainError('FORBIDDEN', 'No se puede pasar a nadie al rol de propietario desde aquí');
+          await tx`update user_organizations set role_id = ${target} where organization_id = ${orgId} and role_id = ${roleId}`;
+        }
+
+        const rows = await tx`delete from roles where id = ${roleId} and organization_id = ${orgId} returning id`;
+        if (rows.length === 0) throw new DomainError('FORBIDDEN', 'Tu rol no incluye el permiso «Eliminar roles»');
+      });
+    },
+
     async customFields(ctx: TenantContext): Promise<CustomField[]> {
       const orgId = singleOrganization(ctx);
       return withTenant(sql, ctx, async (tx) =>

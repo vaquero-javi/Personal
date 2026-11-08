@@ -76,9 +76,24 @@
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-/* Modo oscuro de Apple: negro de fondo, tarjetas elevadas en grises. */
+/*
+ * Modo oscuro de Apple: negro de fondo, tarjetas elevadas en grises.
+ * Sigue al sistema salvo que la persona elija otro en la barra lateral
+ * (<html data-theme="light|dark">, ver components/theme.ts).
+ */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --color-carton: #000000;
     --color-shelf: rgb(30 30 32 / 0.72);
     --color-shelf-edge: #3a3a3c;
@@ -115,6 +130,46 @@
 
     color-scheme: dark;
   }
+}
+:root[data-theme='dark'] {
+  --color-carton: #000000;
+  --color-shelf: rgb(30 30 32 / 0.72);
+  --color-shelf-edge: #3a3a3c;
+  --color-sheet: #1c1c1e;
+  --color-sheet-head: #2c2c2e;
+  --color-fill: rgb(118 118 128 / 0.24);
+  --color-fill-strong: rgb(118 118 128 / 0.34);
+  --color-line: rgb(84 84 88 / 0.65);
+  --color-line-soft: rgb(84 84 88 / 0.4);
+  --color-ink: #f5f5f7;
+  --color-ink-2: #d1d1d6;
+  --color-ink-3: #98989d;
+
+  --color-tint: #0a84ff;
+  --color-tint-hover: #409cff;
+  --color-tint-soft: rgb(10 132 255 / 0.22);
+
+  --color-spine-red: #ff453a;
+  --color-spine-blue: #0a84ff;
+  --color-spine-yellow: #ffd60a;
+  --color-spine-green: #30d158;
+
+  --color-danger: #ff6961;
+  --color-danger-soft: rgb(255 69 58 / 0.2);
+  --color-warning: #ffb340;
+  --color-warning-soft: rgb(255 159 10 / 0.18);
+  --color-warning-line: #ff9f0a;
+  --color-ok: #30d158;
+  --color-ok-soft: rgb(48 209 88 / 0.18);
+
+  --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.06);
+  --shadow-raised: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 3px 8px rgb(0 0 0 / 0.5);
+  --shadow-float: 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 12px 40px rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 @layer base {
