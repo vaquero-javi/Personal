@@ -39,7 +39,7 @@ export async function passwordSignIn(_: ActionState, formData: FormData): Promis
   } catch (error) {
     return { error: authErrorMessage(error) };
   }
-  redirect('/');
+  redirect('/app');
 }
 
 export async function passwordSignUp(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -72,7 +72,7 @@ export async function devSignIn(formData: FormData) {
   if (process.env.AUTH_MODE !== 'dev') throw new Error('Acceso de desarrollo desactivado');
   const userId = z.uuid().parse(formData.get('userId'));
   (await cookies()).set(DEV_USER_COOKIE, userId, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 });
-  redirect('/');
+  redirect('/app');
 }
 
 export async function signOut() {

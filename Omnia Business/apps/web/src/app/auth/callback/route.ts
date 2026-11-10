@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   if (!code || !verifier) return fail;
   try {
     const tokens = await exchangeCode(code, verifier);
-    const response = NextResponse.redirect(new URL('/', request.url));
+    const response = NextResponse.redirect(new URL('/app', request.url));
     response.cookies.set(ACCESS_TOKEN_COOKIE, tokens.access_token, cookieOptions(tokens.expires_in));
     response.cookies.set(REFRESH_TOKEN_COOKIE, tokens.refresh_token, cookieOptions(REFRESH_MAX_AGE));
     response.cookies.delete(PKCE_VERIFIER_COOKIE);

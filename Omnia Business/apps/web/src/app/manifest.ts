@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Omnia',
     description: 'ERP/CRM multiempresa: ventas, compras, almacén, facturación, RRHH e incidencias.',
     lang: 'es',
-    start_url: '/',
+    start_url: '/app',
     display: 'standalone',
     background_color: '#e8eaed',
     theme_color: '#16181d',

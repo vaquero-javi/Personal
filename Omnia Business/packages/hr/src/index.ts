@@ -96,6 +96,10 @@ export const ManualEntryInput = z.object({
   correctionReason: requiredText(300, 'Explica el motivo de la corrección'),
 });
 
+const toMinutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+/** Duración en minutos; si la salida no es posterior a la entrada, cruza la medianoche. */
+export const shiftMinutes = (from: string, to: string) => (toMinutes(to) - toMinutes(from) + 24 * 60) % (24 * 60) || 24 * 60;
+
 export const ShiftInput = z
   .object({
     userId: z.uuid('Elige a la persona'),
@@ -104,7 +108,10 @@ export const ShiftInput = z
     to: z.string().regex(/^\d{2}:\d{2}$/, 'Hora no válida'),
     area: optionalText(80),
   })
-  .refine((v) => v.to > v.from, { message: 'La salida debe ser posterior a la entrada', path: ['to'] });
+  // Si la salida es igual o anterior a la entrada, el turno acaba al día siguiente (22:00–04:00).
+  .refine((v) => v.to !== v.from, { message: 'La entrada y la salida no pueden ser iguales', path: ['to'] })
+  .refine((v) => shiftMinutes(v.from, v.to) <= 16 * 60, { message: 'Un turno no puede durar más de 16 horas', path: ['to'] });
+
 
 export const LeaveInput = z
   .object({
@@ -235,17 +242,19 @@ export function createHrService(sql: Sql) {
     async createShift(ctx: TenantContext, raw: unknown) {
       const input = ShiftInput.parse(raw);
       const orgId = singleOrganization(ctx);
+      // Turno nocturno: la salida cae en el día siguiente.
+      const endDayOffset = input.to <= input.from ? 1 : 0;
       await withTenant(sql, ctx, async (tx) => {
         const [overlap] = await tx`
           select 1 from shifts where user_id = ${input.userId}
             and tstzrange(starts_at, ends_at) && tstzrange((${input.date}::date + ${input.from}::time) at time zone 'Europe/Madrid',
-                                                          (${input.date}::date + ${input.to}::time) at time zone 'Europe/Madrid')`;
+                                                          (${input.date}::date + ${endDayOffset}::int + ${input.to}::time) at time zone 'Europe/Madrid')`;
         if (overlap) throw new DomainError('CONFLICT', 'Esa persona ya tiene un turno que se solapa');
         await tx`
           insert into shifts (organization_id, user_id, starts_at, ends_at, area)
           values (${orgId}, ${input.userId},
                   (${input.date}::date + ${input.from}::time) at time zone 'Europe/Madrid',
-                  (${input.date}::date + ${input.to}::time) at time zone 'Europe/Madrid', ${input.area ?? null})`;
+                  (${input.date}::date + ${endDayOffset}::int + ${input.to}::time) at time zone 'Europe/Madrid', ${input.area ?? null})`;
       });
     },
 

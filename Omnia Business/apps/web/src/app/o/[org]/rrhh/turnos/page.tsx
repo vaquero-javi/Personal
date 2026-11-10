@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
 import { Cell, PageHeader, Ruled } from '@/components/ui/layout';
-import { ActionForm, SelectField, TextField } from '@/components/ui/form';
+import { ActionForm, inputClass, SelectField, TextField } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import { buttonClass } from '@/components/ui/button-styles';
 import { addDays, capitalizeFirst, formatTime, mondayOf, todayIso } from '@/lib/format';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
+import { ShiftCell } from '@/features/hr/shift-cell';
 import { createShift, deleteShift } from '../actions';
 
 export const metadata = { title: 'Turnos · Omnia' };
@@ -22,7 +23,8 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   const [shifts, people] = await Promise.all([container().hr.shifts(ctx, monday, 7), container().hr.people(ctx)]);
   const manage = can('hr.shifts.manage');
-  const visiblePeople = manage || can('hr.time.read') ? people : people.filter((p) => p.userId === ctx.userId);
+  // Ver el cuadrante de todo el equipo: permiso «Ver los turnos de todo el equipo» (o poder planificarlos).
+  const visiblePeople = manage || can('hr.shifts.read') ? people : people.filter((p) => p.userId === ctx.userId);
   const base = `/o/${org}/rrhh/turnos`;
   const today = todayIso();
 
@@ -32,7 +34,17 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
         title="Turnos"
         description={`Semana del ${head.format(new Date(`${monday}T00:00:00Z`))} al ${head.format(new Date(`${days[6]}T00:00:00Z`))}`}
         actions={
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
+            {manage && (
+              <form action={`${base}/mes`} method="get" className="mr-2 flex items-center gap-1">
+                <label htmlFor="mes-descarga" className="sr-only">Mes a descargar</label>
+                <input id="mes-descarga" name="mes" type="month" defaultValue={addDays(monday, 3).slice(0, 7)} required className={`${inputClass} w-auto`} />
+                <button type="submit" className={buttonClass('secondary')}>
+                  <Download aria-hidden className="size-4" />
+                  Descargar mes
+                </button>
+              </form>
+            )}
             <Link href={`${base}?semana=${addDays(monday, -7)}`} className={buttonClass('secondary', 'px-2')} aria-label="Semana anterior"><ChevronLeft aria-hidden className="size-4" /></Link>
             <Link href={base} className={buttonClass('secondary')}>Esta semana</Link>
             <Link href={`${base}?semana=${addDays(monday, 7)}`} className={buttonClass('secondary', 'px-2')} aria-label="Semana siguiente"><ChevronRight aria-hidden className="size-4" /></Link>
@@ -60,11 +72,12 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
                     {days.map((d) => {
                       const own = shifts.filter((s) => s.userId === p.userId && isoInMadrid(new Date(s.startsAt)) === d);
                       return (
-                        <td key={d} className="h-14 border-b border-l border-line-soft px-1.5 py-1.5 align-top">
+                        <ShiftCell key={d} action={createShift.bind(null, org)} userId={p.userId} date={d} label={`${p.name}, ${head.format(new Date(`${d}T00:00:00Z`))}`} editable={manage}>
                           {own.map((s) => (
                             <div key={s.id} className="group mb-1 flex items-start justify-between gap-1 rounded bg-carton px-2 py-1 text-xs">
                               <span>
                                 <b>{formatTime(s.startsAt)}–{formatTime(s.endsAt)}</b>
+                                {isoInMadrid(new Date(s.endsAt)) !== d && <span className="ml-1 text-ink-3" title="Termina al día siguiente">+1</span>}
                                 {s.area && <span className="block text-ink-3">{s.area}</span>}
                               </span>
                               {manage && (
@@ -76,7 +89,7 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
                               )}
                             </div>
                           ))}
-                        </td>
+                        </ShiftCell>
                       );
                     })}
                   </tr>
@@ -94,6 +107,7 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
                 <TextField label="Entrada" name="from" type="time" defaultValue="08:00" required />
                 <TextField label="Salida" name="to" type="time" defaultValue="16:00" required />
               </div>
+              <p className="-mt-1 text-xs text-ink-3">Si la salida es antes que la entrada, el turno acaba al día siguiente.</p>
               <TextField label="Área o puesto" name="area" placeholder="Almacén" />
               <div>
                 <SubmitButton>Crear turno</SubmitButton>

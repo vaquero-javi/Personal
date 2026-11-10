@@ -1,0 +1,3135 @@
+{
+ "url": "http://localhost:3000/",
+ "at": "2026-11-10T19:15:20.982Z",
+ "allow": [
+  "palette-purple",
+  "late-title"
+ ],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    0.31,
+    0.36,
+    0.32,
+    0.35,
+    0.71,
+    0.45,
+    0.47,
+    0.5,
+    0.55,
+    0.51,
+    0.52,
+    0.51
+   ],
+   "motion": {
+    "elements": 63,
+    "css": 5,
+    "transitions": 56,
+    "scripted": 2,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 10444,
+     "screens": 11.6,
+     "words": 1034,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 37,
+     "sections": 7,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 15,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 13,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Toda tu empresa, en una sola app.",
+     "words": 7,
+     "chars": 33,
+     "lines": 1,
+     "size": 53.3,
+     "vw": 3.7,
+     "font": "-apple-system",
+     "weight": 700,
+     "tracking": -0.035,
+     "leading": 1.02,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.96,
+     "top": 423,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Toda tu empresa, en una sola app.",
+     "words": 7,
+     "lines": 1,
+     "size": 53.3,
+     "font": "-apple-system"
+    },
+    "headings": [
+     {
+      "text": "Toda tu empresa, en una sola app.",
+      "words": 7,
+      "chars": 33,
+      "lines": 1,
+      "size": 53.3,
+      "vw": 3.7,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.035,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 423,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Cada factura, con su estado.",
+      "words": 5,
+      "chars": 28,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.55,
+      "top": 3258,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Estudio Nadir",
+      "words": 2,
+      "chars": 13,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 3377,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Clínica Vela",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.38,
+      "top": 3453,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Grupo Lumen",
+      "words": 2,
+      "chars": 11,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 3529,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Talleres Brío SL",
+      "words": 3,
+      "chars": 16,
+      "lines": 1,
+      "size": 40,
+      "vw": 2.8,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 3626,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Construcciones Ará",
+      "words": 2,
+      "chars": 18,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.38,
+      "top": 3825,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Óptica Faro",
+      "words": 2,
+      "chars": 11,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 3901,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Papelera Central",
+      "words": 2,
+      "chars": 16,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 3977,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Hnos. Ribera",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.37,
+      "top": 4053,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Distribuciones Sur",
+      "words": 2,
+      "chars": 18,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.38,
+      "top": 4129,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Un módulo para cada área.",
+      "words": 5,
+      "chars": 25,
+      "lines": 2,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.31,
+      "top": 4359,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Cobra en el mostrador o desde la tablet",
+      "words": 8,
+      "chars": 39,
+      "lines": 2,
+      "size": 31.7,
+      "vw": 2.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 4395,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Facturas con VeriFactu desde el primer día",
+      "words": 7,
+      "chars": 42,
+      "lines": 2,
+      "size": 31.7,
+      "vw": 2.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 4896,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Sabes lo que tienes y lo que falta",
+      "words": 8,
+      "chars": 34,
+      "lines": 2,
+      "size": 31.7,
+      "vw": 2.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 5342,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Fichajes, turnos, vacaciones y nóminas",
+      "words": 5,
+      "chars": 38,
+      "lines": 2,
+      "size": 31.7,
+      "vw": 2.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 5773,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Lo pendiente, a la vista de todos",
+      "words": 7,
+      "chars": 33,
+      "lines": 2,
+      "size": 31.7,
+      "vw": 2.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 6152,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Las cifras, sin hojas de cálculo",
+      "words": 6,
+      "chars": 32,
+      "lines": 2,
+      "size": 31.7,
+      "vw": 2.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 6720,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "52,3 mil €+9 %",
+      "words": 4,
+      "chars": 14,
+      "lines": 1,
+      "size": 28,
+      "vw": 1.9,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.24,
+      "top": 6776,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Un día con Omnia.",
+      "words": 4,
+      "chars": 17,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 7432,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "El equipo ficha la entrada.",
+      "words": 5,
+      "chars": 27,
+      "lines": 2,
+      "size": 63.4,
+      "vw": 4.4,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.035,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.42,
+      "top": 7686,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Pruébalo o contrátalo.",
+      "words": 3,
+      "chars": 22,
+      "lines": 1,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.46,
+      "top": 8567,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "0 €",
+      "words": 2,
+      "chars": 3,
+      "lines": 1,
+      "size": 100.8,
+      "vw": 7,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.09,
+      "top": 8610,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "Prueba gratis",
+      "words": 2,
+      "chars": 13,
+      "lines": 1,
+      "size": 86.4,
+      "vw": 6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.04,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.46,
+      "top": 8653,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "Contratar",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 86.4,
+      "vw": 6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.04,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.46,
+      "top": 8746,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "Preguntas frecuentes",
+      "words": 2,
+      "chars": 20,
+      "lines": 2,
+      "size": 51.8,
+      "vw": 3.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.3,
+      "top": 9094,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Empieza hoy con Omnia.",
+      "words": 4,
+      "chars": 22,
+      "lines": 1,
+      "size": 49,
+      "vw": 3.4,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.58,
+      "top": 9829,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 27,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 2,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "-apple-system",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      26,
+      32,
+      49,
+      52,
+      53,
+      63,
+      86,
+      101
+     ],
+     "sizeCount": 14,
+     "notLoaded": [],
+     "body": {
+      "font": "-apple-system",
+      "size": 17,
+      "leading": 1.55,
+      "weight": 400,
+      "tracking": -0.005,
+      "contrast": 19.3
+     },
+     "measureChars": 43,
+     "max": {
+      "size": 100.8,
+      "vw": 7,
+      "font": "-apple-system",
+      "text": "0 €"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#000000",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#000000",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0
+       }
+      },
+      {
+       "color": "#1c1c1e",
+       "top": 7596,
+       "hsl": {
+        "h": 240,
+        "s": 0.03,
+        "l": 0.11
+       }
+      },
+      {
+       "color": "#007aff",
+       "top": 7596,
+       "hsl": {
+        "h": 211,
+        "s": 1,
+        "l": 0.5
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#f5f5f7",
+       "share": 0.68
+      },
+      {
+       "color": "#98989d",
+       "share": 0.17
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.07
+      },
+      {
+       "color": "#a1a1a6",
+       "share": 0.02
+      },
+      {
+       "color": "#30d158",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#0a84ff",
+      "hsl": {
+       "h": 210,
+       "s": 1,
+       "l": 0.52
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": [
+      {
+       "text": "Prueba gratis",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Lun 16",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 12,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Prueba gratis un mes",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Estadísticas",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Cobrar 40,50 € con tarjeta",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 14,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Enviada",
+       "ratio": 4,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#ffffff",
+       "bg": "#007aff"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 6,
+     "inHero": 2,
+     "radius": "pill",
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Prueba gratis",
+      "Prueba gratis un mes"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 14,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 27,
+     "boxRadius": 14,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": false,
+       "rounded": true,
+       "top": 377
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 6,
+     "fixed": true,
+     "height": 900,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 10444,
+    "margins": {
+     "left": 32,
+     "right": 32
+    },
+    "sections": [
+     {
+      "sel": "section.ln-hero",
+      "tag": "section",
+      "top": 0,
+      "height": 2970,
+      "words": 133,
+      "media": 0,
+      "middle": 57,
+      "heading": {
+       "text": "Toda tu empresa,",
+       "size": 53,
+       "tag": "h1"
+      },
+      "left": 32,
+      "right": 32,
+      "textLeft": 32,
+      "textRight": 32,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": true
+     },
+     {
+      "sel": "section.ln-board.mt-[var(--gap-section)]",
+      "tag": "section",
+      "top": 3143,
+      "height": 1044,
+      "words": 122,
+      "media": 0,
+      "middle": 78,
+      "heading": {
+       "text": "Cada factura, con su estado.",
+       "size": 52,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 39,
+      "textLeft": 32,
+      "textRight": 39,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#modulos.ln-wrap.grid",
+      "tag": "section",
+      "top": 4186,
+      "height": 3065,
+      "words": 435,
+      "media": 0,
+      "middle": 200,
+      "heading": {
+       "text": "Un módulo para cada área.",
+       "size": 52,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 33,
+      "textLeft": 32,
+      "textRight": 33,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": true
+     },
+     {
+      "sel": "section#un-dia.mt-[var(--gap-section)].pt-2",
+      "tag": "section",
+      "top": 7424,
+      "height": 962,
+      "words": 64,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "El equipo ficha la entrada.",
+       "size": 63,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 32,
+      "textLeft": 32,
+      "textRight": 172,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#precios.ln-wrap.mt-[var(--gap-section)]",
+      "tag": "section",
+      "top": 8559,
+      "height": 355,
+      "words": 35,
+      "media": 0,
+      "middle": 83,
+      "heading": {
+       "text": "0 €",
+       "size": 101,
+       "tag": "span"
+      },
+      "left": 32,
+      "right": 193,
+      "textLeft": 32,
+      "textRight": 193,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.ln-wrap.ln-faq",
+      "tag": "section",
+      "top": 9086,
+      "height": 480,
+      "words": 150,
+      "media": 0,
+      "middle": 250,
+      "heading": {
+       "text": "Preguntas frecuentes",
+       "size": 52,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 410,
+      "textLeft": 32,
+      "textRight": 410,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.mt-[var(--gap-section)].grid",
+      "tag": "section",
+      "top": 9739,
+      "height": 380,
+      "words": 29,
+      "media": 1,
+      "middle": 350,
+      "heading": {
+       "text": "Empieza hoy con Omnia.",
+       "size": 49,
+       "tag": "h2"
+      },
+      "left": 300,
+      "right": 0,
+      "textLeft": 300,
+      "textRight": 623,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 10048,
+      "height": 340
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Toda tu empresa, en una sola app.",
+      "size": 53,
+      "top": 423,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 1046,
+      "n": 17
+     },
+     {
+      "x": 32,
+      "n": 9
+     },
+     {
+      "x": 525,
+      "n": 6
+     },
+     {
+      "x": 300,
+      "n": 2
+     },
+     {
+      "x": 75,
+      "n": 1
+     },
+     {
+      "x": 783,
+      "n": 1
+     },
+     {
+      "x": 849,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 37,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.2,
+    "voidBox": {
+     "x": 0,
+     "y": 120,
+     "w": 1440,
+     "h": 180
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 8,
+   "filled": [
+    0.59,
+    0.86,
+    0.57,
+    0.58,
+    0.54,
+    0.59,
+    0.7,
+    0.51
+   ],
+   "motion": {
+    "elements": 51,
+    "css": 5,
+    "transitions": 45,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 7590,
+     "screens": 7.4,
+     "words": 1025,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 37,
+     "sections": 7,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 15,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 11,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 1,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Toda tu empresa, en una sola app.",
+     "words": 7,
+     "chars": 33,
+     "lines": 2,
+     "size": 40,
+     "vw": 5.2,
+     "font": "-apple-system",
+     "weight": 700,
+     "tracking": -0.035,
+     "leading": 1.02,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.95,
+     "top": 96,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Toda tu empresa, en una sola app.",
+     "words": 7,
+     "lines": 2,
+     "size": 40,
+     "font": "-apple-system"
+    },
+    "headings": [
+     {
+      "text": "Toda tu empresa, en una sola app.",
+      "words": 7,
+      "chars": 33,
+      "lines": 2,
+      "size": 40,
+      "vw": 5.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.035,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 96,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Cada factura, con su estado.",
+      "words": 5,
+      "chars": 28,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.54,
+      "top": 1040,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Talleres Brío SL",
+      "words": 3,
+      "chars": 16,
+      "lines": 1,
+      "size": 26,
+      "vw": 3.4,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.3,
+      "top": 1377,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Un módulo para cada área.",
+      "words": 5,
+      "chars": 25,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 2061,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "52,3 mil €+9 %",
+      "words": 4,
+      "chars": 14,
+      "lines": 1,
+      "size": 28,
+      "vw": 3.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 4205,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Un día con Omnia.",
+      "words": 4,
+      "chars": 17,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.95,
+      "top": 4759,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "El equipo ficha la entrada.",
+      "words": 5,
+      "chars": 27,
+      "lines": 2,
+      "size": 36,
+      "vw": 4.7,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.035,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.41,
+      "top": 4964,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Pruébalo o contrátalo.",
+      "words": 3,
+      "chars": 22,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.45,
+      "top": 5796,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "0 €",
+      "words": 2,
+      "chars": 3,
+      "lines": 1,
+      "size": 56,
+      "vw": 7.3,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.1,
+      "top": 5820,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "Prueba gratis",
+      "words": 2,
+      "chars": 13,
+      "lines": 1,
+      "size": 46.1,
+      "vw": 6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.04,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.45,
+      "top": 5861,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "Contratar",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 46.1,
+      "vw": 6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.04,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.45,
+      "top": 5911,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "Preguntas frecuentes",
+      "words": 2,
+      "chars": 20,
+      "lines": 2,
+      "size": 32,
+      "vw": 4.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.29,
+      "top": 6220,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Empieza hoy con Omnia.",
+      "words": 4,
+      "chars": 22,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.58,
+      "top": 6926,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 13,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 2,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "-apple-system",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      32,
+      36,
+      40,
+      46,
+      56
+     ],
+     "sizeCount": 11,
+     "notLoaded": [],
+     "body": {
+      "font": "-apple-system",
+      "size": 17,
+      "leading": 1.55,
+      "weight": 400,
+      "tracking": -0.005,
+      "contrast": 19.3
+     },
+     "measureChars": 81,
+     "max": {
+      "size": 56,
+      "vw": 7.3,
+      "font": "-apple-system",
+      "text": "0 €"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#000000",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#000000",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0
+       }
+      },
+      {
+       "color": "#1c1c1e",
+       "top": 198,
+       "hsl": {
+        "h": 240,
+        "s": 0.03,
+        "l": 0.11
+       }
+      },
+      {
+       "color": "#007aff",
+       "top": 4902,
+       "hsl": {
+        "h": 211,
+        "s": 1,
+        "l": 0.5
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#f5f5f7",
+       "share": 0.69
+      },
+      {
+       "color": "#98989d",
+       "share": 0.15
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.07
+      },
+      {
+       "color": "#a1a1a6",
+       "share": 0.02
+      },
+      {
+       "color": "#30d158",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#0a84ff",
+      "hsl": {
+       "h": 210,
+       "s": 1,
+       "l": 0.52
+      },
+      "fg": "#ffffff"
+     },
+     "lowContrast": [
+      {
+       "text": "Prueba gratis",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Lun 16",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 12,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Prueba gratis un mes",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Cobrar 40,50 € con tarjeta",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 14,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Fichar entrada",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Empezar la prueba gratis",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 6,
+     "inHero": 2,
+     "radius": "pill",
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Prueba gratis",
+      "Prueba gratis un mes"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 13,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 24,
+     "boxRadius": 14,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 6,
+     "fixed": false,
+     "height": 36,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 7590,
+    "margins": {
+     "left": 12,
+     "right": 12
+    },
+    "sections": [
+     {
+      "sel": "section.ln-hero",
+      "tag": "section",
+      "top": 0,
+      "height": 880,
+      "words": 95,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Toda tu empresa,",
+       "size": 40,
+       "tag": "h1"
+      },
+      "left": 18,
+      "right": 0,
+      "textLeft": 18,
+      "textRight": 0,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.ln-board.mt-[var(--gap-section)]",
+      "tag": "section",
+      "top": 976,
+      "height": 989,
+      "words": 122,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Cada factura, con su estado.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 12,
+      "right": 12,
+      "textLeft": 18,
+      "textRight": 23,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#modulos.ln-wrap.grid",
+      "tag": "section",
+      "top": 1965,
+      "height": 2690,
+      "words": 426,
+      "media": 0,
+      "middle": 67,
+      "heading": {
+       "text": "Un módulo para cada área.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 18,
+      "right": 18,
+      "textLeft": 18,
+      "textRight": 18,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#un-dia.mt-[var(--gap-section)].pt-2",
+      "tag": "section",
+      "top": 4751,
+      "height": 941,
+      "words": 64,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "El equipo ficha la entrada.",
+       "size": 36,
+       "tag": "h3"
+      },
+      "left": 18,
+      "right": 18,
+      "textLeft": 18,
+      "textRight": 82,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#precios.ln-wrap.mt-[var(--gap-section)]",
+      "tag": "section",
+      "top": 5788,
+      "height": 328,
+      "words": 35,
+      "media": 0,
+      "middle": 64,
+      "heading": {
+       "text": "0 €",
+       "size": 56,
+       "tag": "span"
+      },
+      "left": 18,
+      "right": 49,
+      "textLeft": 18,
+      "textRight": 49,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.ln-wrap.ln-faq",
+      "tag": "section",
+      "top": 6212,
+      "height": 520,
+      "words": 150,
+      "media": 0,
+      "middle": 126,
+      "heading": {
+       "text": "Preguntas frecuentes",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 18,
+      "right": 49,
+      "textLeft": 18,
+      "textRight": 49,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.mt-[var(--gap-section)].grid",
+      "tag": "section",
+      "top": 6828,
+      "height": 380,
+      "words": 29,
+      "media": 1,
+      "middle": 4,
+      "heading": {
+       "text": "Empieza hoy con Omnia.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 161,
+      "right": 0,
+      "textLeft": 161,
+      "textRight": 164,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 7140,
+      "height": 376
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Toda tu empresa, en una sola app.",
+      "size": 40,
+      "top": 96,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 458,
+      "n": 17
+     },
+     {
+      "x": 18,
+      "n": 10
+     },
+     {
+      "x": 297,
+      "n": 6
+     },
+     {
+      "x": 161,
+      "n": 2
+     },
+     {
+      "x": 42,
+      "n": 1
+     },
+     {
+      "x": 428,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 37,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 11,
+   "filled": [
+    0.52,
+    0.78,
+    0.66,
+    0.64,
+    0.71,
+    0.68,
+    0.63,
+    0.71,
+    0.6,
+    0.9,
+    0.7
+   ],
+   "motion": {
+    "elements": 51,
+    "css": 5,
+    "transitions": 45,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 8850,
+     "screens": 10.5,
+     "words": 974,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 37,
+     "sections": 7,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 15,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 12,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 1,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Toda tu empresa, en una sola app.",
+     "words": 7,
+     "chars": 33,
+     "lines": 2,
+     "size": 40,
+     "vw": 10.3,
+     "font": "-apple-system",
+     "weight": 700,
+     "tracking": -0.035,
+     "leading": 1.02,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.92,
+     "top": 96,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Toda tu empresa, en una sola app.",
+     "words": 7,
+     "lines": 2,
+     "size": 40,
+     "font": "-apple-system"
+    },
+    "headings": [
+     {
+      "text": "Toda tu empresa, en una sola app.",
+      "words": 7,
+      "chars": 33,
+      "lines": 2,
+      "size": 40,
+      "vw": 10.3,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.035,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 96,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Cada factura, con su estado.",
+      "words": 5,
+      "chars": 28,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 903,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Talleres Brío SL",
+      "words": 3,
+      "chars": 16,
+      "lines": 1,
+      "size": 26,
+      "vw": 6.7,
+      "font": "-apple-system",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.5,
+      "top": 1303,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Un módulo para cada área.",
+      "words": 5,
+      "chars": 25,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 1934,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "40,50 €",
+      "words": 2,
+      "chars": 7,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.2,
+      "top": 2298,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "Cobra en el mostrador o desde la tablet",
+      "words": 8,
+      "chars": 39,
+      "lines": 2,
+      "size": 24,
+      "vw": 6.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2519,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Facturas con VeriFactu desde el primer día",
+      "words": 7,
+      "chars": 42,
+      "lines": 2,
+      "size": 24,
+      "vw": 6.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 3146,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Sabes lo que tienes y lo que falta",
+      "words": 8,
+      "chars": 34,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 3719,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Fichajes, turnos, vacaciones y nóminas",
+      "words": 5,
+      "chars": 38,
+      "lines": 2,
+      "size": 24,
+      "vw": 6.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 4214,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Lo pendiente, a la vista de todos",
+      "words": 7,
+      "chars": 33,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 4924,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "52,3 mil €+9 %",
+      "words": 4,
+      "chars": 14,
+      "lines": 1,
+      "size": 28,
+      "vw": 7.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.5,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.75,
+      "top": 5174,
+      "tag": "p",
+      "kind": "statement"
+     },
+     {
+      "text": "Las cifras, sin hojas de cálculo",
+      "words": 6,
+      "chars": 32,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.02,
+      "leading": 1.12,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5681,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Un día con Omnia.",
+      "words": 4,
+      "chars": 17,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5942,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "El equipo ficha la entrada.",
+      "words": 5,
+      "chars": 27,
+      "lines": 2,
+      "size": 36,
+      "vw": 9.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.035,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.79,
+      "top": 6472,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Pruébalo o contrátalo.",
+      "words": 3,
+      "chars": 22,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 6828,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Prueba gratis",
+      "words": 2,
+      "chars": 13,
+      "lines": 1,
+      "size": 44,
+      "vw": 11.3,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.04,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 6893,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "Contratar",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 44,
+      "vw": 11.3,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.04,
+      "leading": 1.08,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 6941,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "0 €",
+      "words": 2,
+      "chars": 3,
+      "lines": 1,
+      "size": 56,
+      "vw": 14.4,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.045,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.2,
+      "top": 7052,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "Preguntas frecuentes",
+      "words": 2,
+      "chars": 20,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 7424,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Empieza hoy con Omnia.",
+      "words": 4,
+      "chars": 22,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "-apple-system",
+      "weight": 700,
+      "tracking": -0.03,
+      "leading": 1.04,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 8185,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 20,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 3,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "-apple-system",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      32,
+      36,
+      40,
+      44,
+      56
+     ],
+     "sizeCount": 11,
+     "notLoaded": [],
+     "body": {
+      "font": "-apple-system",
+      "size": 17,
+      "leading": 1.55,
+      "weight": 400,
+      "tracking": -0.005,
+      "contrast": 19.3
+     },
+     "measureChars": 40,
+     "max": {
+      "size": 56,
+      "vw": 14.4,
+      "font": "-apple-system",
+      "text": "0 €"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.02,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#000000",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#000000",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0
+       }
+      },
+      {
+       "color": "#ff2d55",
+       "top": 2115,
+       "hsl": {
+        "h": 349,
+        "s": 1,
+        "l": 0.59
+       }
+      },
+      {
+       "color": "#34c759",
+       "top": 2758,
+       "hsl": {
+        "h": 135,
+        "s": 0.59,
+        "l": 0.49
+       }
+      },
+      {
+       "color": "#30b0c7",
+       "top": 4453,
+       "hsl": {
+        "h": 189,
+        "s": 0.61,
+        "l": 0.48
+       }
+      },
+      {
+       "color": "#af52de",
+       "top": 5110,
+       "hsl": {
+        "h": 280,
+        "s": 0.68,
+        "l": 0.6
+       }
+      },
+      {
+       "color": "#007aff",
+       "top": 6085,
+       "hsl": {
+        "h": 211,
+        "s": 1,
+        "l": 0.5
+       }
+      },
+      {
+       "color": "#1c1c1e",
+       "top": 7028,
+       "hsl": {
+        "h": 240,
+        "s": 0.03,
+        "l": 0.11
+       }
+      },
+      {
+       "color": "#0a84ff",
+       "top": 8137,
+       "hsl": {
+        "h": 210,
+        "s": 1,
+        "l": 0.52
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#f5f5f7",
+       "share": 0.71
+      },
+      {
+       "color": "#98989d",
+       "share": 0.16
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.07
+      },
+      {
+       "color": "#30d158",
+       "share": 0.02
+      },
+      {
+       "color": "#d1d1d6",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#1c1c1e",
+      "hsl": {
+       "h": 240,
+       "s": 0.03,
+       "l": 0.11
+      },
+      "fg": "#f5f5f7"
+     },
+     "lowContrast": [
+      {
+       "text": "Prueba gratis",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Lun 16",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 12,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Prueba gratis un mes",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Cobrar 40,50 € con tarjeta",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 14,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Fichar entrada",
+       "ratio": 3.6,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#0a84ff"
+      },
+      {
+       "text": "Enviada",
+       "ratio": 4,
+       "need": 4.5,
+       "size": 15,
+       "fg": "#ffffff",
+       "bg": "#007aff"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 14,
+     "inHero": 2,
+     "radius": 10,
+     "height": 64,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Prueba gratis",
+      "Prueba gratis un mes"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 13,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 27,
+     "boxRadius": 14,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 3,
+     "fixed": false,
+     "height": 36,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 8850,
+    "margins": {
+     "left": 12,
+     "right": 12
+    },
+    "sections": [
+     {
+      "sel": "section.ln-hero",
+      "tag": "section",
+      "top": 0,
+      "height": 743,
+      "words": 86,
+      "media": 0,
+      "middle": 25,
+      "heading": {
+       "text": "Toda tu empresa,",
+       "size": 40,
+       "tag": "h1"
+      },
+      "left": 16,
+      "right": 0,
+      "textLeft": 16,
+      "textRight": 0,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.ln-board.mt-[var(--gap-section)]",
+      "tag": "section",
+      "top": 839,
+      "height": 1000,
+      "words": 77,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Cada factura, con su estado.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 12,
+      "right": 12,
+      "textLeft": 16,
+      "textRight": 32,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lg:sticky.lg:top-8",
+      "tag": "div",
+      "top": 1934,
+      "height": 141,
+      "words": 15,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 16,
+      "right": 25,
+      "textLeft": 16,
+      "textRight": 25,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "article#mod-ventas.grid.scroll-mt-8",
+      "tag": "article",
+      "top": 2115,
+      "height": 587,
+      "words": 70,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Cobra en el mostrador o desde la tablet",
+       "size": 24,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 24,
+      "textLeft": 16,
+      "textRight": 24,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "article#mod-facturacion.grid.scroll-mt-8",
+      "tag": "article",
+      "top": 2758,
+      "height": 572,
+      "words": 63,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Facturas con VeriFactu desde el primer día",
+       "size": 24,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 23,
+      "textLeft": 16,
+      "textRight": 23,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "article#mod-almacen.grid.scroll-mt-8",
+      "tag": "article",
+      "top": 3385,
+      "height": 490,
+      "words": 74,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Sabes lo que tienes y lo que falta",
+       "size": 24,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 28,
+      "textLeft": 16,
+      "textRight": 28,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "article#mod-rrhh.grid.scroll-mt-8",
+      "tag": "article",
+      "top": 3931,
+      "height": 466,
+      "words": 57,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Fichajes, turnos, vacaciones y nóminas",
+       "size": 24,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 22,
+      "textLeft": 16,
+      "textRight": 22,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "article#mod-tareas.grid.scroll-mt-8",
+      "tag": "article",
+      "top": 4453,
+      "height": 601,
+      "words": 80,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Lo pendiente, a la vista de todos",
+       "size": 24,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 30,
+      "textLeft": 16,
+      "textRight": 30,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "article#mod-estadisticas.grid.scroll-mt-8",
+      "tag": "article",
+      "top": 5110,
+      "height": 727,
+      "words": 62,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "52,3",
+       "size": 28,
+       "tag": "p"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 16,
+      "textRight": 16,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#un-dia.mt-[var(--gap-section)].pt-2",
+      "tag": "section",
+      "top": 5934,
+      "height": 790,
+      "words": 64,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Un día con Omnia.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 16,
+      "textRight": 37,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#precios.ln-wrap.mt-[var(--gap-section)]",
+      "tag": "section",
+      "top": 6820,
+      "height": 500,
+      "words": 35,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "0 €",
+       "size": 56,
+       "tag": "span"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 16,
+      "textRight": 42,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.ln-wrap.ln-faq",
+      "tag": "section",
+      "top": 7416,
+      "height": 625,
+      "words": 150,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Preguntas frecuentes",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 43,
+      "textLeft": 16,
+      "textRight": 43,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.mt-[var(--gap-section)].grid",
+      "tag": "section",
+      "top": 8137,
+      "height": 436,
+      "words": 29,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Empieza hoy con Omnia.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 24,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Toda tu empresa, en una sola app.",
+      "size": 40,
+      "top": 96,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 29
+     },
+     {
+      "x": 40,
+      "n": 8
+     }
+    ],
+    "leftBlocks": 37,
+    "bodySize": 17,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "contrast",
+   "width": 1440,
+   "message": "Low-contrast text: \"Prueba gratis\" 3.6:1 needs 4.5:1; \"Lun 16\" 3.6:1 needs 4.5:1; \"Prueba gratis un mes\" 3.6:1 needs 4.5:1; \"Estadísticas\" 3.6:1 needs 4.5:1",
+   "fix": "Darken or lighten the text colour.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "14 different font sizes (14, 15, 16, 17, 18, 20, 26, 32, 49, 52, 53, 63, 86, 101).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "no-real-pictures",
+   "width": 1440,
+   "message": "Only 0 real photograph(s) or clip(s); the rest are interface fragments.",
+   "fix": "Add two or more real pictures of the customer's world from scripts/assets.mjs, not stock of people at laptops."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "long-pin",
+   "width": 1440,
+   "message": "The same large text stays on screen for 4 screens in a row: \"Toda tu empresa, en una sola app.\"; \"Un módulo para cada área.\"",
+   "fix": "A pinned element earns two screens, and something must change at each. Shorten the run or give every screen its own content."
+  },
+  {
+   "level": "WARN",
+   "id": "side-scroll",
+   "width": 768,
+   "message": "1 row(s) scroll sideways with content past their edge.",
+   "fix": "Jurors and most visitors read a row cut at the edge as clipped, not as scrollable. Wrap it onto more lines, or end it inside the grid.",
+   "alsoAt": [
+    390
+   ]
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/desktop-fold.jpg",
+   "pages": [
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/desktop-page-01.jpg",
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/desktop-page-02.jpg",
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/desktop-page-03.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/tablet-fold.jpg",
+   "pages": [
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/tablet-page-01.jpg",
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/tablet-page-02.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/mobile-fold.jpg",
+   "pages": [
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/mobile-page-01.jpg",
+    "/Users/javi/Documents/GitHub/Personal/Omnia Business/.taste-skill/inspect/mobile-page-02.jpg"
+   ],
+   "film": []
+  }
+ ]
+}
