@@ -7,6 +7,8 @@ const euro = new Intl.NumberFormat('es-ES', {
   // es-ES no agrupa los números de 4 cifras por defecto («4210,00 €»); en contabilidad sí.
   useGrouping: 'always',
 });
+// Precios por unidad: hasta 4 decimales (0,6250 € la lata no es 0,63 €).
+const unitEuro = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 4, useGrouping: 'always' });
 const qty = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 3, useGrouping: 'always' });
 const dayMonthYear = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 const weekdayDay = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -17,6 +19,7 @@ const longDate = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numer
 
 /** Solo para mostrar: el texto decimal de la API se convierte aquí, nunca para calcular importes. */
 export const formatEuro = (decimal: string | number) => euro.format(Number(decimal));
+export const formatUnitPrice = (decimal: string | number) => unitEuro.format(Number(decimal));
 export const formatQty = (decimal: string | number) => qty.format(Number(decimal));
 /** Fechas `date` de Postgres (YYYY-MM-DD, sin hora). */
 export const formatDate = (iso: string | null) => (iso ? dayMonthYear.format(new Date(`${iso}T00:00:00Z`)) : '—');

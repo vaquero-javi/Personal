@@ -253,3 +253,38 @@ export async function googleWalletLink(org: string, cardId: string): Promise<{ o
   });
   return state.ok ? { ok: true, url } : { ok: false, error: state.error ?? 'No se pudo generar el enlace' };
 }
+
+// ------------------------------------------------------------- carta del TPV
+
+/** Coloca un artículo en la carta (o lo saca con categoría vacía) y fija su PVP. El TPV lo ve en segundos. */
+export async function saveMenuItem(org: string, input: { itemId: string; categoryId: string | null; pvp: string }): Promise<ActionState> {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'pos.manage');
+    await container().pos.saveMenuItem(ctx, input);
+    revalidate(org);
+    return input.categoryId ? 'Carta actualizada' : 'Producto fuera de carta';
+  });
+}
+
+export async function createMenuItem(
+  org: string,
+  input: { name: string; categoryId: string; pvp: string; taxRate: string; kind: 'stock' | 'recipe' },
+): Promise<ActionState & { id?: string }> {
+  let id: string | undefined;
+  const result = await runAction(async () => {
+    const { ctx } = await requirePermission(org, 'pos.manage');
+    id = await container().pos.createMenuItem(ctx, input);
+    revalidate(org);
+    return 'Producto añadido a la carta';
+  });
+  return id ? { ...result, id } : result;
+}
+
+export async function saveRecipe(org: string, productId: string, lines: { ingredientId: string; quantity: string }[]): Promise<ActionState> {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'pos.manage');
+    await container().recipes.save(ctx, { productId, lines });
+    revalidate(org);
+    return 'Escandallo guardado';
+  });
+}

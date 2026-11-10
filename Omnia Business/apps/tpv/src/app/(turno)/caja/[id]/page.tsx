@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { container } from '@/server/container';
 import { requireShift } from '@/server/session';
 import { CashReport } from '@/features/cash/cash-report';
-import { Notice, buttonClass } from '@/components/ui';
+import { Notice } from '@/components/ui';
+import { buttonClass } from '@/components/button-styles';
 import { PrintButton } from '@/features/cash/print-button';
 
 export const metadata = { title: 'Reporte de caja · Omnia TPV' };

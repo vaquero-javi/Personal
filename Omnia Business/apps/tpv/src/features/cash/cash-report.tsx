@@ -1,6 +1,15 @@
-import type { CashMovement, CashSession } from '@omnia/pos/types';
-import { formatDateTime, formatEuro, formatQty } from '@/lib/format';
+import type { CashMovement, CashMovementKind, CashSession } from '@omnia/pos/types';
+import { formatDateTime, formatEuro, formatQty, formatTime } from '@/lib/format';
 import { DENOMINATIONS, denominationLabel } from './denominations';
+
+const movementLabel: Record<CashMovementKind, string> = {
+  withdrawal: 'Retirada',
+  deposit: 'Entrada',
+  cash_to_card: 'Efectivo → tarjeta',
+  card_to_cash: 'Tarjeta → efectivo',
+};
+/** Signo respecto al efectivo del cajón. */
+const movementSign: Record<CashMovementKind, string> = { withdrawal: '−', deposit: '+', cash_to_card: '−', card_to_cash: '+' };
 
 function Row({ label, value, strong = false, tone }: { label: string; value: string; strong?: boolean; tone?: 'ok' | 'danger' | 'warning' }) {
   const color = tone === 'ok' ? 'text-ok' : tone === 'danger' ? 'text-danger' : tone === 'warning' ? 'text-warning' : '';
@@ -17,6 +26,9 @@ export function CashReport({ session, movements }: { session: CashSession; movem
   const s = session.summary;
   const closed = session.status === 'closed';
   const diff = Number(session.difference ?? 0);
+  const cardDiff = Number(session.cardDifference ?? 0);
+  const transfers = Number(s.cashToCard) > 0 || Number(s.cardToCash) > 0;
+  const tone = (d: number) => (d === 0 ? 'ok' : Math.abs(d) <= 1 ? 'warning' : 'danger');
   return (
     <article className="rounded-[20px] bg-sheet shadow-[var(--shadow-card)] print:rounded-none print:shadow-none">
       <header className="border-b border-line px-5 py-4">
@@ -32,19 +44,37 @@ export function CashReport({ session, movements }: { session: CashSession; movem
           <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Efectivo</h2>
           <dl className="text-sm">
             <Row label="Fondo inicial" value={formatEuro(s.openingFloat)} />
-            <Row label="Ventas en efectivo" value={formatEuro(s.cashSales)} />
+            {transfers ? (
+              <>
+                <Row label="Cobrado en efectivo (TPV)" value={formatEuro(s.cashRecorded)} />
+                {Number(s.cardToCash) > 0 && <Row label="Corregido de tarjeta a efectivo" value={`+${formatEuro(s.cardToCash)}`} />}
+                {Number(s.cashToCard) > 0 && <Row label="Corregido de efectivo a tarjeta" value={`−${formatEuro(s.cashToCard)}`} />}
+              </>
+            ) : (
+              <Row label="Ventas en efectivo" value={formatEuro(s.cashSales)} />
+            )}
             <Row label="Entradas" value={formatEuro(s.deposits)} />
             <Row label="Retiradas" value={`−${formatEuro(s.withdrawals)}`} />
             <Row label="Efectivo esperado" value={formatEuro(closed ? session.expectedCash! : s.expectedCash)} strong />
             {closed && (
               <>
                 <Row label="Efectivo contado" value={formatEuro(session.countedCash!)} />
-                <Row
-                  label="Diferencia"
-                  value={`${diff > 0 ? '+' : ''}${formatEuro(diff)}`}
-                  strong
-                  tone={diff === 0 ? 'ok' : Math.abs(diff) <= 1 ? 'warning' : 'danger'}
-                />
+                <Row label="Diferencia" value={`${diff > 0 ? '+' : ''}${formatEuro(diff)}`} strong tone={tone(diff)} />
+              </>
+            )}
+          </dl>
+        </section>
+        <section className="bg-sheet px-5 py-4">
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Tarjeta</h2>
+          <dl className="text-sm">
+            <Row label="Cobrado con tarjeta (TPV)" value={formatEuro(s.cardRecorded)} />
+            {Number(s.cashToCard) > 0 && <Row label="Corregido de efectivo a tarjeta" value={`+${formatEuro(s.cashToCard)}`} />}
+            {Number(s.cardToCash) > 0 && <Row label="Corregido de tarjeta a efectivo" value={`−${formatEuro(s.cardToCash)}`} />}
+            <Row label="Tarjeta esperada (datáfono)" value={formatEuro(closed && session.expectedCard !== null ? session.expectedCard : s.expectedCard)} strong />
+            {closed && session.countedCard !== null && (
+              <>
+                <Row label="Total del datáfono" value={formatEuro(session.countedCard)} />
+                <Row label="Diferencia" value={`${cardDiff > 0 ? '+' : ''}${formatEuro(cardDiff)}`} strong tone={tone(cardDiff)} />
               </>
             )}
           </dl>
@@ -99,14 +129,14 @@ export function CashReport({ session, movements }: { session: CashSession; movem
             </dl>
           )}
         </section>
-        <section className="bg-sheet px-5 py-4">
+        <section className="bg-sheet px-5 py-4 md:col-span-2">
           <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Movimientos de caja</h2>
           {movements.length === 0 ? (
             <p className="text-sm text-ink-3">Ninguno.</p>
           ) : (
             <dl className="text-sm">
               {movements.map((m) => (
-                <Row key={m.id} label={`${m.kind === 'withdrawal' ? 'Retirada' : 'Entrada'}: ${m.reason} (${m.createdByName})`} value={`${m.kind === 'withdrawal' ? '−' : '+'}${formatEuro(m.amount)}`} />
+                <Row key={m.id} label={`${movementLabel[m.kind]}${m.ticketNumber ? ` · ticket ${m.ticketNumber}` : ''}: ${m.reason} (${m.createdByName}, ${formatTime(m.createdAt)})`} value={`${movementSign[m.kind]}${formatEuro(m.amount)}`} />
               ))}
             </dl>
           )}

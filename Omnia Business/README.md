@@ -33,7 +33,7 @@ cd apps/tpv && npx next dev -p 3200      # en una tercera terminal; usa apps/tpv
 
 El camarero ve mesas, comandas y cobro; el encargado, además, caja (apertura, retiradas, arqueo y reporte Z), carta con food cost, escandallos y stock.
 
-Para registrar albaranes con foto, añade `ANTHROPIC_API_KEY=<tu clave>` a `apps/web/.env.local` y reinicia la app. Sin la clave, esa opción aparece desactivada y el albarán se escribe a mano.
+Para registrar albaranes y facturas de proveedor con foto o PDF, añade a `apps/web/.env.local` una clave de lectura y reinicia la app: `GEMINI_API_KEY=<tu clave>` (Google AI Studio, con plan gratuito) o `ANTHROPIC_API_KEY=<tu clave>` (Claude; si están las dos, se usa esta). Sin ninguna, esa opción aparece desactivada y se escriben a mano.
 
 `npm run db:reset` borra los datos locales y vuelve a sembrar (las fechas de ejemplo son relativas a hoy).
 
@@ -50,6 +50,7 @@ npm run db:reset                             # después: los flujos dejan datos 
 
 El flujo del albarán con foto no llama a la API: arranca la app para las pruebas con una lectura grabada,
 `OMNIA_SCAN_FIXTURE="$PWD/e2e/fixtures/albaran-leido.json" npx next dev -p 3100` (en `apps/web`; se ignora en producción).
+Lo mismo para registrar una factura recibida con foto (*Compras › Facturas recibidas*): `OMNIA_INVOICE_SCAN_FIXTURE="$PWD/e2e/fixtures/factura-leida.json"`.
 
 ## Producción (Supabase)
 

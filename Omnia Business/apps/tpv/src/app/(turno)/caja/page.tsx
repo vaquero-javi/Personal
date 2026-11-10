@@ -15,8 +15,10 @@ export default async function CashPage() {
     );
   }
   const [session, history] = await Promise.all([container().pos.cashSession(ctx, terminal.terminalId), container().pos.cashHistory(ctx, terminal.terminalId)]);
-  const movements = session ? await container().pos.cashMovements(ctx, session.id) : [];
+  const [movements, tickets] = session
+    ? await Promise.all([container().pos.cashMovements(ctx, session.id), container().pos.cashTickets(ctx, session.id)])
+    : [[], []];
   const floor = session ? await container().pos.floor(ctx) : null;
   const openTabs = floor ? floor.tables.filter((t) => t.tab).length + floor.counterTabs.length : 0;
-  return <CashDesk terminalName={terminal.terminalName} session={session} movements={movements} history={history} openTabs={openTabs} />;
+  return <CashDesk terminalName={terminal.terminalName} session={session} movements={movements} tickets={tickets} history={history} openTabs={openTabs} />;
 }

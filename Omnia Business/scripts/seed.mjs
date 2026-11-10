@@ -364,6 +364,8 @@ export async function seed(db) {
     });
 
     // Facturas de proveedor.
+    // Una factura anterior de Cervezas del Norte, para que el comparador de precios tenga con qué comparar.
+    await c.receivedInvoice(cervezas, 'TN-F-2026-1094', 68, [L('CER-TER', 250, 9.85), L('REF-COLA', 150, 8.1)], { paid: true });
     await c.receivedInvoice(cervezas, 'TN-F-2026-1188', 38, [L('CER-TER', 300, 9.6), L('REF-COLA', 200, 8.4)], { termsDays: 60 });
     await c.receivedInvoice(bodegas, 'AL-F-9921', 32, [L('GIN-70', 48, 9.8), L('VIN-RIB', 120, 24)], { paid: true });
     await c.receivedInvoice(suministros, 'HI-2026-0412', 27, [L('CAFE-1K', 60, 14), L('SERV-3M', 50, 11)], { termsDays: 45 });

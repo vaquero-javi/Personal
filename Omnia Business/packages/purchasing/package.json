@@ -8,11 +8,13 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@omnia/core": "*",
     "@omnia/db": "*",
+    "@omnia/inventory": "*",
     "zod": "^4.6.7"
   }
 }

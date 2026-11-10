@@ -9,27 +9,11 @@ import { Button } from '@/components/ui/button';
 import type { CustomFieldDef } from '@/components/ui/custom-fields';
 import type { ItemOption } from '@/components/ui/line-items';
 import { formatDate } from '@/lib/format';
+import { shrink } from '@/lib/shrink-image';
 import { ReceiptForm, type ReceiptInitial } from './receipt-form';
 
 type Scan = (formData: FormData) => Promise<{ ok: true; scan: DeliveryNoteScan } | { ok: false; error: string }>;
 type Mode = 'manual' | 'scan';
-
-/** Las fotos del móvil pesan varios MB: se reducen aquí (lado largo ≤ 2000 px) antes de subirlas. */
-async function shrink(file: File): Promise<File> {
-  if (!file.type.startsWith('image/') || file.size < 900_000) return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-    return blob ? new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }) : file;
-  } catch {
-    return file;
-  }
-}
 
 /**
  * Registro de un albarán de proveedor de dos maneras: escribiéndolo o a partir
@@ -141,7 +125,7 @@ export function ReceiptEntry({
           </p>
           {!scanReady && (
             <Notice tone="warning">
-              La lectura de fotos aún no está activada en esta instalación: falta la clave de la API de Claude (<code>ANTHROPIC_API_KEY</code>). Mientras tanto, regístralo a mano.
+              La lectura de fotos aún no está activada en esta instalación: falta la clave de la API de Gemini (<code>GEMINI_API_KEY</code>) o de Claude (<code>ANTHROPIC_API_KEY</code>). Mientras tanto, regístralo a mano.
             </Notice>
           )}
           {error && <Notice tone="danger">{error}</Notice>}

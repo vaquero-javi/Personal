@@ -238,6 +238,60 @@ describe('Escandallos', () => {
 });
 
 describe('Caja', () => {
+  /** Cobra una cuenta de barra con N cañas (2,20 € cada una). */
+  const sell = async (canas: number, method: 'cash' | 'card') => {
+    const tabId = await pos.openTab(marta, terminal, { label: 'Barra', guests: 1 });
+    await pos.setLineQuantity(marta, terminal, { lineId: randomUUID(), tabId, itemId: (await product('Caña')).itemId, quantity: canas });
+    return pos.checkout(marta, terminal, { tabId, method });
+  };
+
+  it('corrige la forma de pago de un ticket: pasa de tarjeta a efectivo y lo refleja en la caja', async () => {
+    const session = (await pos.cashSession(carmen, terminal.terminalId))!;
+    const before = session.summary;
+    // Se cobró en efectivo pero se marcó tarjeta.
+    const wrong = await sell(2, 'card');
+    expect(wrong.total).toBe('4.40');
+
+    const kind = 'card_to_cash' as const;
+    // La camarera no corrige la caja.
+    await expect(pos.addCashMovement(marta, session.id, { kind, amount: '4.40', reason: 'Error al cobrar', invoiceId: wrong.invoiceId })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    // Ni por otro importe ni en la dirección contraria.
+    await expect(pos.addCashMovement(carmen, session.id, { kind, amount: '4', reason: 'x', invoiceId: wrong.invoiceId })).rejects.toThrow(/su importe/);
+    await expect(pos.addCashMovement(carmen, session.id, { kind: 'cash_to_card', amount: '4.40', reason: 'x', invoiceId: wrong.invoiceId })).rejects.toThrow(/se cobró en tarjeta/);
+
+    await pos.addCashMovement(carmen, session.id, { kind, amount: '4.40', reason: 'Cobrado en efectivo, marcado tarjeta', invoiceId: wrong.invoiceId });
+    // Una vez por ticket.
+    await expect(pos.addCashMovement(carmen, session.id, { kind, amount: '4.40', reason: 'otra vez', invoiceId: wrong.invoiceId })).rejects.toThrow();
+
+    const after = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    const plus = (a: string, b: number) => (Number(a) + b).toFixed(2);
+    expect(after.cashSales).toBe(plus(before.cashSales, 4.4));
+    expect(after.cardSales).toBe(before.cardSales);
+    expect(after.cardRecorded).toBe(plus(before.cardRecorded, 4.4));
+    expect(after.cardToCash).toBe(plus(before.cardToCash, 4.4));
+    expect(after.expectedCash).toBe(plus(before.expectedCash, 4.4));
+    expect(after.expectedCard).toBe(before.expectedCard);
+    expect(after.totalSales).toBe(plus(before.totalSales, 4.4));
+
+    const tickets = await pos.cashTickets(carmen, session.id);
+    expect(tickets.find((t) => t.invoiceId === wrong.invoiceId)).toMatchObject({ method: 'cash', corrected: true, total: '4.40' });
+    expect((await pos.ticket(marta, wrong.invoiceId)).method).toBe('cash');
+    const moves = await pos.cashMovements(carmen, session.id);
+    expect(moves.at(-1)).toMatchObject({ kind: 'card_to_cash', ticketNumber: wrong.fullNumber, amount: '4.40' });
+  });
+
+  it('un traspaso sin ticket no puede pasar más de lo vendido con esa forma de pago', async () => {
+    const session = (await pos.cashSession(carmen, terminal.terminalId))!;
+    await sell(1, 'cash');
+    const { cashSales } = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    await expect(
+      pos.addCashMovement(carmen, session.id, { kind: 'cash_to_card', amount: (Number(cashSales) + 1).toFixed(2), reason: 'demasiado' }),
+    ).rejects.toThrow(/más de lo vendido en efectivo/);
+    await pos.addCashMovement(carmen, session.id, { kind: 'cash_to_card', amount: '2.20', reason: 'Datáfono: cobro sin ticket' });
+    const after = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    expect(after.cashToCard).not.toBe('0.00');
+  });
+
   it('no cierra con cuentas abiertas y, cerrada, cuadra con lo contado', async () => {
     const session = (await pos.cashSession(carmen, terminal.terminalId))!;
     await expect(pos.closeCash(carmen, session.id, { counted: '0' })).rejects.toMatchObject({ code: 'INVALID_STATE' });
@@ -245,9 +299,13 @@ describe('Caja', () => {
     const floor = await pos.floor(carmen);
     for (const t of [...floor.tables.flatMap((x) => (x.tab ? [x.tab] : [])), ...floor.counterTabs]) await pos.cancelTab(carmen, t.id, 'cierre de prueba');
     const live = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
-    const closed = await pos.closeCash(carmen, session.id, { counted: live.expectedCash, detail: { '5000': 2 } });
+    // El datáfono marca 1 € menos de lo que dice el TPV.
+    const countedCard = (Number(live.expectedCard) - 1).toFixed(2);
+    const closed = await pos.closeCash(carmen, session.id, { counted: live.expectedCash, countedCard, detail: { '5000': 2 } });
     expect(closed.status).toBe('closed');
     expect(closed.difference).toBe('0.00');
+    expect(closed).toMatchObject({ countedCard, expectedCard: live.expectedCard, cardDifference: '-1.00' });
+    expect(closed.summary.cardToCash).toBe(live.cardToCash);
     expect(closed.summary.tickets).toBe(live.tickets);
     expect(await pos.cashSession(carmen, terminal.terminalId)).toBeNull();
   });

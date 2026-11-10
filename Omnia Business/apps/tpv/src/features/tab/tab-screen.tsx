@@ -14,6 +14,7 @@ import { ProductPicker } from './product-picker';
 import { SplitDialog } from './split-dialog';
 import { StaffCardDialog } from './staff-card-dialog';
 import { lineTotals, useTabLines, type LocalLine } from './use-tab-lines';
+import { useAutoRefresh } from '../use-auto-refresh';
 
 export function TabScreen({ tab, categories, products, freeTables, cashOpen, manager, allowNegativeStock }: {
   tab: TabDetail;
@@ -28,6 +29,9 @@ export function TabScreen({ tab, categories, products, freeTables, cashOpen, man
   const [flash, show] = useFlash();
   const onError = useCallback((m: string) => show(m, 'danger'), [show]);
   const { lines, setQuantity, addProduct, totals, pending, offline } = useTabLines(tab, onError);
+  // Carta y precios al día: lo que se cambie en el backoffice (o en otro terminal)
+  // llega en unos segundos. Sin toques pendientes, para no pisar lo que se envía.
+  useAutoRefresh(5_000, pending === 0 && !offline);
   const [busy, start] = useTransition();
   const [view, setView] = useState<'ticket' | 'menu'>('menu');
   const [editing, setEditing] = useState<LocalLine | null>(null);

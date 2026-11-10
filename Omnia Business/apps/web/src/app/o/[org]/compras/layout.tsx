@@ -14,6 +14,7 @@ export default async function PurchasingLayout({ children, params }: { children:
         items={[
           { href: '', label: 'Pedidos a proveedor' },
           { href: 'facturas', label: 'Facturas recibidas' },
+          { href: 'comparador', label: 'Comparador de precios' },
           { href: 'proveedores', label: 'Proveedores' },
         ]}
       />

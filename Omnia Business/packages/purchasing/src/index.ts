@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { DomainError, decimalString, optionalIsoDate, optionalText, singleOrganization, type TenantContext } from '@omnia/core';
-import { asRow, asRows, withTenant, type Sql } from '@omnia/db';
+import { asRow, asRows, withTenant, type Sql, type Tx } from '@omnia/db';
+import { comparePrices, type PreviousInvoiceRef, type PriceComparison, type PriceLine } from './price-comparison';
+
+export * from './price-comparison';
 
 export type PurchaseOrderStatus = 'draft' | 'sent' | 'partially_received' | 'received' | 'cancelled';
 
@@ -155,7 +158,75 @@ export function createPurchasingService(sql: Sql) {
         return receipt!.id;
       });
     },
+
+    /** Proveedores con facturas recibidas (sin anuladas), para elegir en el comparador. */
+    async suppliersWithInvoices(ctx: TenantContext): Promise<{ id: string; legalName: string; invoiceCount: number; lastDate: string }[]> {
+      return withTenant(sql, ctx, async (tx) =>
+        asRows(await tx`
+          select p.id, p.legal_name, count(*)::int as invoice_count, max(i.issue_date)::text as last_date
+          from invoices i join parties p on p.id = i.party_id
+          where i.direction = 'received' and i.status <> 'cancelled'
+          group by p.id, p.legal_name order by p.legal_name`),
+      );
+    },
+
+    /**
+     * Comparador: las dos últimas facturas recibidas del proveedor (por fecha
+     * de factura y, a igual fecha, por orden de registro), artículo a artículo
+     * y precio por unidad. `comparison` es null si no hay dos facturas.
+     */
+    async compareLatestInvoices(ctx: TenantContext, supplierId: string): Promise<{ latest: PreviousInvoiceRef | null; comparison: PriceComparison | null }> {
+      const id = z.uuid('Elige un proveedor').parse(supplierId);
+      return withTenant(sql, ctx, async (tx) => {
+        const [latest, previous] = asRows<PreviousInvoiceRef>(await tx`
+          select id, full_number, issue_date::text from invoices
+          where direction = 'received' and party_id = ${id} and status <> 'cancelled'
+          order by issue_date desc, created_at desc limit 2`);
+        if (!latest || !previous) return { latest: latest ?? null, comparison: null };
+        const [latestLines, previousLines] = await Promise.all([invoiceLines(tx, latest.id), invoiceLines(tx, previous.id)]);
+        return { latest, comparison: comparePrices(latestLines, previousLines, previous) };
+      });
+    },
+
+    /** Comparativa de una factura recibida ya registrada con la anterior de su proveedor. */
+    async invoicePriceComparison(ctx: TenantContext, invoiceId: string): Promise<PriceComparison | null> {
+      const id = z.uuid().parse(invoiceId);
+      return withTenant(sql, ctx, async (tx) => {
+        const inv = asRow<{ partyId: string | null; issueDate: string | null; createdAt: Date; direction: string }>(await tx`
+          select party_id, issue_date::text, created_at, direction from invoices where id = ${id}`);
+        if (!inv || inv.direction !== 'received' || !inv.partyId) return null;
+        const lines = await invoiceLines(tx, id);
+        const prev = await previousInvoice(tx, { supplierId: inv.partyId, before: inv.issueDate, createdBefore: inv.createdAt, excludeId: id });
+        return comparePrices(lines, prev?.lines ?? [], prev?.ref ?? null);
+      });
+    },
   };
+}
+
+/**
+ * Última factura recibida del mismo proveedor (sin contar anuladas) anterior a
+ * `before`, con sus líneas. Con `createdBefore`, a igual fecha manda el orden
+ * de registro, para que dos facturas del mismo día no se comparen entre sí.
+ */
+async function previousInvoice(
+  tx: Tx,
+  { supplierId, before, createdBefore, excludeId }: { supplierId: string; before: string | null; createdBefore?: Date; excludeId?: string },
+): Promise<{ ref: PreviousInvoiceRef; lines: PriceLine[] } | null> {
+  const ref = asRow<PreviousInvoiceRef>(await tx`
+    select id, full_number, issue_date::text from invoices
+    where direction = 'received' and party_id = ${supplierId} and status <> 'cancelled'
+      and (${excludeId ?? null}::uuid is null or id <> ${excludeId ?? null})
+      and (${before}::date is null or issue_date < ${before}::date
+           or (issue_date = ${before}::date and (${createdBefore ?? null}::timestamptz is null or created_at < ${createdBefore ?? null})))
+    order by issue_date desc, created_at desc limit 1`);
+  if (!ref) return null;
+  return { ref, lines: await invoiceLines(tx, ref.id) };
+}
+
+async function invoiceLines(tx: Tx, invoiceId: string): Promise<PriceLine[]> {
+  return asRows<PriceLine>(await tx`
+    select item_id, description, quantity::text, unit_price::text, discount_pct::text
+    from invoice_lines where invoice_id = ${invoiceId} and quantity > 0 order by line_no`);
 }
 
 async function transition(sql: Sql, ctx: TenantContext, id: string, from: string[], to: string, message: string) {

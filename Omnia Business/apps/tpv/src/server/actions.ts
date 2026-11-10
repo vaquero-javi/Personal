@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DomainError } from '@omnia/core';
-import type { CheckoutResult } from '@omnia/pos';
+import type { CashMovementKind, CheckoutResult } from '@omnia/pos';
 import type { ClockEntryType, ClockLookup } from '@omnia/staff-cards';
 import { container } from './container';
 import { run, type Result } from './actions-runtime';
@@ -208,16 +208,24 @@ export async function openCash(openingFloat: string): Promise<Result> {
   }, 'Caja abierta');
 }
 
-export async function addCashMovement(sessionId: string, input: { kind: 'withdrawal' | 'deposit'; amount: string; reason: string }): Promise<Result> {
+const movementMessage: Record<CashMovementKind, string> = {
+  withdrawal: 'Retirada registrada',
+  deposit: 'Entrada registrada',
+  cash_to_card: 'Traspaso registrado: de efectivo a tarjeta',
+  card_to_cash: 'Traspaso registrado: de tarjeta a efectivo',
+};
+
+/** Retiradas, entradas y traspasos entre efectivo y tarjeta (corrección de la forma de pago). */
+export async function addCashMovement(sessionId: string, input: { kind: CashMovementKind; amount: string; reason: string; invoiceId?: string }): Promise<Result> {
   return run(async () => {
     const { ctx } = await shiftFor('pos.manage');
     await container().pos.addCashMovement(ctx, sessionId, input);
     refresh();
     return undefined;
-  }, input.kind === 'withdrawal' ? 'Retirada registrada' : 'Entrada registrada');
+  }, movementMessage[input.kind]);
 }
 
-export async function closeCash(sessionId: string, input: { counted: string; detail: Record<string, number>; notes?: string }): Promise<Result<string>> {
+export async function closeCash(sessionId: string, input: { counted: string; countedCard: string; detail: Record<string, number>; notes?: string }): Promise<Result<string>> {
   return run(async () => {
     const { ctx } = await shiftFor('pos.manage');
     const session = await container().pos.closeCash(ctx, sessionId, input);

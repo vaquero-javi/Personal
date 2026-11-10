@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { DomainError } from '@omnia/core';
+import { matchSupplierInvoice, type SupplierInvoiceScan } from '@omnia/purchasing';
 import { container } from '@/server/container';
+import { readSupplierInvoice } from '@/server/delivery-note-reader';
 import { formObject, runAction, type ActionState } from '@/server/actions';
 import { requirePermission } from '@/server/session';
 
@@ -44,4 +47,31 @@ export async function receivePurchaseOrder(org: string, id: string, _: ActionSta
   });
   if (result.ok) redirect(`/o/${org}/almacen/albaranes/${receiptId}`);
   return result;
+}
+
+export type InvoiceScanState = { ok: true; scan: SupplierInvoiceScan } | { ok: false; error: string };
+
+/**
+ * Registrar factura recibida con foto: lee la factura (foto o PDF) y la
+ * empareja con proveedores y artículos. No guarda nada; solo devuelve con qué
+ * rellenar el formulario, que la persona revisa antes de registrarla.
+ */
+export async function scanReceivedInvoice(org: string, formData: FormData): Promise<InvoiceScanState> {
+  let scan: SupplierInvoiceScan | undefined;
+  const result = await runAction(async () => {
+    const { ctx } = await requirePermission(org, 'invoicing.write');
+    const file = formData.get('photo');
+    if (!(file instanceof File) || file.size === 0) throw new DomainError('VALIDATION', 'Elige o haz una foto de la factura');
+    const [read, suppliers, items] = await Promise.all([
+      readSupplierInvoice(file),
+      container().parties.list(ctx, { role: 'supplier' }),
+      container().warehouse.items(ctx),
+    ]);
+    if (!read.isInvoice) throw new DomainError('VALIDATION', 'El documento no parece una factura o no se lee bien. Prueba con otra foto, con buena luz y la hoja entera.');
+    scan = matchSupplierInvoice(read, {
+      suppliers: suppliers.map((p) => ({ id: p.id, legalName: p.legalName, taxId: p.taxId })),
+      items: items.filter((i) => i.isActive).map((i) => ({ id: i.id, sku: i.sku, barcode: i.barcode, name: i.name, taxRate: i.defaultTaxRate })),
+    });
+  });
+  return result.ok && scan ? { ok: true, scan } : { ok: false, error: result.error ?? 'No se ha podido leer la factura' };
 }

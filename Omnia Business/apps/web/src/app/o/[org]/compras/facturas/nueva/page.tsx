@@ -1,8 +1,10 @@
 import { Cell, PageHeader } from '@/components/ui/layout';
-import { InvoiceForm } from '@/features/invoicing/invoice-form';
+import { ReceivedInvoiceEntry } from '@/features/purchasing/received-invoice-entry';
+import { SCAN_ACCEPT, scanConfigured } from '@/server/delivery-note-reader';
 import { container } from '@/server/container';
 import { requirePermission } from '@/server/session';
 import { createInvoice } from '../../../facturacion/actions';
+import { scanReceivedInvoice } from '../../actions';
 
 export const metadata = { title: 'Registrar factura recibida · Omnia' };
 
@@ -12,12 +14,18 @@ export default async function NewReceivedInvoicePage({ params }: { params: Promi
   const [suppliers, items] = await Promise.all([container().parties.list(ctx, { role: 'supplier' }), container().warehouse.items(ctx)]);
   return (
     <>
-      <PageHeader title="Registrar factura de proveedor" back={{ href: `/o/${org}/compras/facturas`, label: 'Facturas recibidas' }} />
+      <PageHeader
+        title="Registrar factura de proveedor"
+        description="Escríbela a mano, o haz una foto o sube el archivo (PDF) que te mandó el proveedor y se rellena sola."
+        back={{ href: `/o/${org}/compras/facturas`, label: 'Facturas recibidas' }}
+      />
       <Cell>
-        <InvoiceForm
+        <ReceivedInvoiceEntry
           action={createInvoice.bind(null, org, 'received')}
-          direction="received"
-          parties={suppliers.map((s) => ({ value: s.id, label: s.legalName }))}
+          scan={scanReceivedInvoice.bind(null, org)}
+          scanReady={scanConfigured()}
+          accept={SCAN_ACCEPT}
+          suppliers={suppliers.map((s) => ({ value: s.id, label: s.legalName }))}
           items={items.filter((i) => i.isActive).map((i) => ({ id: i.id, sku: i.sku, name: i.name, unit: i.unitOfMeasure, suggested: Number(i.avgUnitCost) ? Number(i.avgUnitCost).toString() : '', taxRate: i.defaultTaxRate }))}
         />
       </Cell>

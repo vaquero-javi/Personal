@@ -7,6 +7,7 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { Download } from 'lucide-react';
 import { formatDate, formatDateTime, formatEuro, formatQty, percent, todayIso } from '@/lib/format';
 import { LimitBar } from '@/features/home/panels';
+import { ComparisonSummary, ComparisonTable, MissingItems, PreviousInvoiceLine, sortRows } from '@/features/purchasing/price-comparison-table';
 import { fiscalStatus, invoiceStatus, invoiceType, paymentMethod, receivedInvoiceStatus } from '@/lib/labels';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
@@ -27,6 +28,7 @@ export async function InvoiceView({ org, id, back }: { org: string; id: string; 
   const pending = Number(inv.total) - Number(inv.paidTotal);
   const statusMap = issued ? invoiceStatus : receivedInvoiceStatus;
   const pdf = `/o/${org}/facturacion/${inv.id}/pdf`;
+  const comparison = issued ? null : await container().purchasing.invoicePriceComparison(ctx, inv.id);
   const wantedKind = inv.invoiceType.startsWith('R') ? 'rectifying' : inv.invoiceType === 'F2' ? 'simplified' : 'standard';
 
   return (
@@ -198,6 +200,21 @@ export async function InvoiceView({ org, id, back }: { org: string; id: string; 
           )}
         </Cell>
       </Ruled>
+
+      {comparison && comparison.rows.length > 0 && (
+        <Cell title="Precios frente a la factura anterior" className="mt-4 md:mt-5">
+          <PreviousInvoiceLine comparison={comparison} href={(prevId) => `/o/${org}/compras/facturas/${prevId}`} />
+          {comparison.previous && (
+            <>
+              <div className="my-4">
+                <ComparisonSummary comparison={comparison} />
+              </div>
+              <ComparisonTable rows={sortRows(comparison.rows)} />
+              <MissingItems items={comparison.missing} />
+            </>
+          )}
+        </Cell>
+      )}
 
       <Ruled cols={issued && inv.status !== 'draft' ? 'xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''}>
         <Cell title={issued ? 'Cobros' : 'Pagos'}>

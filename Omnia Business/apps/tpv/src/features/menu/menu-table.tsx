@@ -10,6 +10,7 @@ import { Button, Modal, useFlash } from '@/components/ui';
 import { formatEuro, formatQty } from '@/lib/format';
 import { createMenuItem, saveMenuItem } from '@/server/actions';
 import { FoodCost } from './food-cost';
+import { useAutoRefresh } from '../use-auto-refresh';
 
 const cell = 'h-10 rounded-[10px] px-2.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45';
 
@@ -22,6 +23,8 @@ export function MenuTable({ products, categories, candidates }: {
   const [flash, show] = useFlash();
   const [pending, start] = useTransition();
   const [creating, setCreating] = useState(false);
+  // Recoge los cambios hechos desde el backoffice sin recargar (no mientras se crea un producto).
+  useAutoRefresh(10_000, !creating && !pending);
 
   const act = (work: () => Promise<{ ok: boolean; error?: string; message?: string }>, done?: () => void) =>
     start(async () => {
@@ -61,7 +64,8 @@ export function MenuTable({ products, categories, candidates }: {
             </thead>
             <tbody className="divide-y divide-line-soft">
               {products.map((p) => (
-                <ProductRow key={p.id} p={p} categories={categories} disabled={pending} onSave={(input) => act(() => saveMenuItem(input))} />
+                // Clave con precio y categoría: si cambian (aquí o desde el backoffice), la fila se rehace con los datos nuevos.
+                <ProductRow key={`${p.id}-${p.pvp}-${p.categoryId}`} p={p} categories={categories} disabled={pending} onSave={(input) => act(() => saveMenuItem(input))} />
               ))}
             </tbody>
           </table>

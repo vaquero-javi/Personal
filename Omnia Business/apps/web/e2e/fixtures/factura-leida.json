@@ -1,0 +1,13 @@
+{
+  "isInvoice": true,
+  "supplierName": "CERVEZAS DEL NORTE SA",
+  "supplierTaxId": "ES-A48112233",
+  "invoiceNumber": "TN-F-2026-1302",
+  "date": "2026-11-05",
+  "lines": [
+    { "reference": "CER-TER", "barcode": null, "description": "Cerveza tercio 33 cl caja 24", "quantity": 100, "unitPrice": 9.6, "discountPct": null, "taxRate": 21 },
+    { "reference": null, "barcode": null, "description": "Refresco cola lata 33cl caja 24", "quantity": 1, "unitPrice": 8.9, "discountPct": null, "taxRate": 10 },
+    { "reference": null, "barcode": null, "description": "Agua mineral 50 cl caja 24", "quantity": 20, "unitPrice": 4.2, "discountPct": null, "taxRate": 10 },
+    { "reference": null, "barcode": null, "description": "Portes", "quantity": 1, "unitPrice": null, "discountPct": null, "taxRate": null }
+  ]
+}

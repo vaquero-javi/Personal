@@ -171,9 +171,9 @@ export function LineItems({
                   ))}
                 </select>
                 {l.read && (
-                  <p className={`text-xs ${!l.itemId ? 'font-medium text-danger' : l.match === 'probable' && l.itemId === l.readItemId ? 'text-warning' : 'text-ink-3'}`}>
-                    {!l.itemId ? 'Elige el artículo · ' : l.match === 'probable' && l.itemId === l.readItemId ? 'Comprueba el artículo · ' : ''}
-                    En el albarán: «{l.read}»
+                  <p className={`text-xs ${!l.itemId && !allowFreeText ? 'font-medium text-danger' : l.match === 'probable' && l.itemId === l.readItemId ? 'text-warning' : 'text-ink-3'}`}>
+                    {!l.itemId ? (allowFreeText ? 'Sin artículo del almacén · ' : 'Elige el artículo · ') : l.match === 'probable' && l.itemId === l.readItemId ? 'Comprueba el artículo · ' : ''}
+                    En {allowFreeText ? 'la factura' : 'el albarán'}: «{l.read}»
                   </p>
                 )}
                 {allowFreeText && (

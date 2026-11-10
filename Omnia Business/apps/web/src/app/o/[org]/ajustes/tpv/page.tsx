@@ -1,7 +1,7 @@
 import { Badge, Cell, PageHeader, Ruled } from '@/components/ui/layout';
 import { Table, Td, Th, Tr } from '@/components/ui/table';
 import { ActionForm, CheckboxField, Notice, SelectField, TextField } from '@/components/ui/form';
-import { SubmitButton } from '@/components/ui/button';
+import { LinkButton, SubmitButton } from '@/components/ui/button';
 import { NewTerminalForm, PairingCodeButton } from '@/features/pos/terminal-pairing';
 import { formatDateTime, formatTime } from '@/lib/format';
 import { container } from '@/server/container';
@@ -10,11 +10,6 @@ import {
   clearStaffPin,
   createPosTerminal,
   newPosPairingCode,
-  removePosCategory,
-  removePosTable,
-  restorePosTable,
-  savePosCategory,
-  savePosTable,
   setNegativeStock,
   setPosTicketsVerifactu,
   setStaffPin,
@@ -29,20 +24,6 @@ const TICKET_MODES = [
   { value: 'off', label: 'Sin VeriFactu (solo factura simplificada)' },
 ];
 
-const ICONS = [
-  { value: 'beer', label: 'Cerveza' },
-  { value: 'wine', label: 'Vino' },
-  { value: 'martini', label: 'Cóctel' },
-  { value: 'cup-soda', label: 'Refresco' },
-  { value: 'coffee', label: 'Café' },
-  { value: 'utensils', label: 'Cubiertos' },
-  { value: 'salad', label: 'Ensalada' },
-  { value: 'beef', label: 'Carne' },
-  { value: 'fish', label: 'Pescado' },
-  { value: 'sandwich', label: 'Bocadillo' },
-  { value: 'pizza', label: 'Pizza' },
-  { value: 'ice-cream', label: 'Postre' },
-];
 
 export default async function PosSettingsPage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
@@ -57,11 +38,9 @@ export default async function PosSettingsPage({ params }: { params: Promise<{ or
       </>
     );
   }
-  const [terminals, pins, floor, categories, warehouses, settings] = await Promise.all([
+  const [terminals, pins, warehouses, settings] = await Promise.all([
     container().pos.terminals(ctx),
     container().pos.pinStatus(ctx),
-    container().pos.floor(ctx, { includeInactive: true }),
-    container().pos.categories(ctx),
     container().warehouse.warehouses(ctx),
     container().pos.settings(ctx),
   ]);
@@ -72,11 +51,14 @@ export default async function PosSettingsPage({ params }: { params: Promise<{ or
     <>
       <PageHeader
         title="TPV"
-        description="Terminales de sala, PIN del personal, mesas y carta. El TPV es una app aparte que usa los mismos datos: el stock, los tickets y la caja se ven aquí."
+        description="Terminales, PIN del personal, stock y tickets. Las mesas, categorías, productos y precios están en «Sala y carta». El TPV es una app aparte que usa los mismos datos: el stock, los tickets y la caja se ven aquí."
         actions={
-          <a href={tpvUrl} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center pressable rounded-full bg-tint px-4 text-sm font-semibold text-on-tint hover:bg-tint-hover">
-            Abrir el TPV
-          </a>
+          <>
+            <LinkButton href={`/o/${org}/ajustes/tpv/carta`}>Sala y carta</LinkButton>
+            <a href={tpvUrl} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center pressable rounded-full bg-fill px-4 text-sm font-semibold text-tint hover:bg-fill-strong">
+              Abrir el TPV
+            </a>
+          </>
         }
       />
       <Ruled cols="xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -201,107 +183,6 @@ export default async function PosSettingsPage({ params }: { params: Promise<{ or
               {pins.length - staff.length} personas más no pueden usar el TPV con su rol. Cámbialo en Miembros o da el permiso «Usar el TPV» en Roles y permisos.
             </p>
           )}
-        </Cell>
-
-        <Cell title="Mesas">
-          {floor.tables.length === 0 ? (
-            <p className="text-sm text-ink-2">Sin mesas. Las cuentas de barra funcionan sin mesa.</p>
-          ) : (
-            <Table minWidth={560}>
-              <thead>
-                <tr>
-                  <Th>Zona</Th>
-                  <Th>Mesa</Th>
-                  <Th align="right">Plazas</Th>
-                  <Th align="right">Orden</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody>
-                {floor.tables.map((t) => (
-                  <Tr key={t.id}>
-                    <Td className="text-ink-2">{t.area}</Td>
-                    <Td className={t.isActive ? 'font-medium' : 'text-ink-3 line-through'}>{t.name}</Td>
-                    <Td align="right">{t.seats}</Td>
-                    <Td align="right">{t.sortOrder}</Td>
-                    <Td align="right">
-                      {t.isActive ? (
-                        <ActionForm action={removePosTable.bind(null, org, t.id)}>
-                          <SubmitButton variant="secondary" className="h-8 px-3" disabled={t.tab !== null}>Quitar</SubmitButton>
-                        </ActionForm>
-                      ) : (
-                        <ActionForm action={restorePosTable.bind(null, org, t.id)}>
-                          <SubmitButton variant="secondary" className="h-8 px-3">Reactivar</SubmitButton>
-                        </ActionForm>
-                      )}
-                    </Td>
-                  </Tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Cell>
-        <Cell title="Añadir mesa">
-          <ActionForm action={savePosTable.bind(null, org)} className="flex flex-col gap-3" resetOnSuccess>
-            <div className="grid grid-cols-2 gap-3">
-              <TextField label="Nombre" name="name" required maxLength={30} placeholder="12, T3, Barra 1…" />
-              <TextField label="Zona" name="area" required maxLength={30} defaultValue="Sala" list="pos-areas" />
-              <datalist id="pos-areas">
-                {[...new Set(floor.tables.map((t) => t.area))].map((a) => <option key={a} value={a} />)}
-              </datalist>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <TextField label="Plazas" name="seats" type="number" min={1} max={99} defaultValue={4} />
-              <TextField label="Orden" name="sortOrder" type="number" min={0} max={9999} defaultValue={floor.tables.length + 1} />
-            </div>
-            <div>
-              <SubmitButton>Añadir mesa</SubmitButton>
-            </div>
-          </ActionForm>
-        </Cell>
-
-        <Cell title="Categorías de la carta">
-          {categories.length === 0 ? (
-            <p className="text-sm text-ink-2">Sin categorías: la carta del TPV está vacía.</p>
-          ) : (
-            <Table minWidth={480}>
-              <thead>
-                <tr>
-                  <Th>Categoría</Th>
-                  <Th>Icono</Th>
-                  <Th align="right">Orden</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((c) => (
-                  <Tr key={c.id}>
-                    <Td className="font-medium">{c.name}</Td>
-                    <Td className="text-ink-2">{ICONS.find((i) => i.value === c.icon)?.label ?? c.icon}</Td>
-                    <Td align="right">{c.sortOrder}</Td>
-                    <Td align="right">
-                      <ActionForm action={removePosCategory.bind(null, org, c.id)}>
-                        <SubmitButton variant="secondary" className="h-8 px-3">Quitar</SubmitButton>
-                      </ActionForm>
-                    </Td>
-                  </Tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-          <p className="mt-3 text-sm text-ink-3">Los productos, precios y escandallos se colocan en la carta desde el propio TPV (Carta), entrando como encargado.</p>
-        </Cell>
-        <Cell title="Añadir categoría">
-          <ActionForm action={savePosCategory.bind(null, org)} className="flex flex-col gap-3" resetOnSuccess>
-            <TextField label="Nombre" name="name" required maxLength={30} placeholder="Cócteles, Tapas…" />
-            <div className="grid grid-cols-2 gap-3">
-              <SelectField label="Icono" name="icon" options={ICONS} defaultValue="utensils" />
-              <TextField label="Orden" name="sortOrder" type="number" min={0} max={9999} defaultValue={categories.length + 1} />
-            </div>
-            <div>
-              <SubmitButton>Añadir categoría</SubmitButton>
-            </div>
-          </ActionForm>
         </Cell>
 
         <Cell title="Stock al vender" className="xl:col-span-2">

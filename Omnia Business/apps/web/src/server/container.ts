@@ -9,6 +9,7 @@ import { createOrganizationsService } from '@omnia/organizations';
 import { createPartiesService } from '@omnia/parties';
 import { createPosService } from '@omnia/pos';
 import { createPurchasingService } from '@omnia/purchasing';
+import { createRecipeService } from '@omnia/recipes';
 import { createSalesService } from '@omnia/sales';
 import { createStatsService } from '@omnia/stats';
 import { createTasksService } from '@omnia/tasks';
@@ -47,6 +48,7 @@ function build() {
     tasks: createTasksService(sql),
     stats: createStatsService(sql),
     pos: createPosService(sql),
+    recipes: createRecipeService(sql),
     /** Tarjetas de empleado: perezoso, solo exige STAFF_CARD_SECRET_KEY al usarse. */
     get staffCards(): StaffCardService {
       return (staffCards ??= buildStaffCards(sql));

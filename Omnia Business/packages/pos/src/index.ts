@@ -154,8 +154,16 @@ export interface CheckoutResult {
 
 export interface CashSummary {
   openingFloat: string;
+  /** Ventas en efectivo y en tarjeta ya corregidas con los traspasos. */
   cashSales: string;
   cardSales: string;
+  /** Tal como se marcaron al cobrar en el TPV, antes de corregir. */
+  cashRecorded: string;
+  cardRecorded: string;
+  cashToCard: string;
+  cardToCash: string;
+  /** Lo que debería dar el datáfono. */
+  expectedCard: string;
   totalSales: string;
   tickets: number;
   deposits: string;
@@ -185,17 +193,36 @@ export interface CashSession {
   countDetail: Record<string, number> | null;
   expectedCash: string | null;
   difference: string | null;
+  /** Total del datáfono al cerrar (null en cierres anteriores a pedirlo). */
+  countedCard: string | null;
+  expectedCard: string | null;
+  cardDifference: string | null;
   notes: string | null;
   summary: CashSummary;
 }
 
+export type CashMovementKind = 'withdrawal' | 'deposit' | 'cash_to_card' | 'card_to_cash';
+
 export interface CashMovement {
   id: string;
-  kind: 'withdrawal' | 'deposit';
+  kind: CashMovementKind;
   amount: string;
   reason: string;
+  /** Traspaso de un ticket concreto. */
+  ticketNumber: string | null;
   createdByName: string;
   createdAt: Date;
+}
+
+/** Ticket cobrado en una caja, con la forma de pago ya corregida por un traspaso si lo hubo. */
+export interface CashTicket {
+  invoiceId: string;
+  fullNumber: string;
+  total: string;
+  method: 'cash' | 'card';
+  corrected: boolean;
+  closedAt: Date | null;
+  tableName: string | null;
 }
 
 export interface PrintableTicket {
@@ -289,13 +316,16 @@ const SplitCheckoutInput = CheckoutInput.extend({
 });
 
 const CashMovementInput = z.object({
-  kind: z.enum(['withdrawal', 'deposit']),
+  kind: z.enum(['withdrawal', 'deposit', 'cash_to_card', 'card_to_cash']),
+  invoiceId: z.preprocess((v) => (v === '' || v === null ? undefined : v), z.uuid().optional()),
   amount: decimalString({ scale: 2, sign: 'positive' }),
   reason: z.string().trim().min(1, 'Indica el motivo').max(200),
 });
 
 const CloseCashInput = z.object({
   counted: Money,
+  /** Total cobrado con tarjeta según el cierre del datáfono. */
+  countedCard: Money.optional(),
   detail: z.record(z.string(), z.number().int().min(0).max(100_000)).default({}),
   notes: optionalText(500),
 });
@@ -887,7 +917,7 @@ export function createPosService(sql: Sql) {
           select i.id as invoice_id, i.full_number, i.issue_date::text, i.fiscal_record_at, i.fiscal_record_hash, i.total::text,
                  coalesce(i.issuer_snapshot, '{}'::jsonb) as issuer,
                  (o.fiscal_regime = 'verifactu' and i.fiscal_status <> 'not_applicable') as verifactu,
-                 (select method from invoice_payments p where p.invoice_id = i.id limit 1) as method,
+                 (select case m.kind when 'cash_to_card' then 'card' when 'card_to_cash' then 'cash' else p.method end from invoice_payments p left join cash_movements m on m.invoice_id = p.invoice_id where p.invoice_id = i.id limit 1) as method,
                  coalesce(pt.name, t.label) as table_name, coalesce(u.full_name, u.email) as waiter_name
           from invoices i
           join organizations o on o.id = i.organization_id
@@ -912,7 +942,10 @@ export function createPosService(sql: Sql) {
           from pos_tabs t
           join invoices i on i.id = t.invoice_id
           left join pos_tables pt on pt.id = t.table_id
-          left join lateral (select method from invoice_payments where invoice_id = i.id limit 1) p on true
+          left join lateral (
+            select case m.kind when 'cash_to_card' then 'card' when 'card_to_cash' then 'cash' else p.method end as method from invoice_payments p left join cash_movements m on m.invoice_id = p.invoice_id
+            where p.invoice_id = i.id limit 1
+          ) p on true
           where t.terminal_id = ${z.uuid().parse(terminalId)} and t.status = 'paid'
           order by t.closed_at desc limit 15`),
       );
@@ -958,8 +991,9 @@ export function createPosService(sql: Sql) {
     async cashMovements(ctx: TenantContext, sessionId: string): Promise<CashMovement[]> {
       return withTenant(sql, ctx, async (tx) =>
         asRows<CashMovement>(await tx`
-          select m.id, m.kind, m.amount::text, m.reason, coalesce(u.full_name, u.email) as created_by_name, m.created_at
+          select m.id, m.kind, m.amount::text, m.reason, i.full_number as ticket_number, coalesce(u.full_name, u.email) as created_by_name, m.created_at
           from cash_movements m join users u on u.id = m.created_by
+          left join invoices i on i.id = m.invoice_id
           where m.cash_session_id = ${z.uuid().parse(sessionId)} order by m.created_at`),
       );
     },
@@ -968,14 +1002,30 @@ export function createPosService(sql: Sql) {
       const input = CashMovementInput.parse(raw);
       const orgId = singleOrganization(ctx);
       await withTenant(sql, ctx, (tx) => tx`
-        insert into cash_movements (organization_id, cash_session_id, kind, amount, reason)
-        values (${orgId}, ${z.uuid().parse(sessionId)}, ${input.kind}, ${input.amount}, ${input.reason})`);
+        insert into cash_movements (organization_id, cash_session_id, kind, amount, reason, invoice_id)
+        values (${orgId}, ${z.uuid().parse(sessionId)}, ${input.kind}, ${input.amount}, ${input.reason}, ${input.invoiceId ?? null})`);
+    },
+
+    /** Tickets cobrados en la caja, con la forma de pago efectiva (tras corregir), para los traspasos. */
+    async cashTickets(ctx: TenantContext, sessionId: string): Promise<CashTicket[]> {
+      return withTenant(sql, ctx, async (tx) =>
+        asRows<CashTicket>(await tx`
+          select i.id as invoice_id, i.full_number, p.amount::text as total, case m.kind when 'cash_to_card' then 'card' when 'card_to_cash' then 'cash' else p.method end as method,
+                 (m.id is not null) as corrected, t.closed_at, coalesce(pt.name, t.label) as table_name
+          from invoice_payments p
+          join invoices i on i.id = p.invoice_id
+          left join cash_movements m on m.invoice_id = p.invoice_id
+          left join pos_tabs t on t.invoice_id = i.id
+          left join pos_tables pt on pt.id = t.table_id
+          where p.cash_session_id = ${z.uuid().parse(sessionId)}
+          order by i.fiscal_record_at desc, i.number desc`),
+      );
     },
 
     async closeCash(ctx: TenantContext, sessionId: string, raw: unknown): Promise<CashSession> {
       const input = CloseCashInput.parse(raw);
       return withTenant(sql, ctx, async (tx) => {
-        await tx`select id from app.close_cash_session(${z.uuid().parse(sessionId)}, ${input.counted}, ${tx.json(input.detail)}, ${input.notes ?? null})`;
+        await tx`select id from app.close_cash_session(${z.uuid().parse(sessionId)}, ${input.counted}, ${tx.json(input.detail)}, ${input.notes ?? null}, ${input.countedCard ?? null}::numeric)`;
         return loadSession(tx, sessionId);
       });
     },
@@ -1046,7 +1096,8 @@ async function loadSession(tx: Tx, id: string): Promise<CashSession> {
     select s.id, s.number::int, s.terminal_id, coalesce(t.name, 'este terminal') as terminal_name, s.status, s.opened_at,
            coalesce(uo.full_name, uo.email) as opened_by_name, s.opening_float::text,
            s.closed_at, coalesce(uc.full_name, uc.email) as closed_by_name,
-           s.counted_cash::text, s.count_detail, s.expected_cash::text, s.difference::text, s.notes, s.report,
+           s.counted_cash::text, s.count_detail, s.expected_cash::text, s.difference::text,
+           s.counted_card::text, s.expected_card::text, s.card_difference::text, s.notes, s.report,
            app.cash_session_summary(s.id) as live
     from cash_sessions s
     -- Left join: el camarero ve la caja pero no la tabla de terminales (pos.manage).
@@ -1067,6 +1118,12 @@ function normalizeSummary(raw: CashSummary): CashSummary {
     openingFloat: money(raw.openingFloat),
     cashSales: money(raw.cashSales),
     cardSales: money(raw.cardSales),
+    // Reportes Z anteriores a los traspasos no traen estos campos.
+    cashRecorded: money(raw.cashRecorded ?? raw.cashSales),
+    cardRecorded: money(raw.cardRecorded ?? raw.cardSales),
+    cashToCard: money(raw.cashToCard),
+    cardToCash: money(raw.cardToCash),
+    expectedCard: money(raw.expectedCard ?? raw.cardSales),
     totalSales: money(raw.totalSales),
     tickets: Number(raw.tickets ?? 0),
     deposits: money(raw.deposits),
