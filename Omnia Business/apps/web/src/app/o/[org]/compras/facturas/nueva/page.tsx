@@ -11,12 +11,16 @@ export const metadata = { title: 'Registrar factura recibida · Omnia' };
 export default async function NewReceivedInvoicePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
   const { ctx } = await requirePermission(org, 'invoicing.write');
-  const [suppliers, items] = await Promise.all([container().parties.list(ctx, { role: 'supplier' }), container().warehouse.items(ctx)]);
+  const [suppliers, items, warehouses] = await Promise.all([
+    container().parties.list(ctx, { role: 'supplier' }),
+    container().warehouse.items(ctx),
+    container().warehouse.warehouses(ctx),
+  ]);
   return (
     <>
       <PageHeader
         title="Registrar factura de proveedor"
-        description="Escríbela a mano, o haz una foto o sube el archivo (PDF) que te mandó el proveedor y se rellena sola."
+        description="Escríbela a mano, o haz una foto o sube el archivo (PDF) que te mandó el proveedor y se rellena sola. Al registrarla, los artículos de almacén entran en stock."
         back={{ href: `/o/${org}/compras/facturas`, label: 'Facturas recibidas' }}
       />
       <Cell>
@@ -26,7 +30,19 @@ export default async function NewReceivedInvoicePage({ params }: { params: Promi
           scanReady={scanConfigured()}
           accept={SCAN_ACCEPT}
           suppliers={suppliers.map((s) => ({ value: s.id, label: s.legalName }))}
-          items={items.filter((i) => i.isActive).map((i) => ({ id: i.id, sku: i.sku, name: i.name, unit: i.unitOfMeasure, suggested: Number(i.avgUnitCost) ? Number(i.avgUnitCost).toString() : '', taxRate: i.defaultTaxRate }))}
+          warehouses={warehouses.filter((w) => w.isActive).map((w) => ({ value: w.id, label: w.name }))}
+          items={items
+            .filter((i) => i.isActive)
+            .map((i) => ({
+              id: i.id,
+              sku: i.sku,
+              name: i.name,
+              unit: i.unitOfMeasure,
+              // Coste por unidad de stock; la línea lo pasa a precio por caja si va en cajas.
+              suggested: Number(i.avgUnitCost) ? Number(i.avgUnitCost).toString() : '',
+              taxRate: i.defaultTaxRate,
+              ...(i.itemType === 'stockable' && i.purchaseUnit ? { pack: { unit: i.purchaseUnit, size: i.purchasePackSize } } : {}),
+            }))}
         />
       </Cell>
     </>

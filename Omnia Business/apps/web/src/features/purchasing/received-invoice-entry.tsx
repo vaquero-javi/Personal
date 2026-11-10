@@ -26,6 +26,7 @@ export function ReceivedInvoiceEntry({
   scanReady,
   suppliers,
   items,
+  warehouses,
   accept,
 }: {
   action: FormAction;
@@ -34,6 +35,8 @@ export function ReceivedInvoiceEntry({
   scanReady: boolean;
   suppliers: { value: string; label: string }[];
   items: ItemOption[];
+  /** Almacenes donde puede entrar la mercancía de la factura. */
+  warehouses: { value: string; label: string }[];
   accept: string;
 }) {
   const [mode, setMode] = useState<Mode>('manual');
@@ -210,7 +213,7 @@ export function ReceivedInvoiceEntry({
                 </Button>
               </div>
             )}
-            <InvoiceForm key={scans} action={action} direction="received" parties={suppliers} items={items} {...(initial ? { initial } : {})} />
+            <InvoiceForm key={scans} action={action} direction="received" parties={suppliers} items={items} warehouses={warehouses} {...(initial ? { initial } : {})} />
           </div>
           {result && preview && (
             <figure className="hidden xl:block">

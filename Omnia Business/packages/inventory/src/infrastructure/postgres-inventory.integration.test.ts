@@ -85,7 +85,7 @@ describe('Entrada de mercancía sobre Postgres', () => {
     ],
   });
 
-  it('crea el borrador, contabiliza y actualiza el saldo con coste medio', async () => {
+  it('crea el borrador y lo confirma sin tocar el stock (entra con la factura)', async () => {
     const receipt = await service().create(acme, draft('ALB-1'));
     expect(receipt).toMatchObject({ status: 'draft', number: 1 });
 
@@ -94,11 +94,7 @@ describe('Entrada de mercancía sobre Postgres', () => {
     expect(result.receipt.status).toBe('posted');
 
     const m6 = result.levels.find((l) => l.itemId === itemIds[0]);
-    expect(Number(m6?.onHand)).toBe(15);
-
-    const [level] = await withTenant(sql, acme, (tx) =>
-      tx<{ avg_unit_cost: string }[]>`select avg_unit_cost from stock_levels where item_id = ${itemIds[0]}`);
-    expect(Number(level?.avg_unit_cost)).toBeCloseTo(0.12, 6); // (10·0.10 + 5·0.16) / 15
+    expect(Number(m6?.onHand ?? 0)).toBe(0);
   });
 
   it('es idempotente frente a reintentos concurrentes', async () => {
@@ -108,7 +104,7 @@ describe('Entrada de mercancía sobre Postgres', () => {
 
     const [{ n }] = (await withTenant(sql, acme, (tx) =>
       tx`select count(*)::int as n from stock_movements where source_id = ${receipt.id}`)) as unknown as [{ n: number }];
-    expect(n).toBe(3);
+    expect(n).toBe(0);
   });
 
   it('rechaza el mismo albarán de proveedor dos veces', async () => {

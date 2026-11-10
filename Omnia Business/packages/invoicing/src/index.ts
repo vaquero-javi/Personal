@@ -45,6 +45,8 @@ export interface InvoiceLine {
   taxRate: string;
   lineBase: string;
   lineTax: string;
+  /** Recibidas: unidades de stock por unidad de la línea (null si no es un artículo). */
+  packSize: string | null;
 }
 
 export interface PartySnapshot {
@@ -55,6 +57,8 @@ export interface PartySnapshot {
 
 export interface InvoiceDetail extends InvoiceSummary {
   partyId: string | null;
+  /** Recibidas: almacén donde entró la mercancía (null si no llevaba artículos de almacén o no se ve el almacén). */
+  warehouseName: string | null;
   partyTaxId: string | null;
   seriesCode: string | null;
   subtotal: string;
@@ -95,6 +99,8 @@ const LineInput = z.object({
   unitPrice: decimalString({ scale: 4 }),
   discountPct: z.preprocess((v) => (v === '' || v === undefined ? '0' : v), decimalString({ scale: 2, sign: 'non-negative' })),
   taxRate: decimalString({ scale: 2, sign: 'non-negative' }),
+  /** Facturas recibidas: unidades de stock por cada unidad de la línea (caja de 24 → 24; suelta → 1). */
+  packSize: z.preprocess((v) => (v === '' || v === null ? undefined : v), decimalString({ scale: 4, sign: 'positive' }).optional()),
 });
 
 export const InvoiceDraftInput = z
@@ -104,6 +110,8 @@ export const InvoiceDraftInput = z
     partyId: optionalUuid(),
     invoiceType: z.enum(['F1', 'F2', 'F3', 'R1', 'R2', 'R3', 'R4', 'R5']).default('F1'),
     supplierNumber: optionalText(60),
+    /** Facturas recibidas: almacén en el que entra la mercancía. */
+    warehouseId: optionalUuid(),
     issueDate: optionalIsoDate(),
     operationDate: optionalIsoDate(),
     dueDate: optionalIsoDate(),
@@ -184,16 +192,17 @@ export function createInvoicingService(sql: Sql) {
                  i.subtotal::text, i.tax_total::text, i.operation_date::text, i.rectifies_invoice_id, r.full_number as rectifies_number,
                  i.fiscal_record_hash, i.fiscal_previous_hash, i.fiscal_record_at, i.fiscal_response,
                  i.notes, i.payment_method, i.withholding_rate::text, i.withholding_total::text,
-                 i.issuer_snapshot, i.party_snapshot
+                 i.issuer_snapshot, i.party_snapshot, w.name as warehouse_name
           from invoices i
           left join parties p on p.id = i.party_id
+          left join warehouses w on w.id = i.warehouse_id
           left join invoice_series s on s.id = i.series_id
           left join invoices r on r.id = i.rectifies_invoice_id
           where i.id = ${invoiceId}`);
         if (!inv) throw new DomainError('NOT_FOUND', 'Factura no encontrada');
         inv.lines = asRows<InvoiceLine>(await tx`
           select id, line_no, item_id, description, quantity::text, unit_price::text, discount_pct::text, tax_rate::text,
-                 line_base::text, line_tax::text
+                 line_base::text, line_tax::text, trim_scale(pack_size)::text as pack_size
           from invoice_lines where invoice_id = ${invoiceId} order by line_no`);
         inv.payments = asRows(await tx`
           select id, amount::text, paid_at::text, method, reference from invoice_payments where invoice_id = ${invoiceId} order by paid_at`);
@@ -239,6 +248,7 @@ export function createInvoicingService(sql: Sql) {
           payment_method: input.paymentMethod ?? null,
           withholding_rate: withholding,
           notes: input.notes ?? null,
+          warehouse_id: input.direction === 'received' ? (input.warehouseId ?? null) : null,
         };
         let invoiceId: string;
         if (draftId) {
@@ -363,8 +373,9 @@ export async function insertLines(tx: Tx, orgId: string, invoiceId: string, line
         unit_price: l.unitPrice,
         discount_pct: l.discountPct,
         tax_rate: l.taxRate,
+        pack_size: l.packSize ?? null,
       })),
-      'organization_id', 'invoice_id', 'line_no', 'item_id', 'description', 'quantity', 'unit_price', 'discount_pct', 'tax_rate',
+      'organization_id', 'invoice_id', 'line_no', 'item_id', 'description', 'quantity', 'unit_price', 'discount_pct', 'tax_rate', 'pack_size',
     )}`;
 }
 

@@ -68,7 +68,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ org: s
               ['Almacén', receipt.warehouseName],
               ['Recibido', formatDateTime(receipt.receivedAt)],
               ['Pedido de compra', receipt.purchaseOrderNumber ? `Nº ${receipt.purchaseOrderNumber}` : null],
-              ['Contabilizado', receipt.postedAt ? `${formatDateTime(receipt.postedAt)} · ${receipt.postedByName}` : null],
+              ['Confirmado', receipt.postedAt ? `${formatDateTime(receipt.postedAt)} · ${receipt.postedByName}` : null],
               ['Notas', receipt.notes],
             ]}
           />
@@ -76,10 +76,10 @@ export default async function ReceiptPage({ params }: { params: Promise<{ org: s
             <div className="mt-5 border-t border-line pt-4">
               {can('inventory.post') ? (
                 <>
-                  <p className="mb-3 text-sm text-ink-2">Al contabilizar, la mercancía entra en stock y el albarán ya no se puede editar.</p>
+                  <p className="mb-3 text-sm text-ink-2">Al confirmarlo, el albarán queda cerrado como justificante de la entrega{receipt.purchaseOrderNumber ? ' y se marca lo recibido del pedido' : ''}. No suma stock: la mercancía entra en el almacén al registrar la factura del proveedor.</p>
                   <div className="flex flex-wrap items-start gap-2">
                     <ActionForm action={postReceipt.bind(null, org, receipt.id)}>
-                      <SubmitButton pendingLabel="Contabilizando…">Contabilizar entrada</SubmitButton>
+                      <SubmitButton pendingLabel="Confirmando…">Confirmar recepción</SubmitButton>
                     </ActionForm>
                     <ActionForm action={cancelReceipt.bind(null, org, receipt.id)}>
                       <SubmitButton variant="danger" pendingLabel="Anulando…">Anular</SubmitButton>
@@ -87,7 +87,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ org: s
                   </div>
                 </>
               ) : (
-                <Notice tone="warning">Pendiente de que alguien con permiso de almacén lo contabilice.</Notice>
+                <Notice tone="warning">Pendiente de que alguien con permiso de almacén lo confirme.</Notice>
               )}
             </div>
           )}

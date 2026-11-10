@@ -112,7 +112,7 @@ describe('Formato de compra', () => {
     expect(Number((await itemBySku('ACE-5L')).onHand)).toBe(Number(litres.onHand) - 1);
   });
 
-  it('un albarán en packs mete botellas en el stock', async () => {
+  it('el albarán ya no mueve stock; la factura recibida en packs mete las botellas', async () => {
     const warehouseId = await centralWarehouse();
     const water = await itemBySku('AGUA-50');
     const [supplier] = await sql`select id from parties where is_supplier limit 1`;
@@ -126,6 +126,19 @@ describe('Formato de compra', () => {
       ],
     });
     await services.receipts.post(lucia, receipt.id);
+    expect(Number((await itemBySku('AGUA-50')).onHand)).toBe(Number(water.onHand));
+
+    await services.invoicing.createDraft(lucia, {
+      direction: 'received',
+      partyId: supplier!.id,
+      supplierNumber: 'F-PACKS-24',
+      issueDate: '2026-11-10',
+      warehouseId,
+      lines: [
+        { itemId: water.id, description: 'Agua (pack 24)', quantity: '2', unitPrice: '4.80', taxRate: '10' }, // en packs
+        { itemId: water.id, description: 'Agua suelta', quantity: '5', unitPrice: '0.20', taxRate: '10', packSize: '1' },
+      ],
+    });
     expect(water.unitOfMeasure).toBe('ud');
     expect(Number((await itemBySku('AGUA-50')).onHand)).toBe(Number(water.onHand) + 48 + 5);
   });

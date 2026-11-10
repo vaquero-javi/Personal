@@ -12,7 +12,7 @@ export const metadata = { title: 'Entradas de mercancía · Omnia' };
 const FILTERS = [
   { value: undefined, label: 'Todos' },
   { value: 'draft', label: 'Borradores' },
-  { value: 'posted', label: 'Contabilizados' },
+  { value: 'posted', label: 'Confirmados' },
   { value: 'cancelled', label: 'Anulados' },
 ];
 
@@ -27,7 +27,7 @@ export default async function ReceiptsPage({ params, searchParams }: { params: P
     <>
       <PageHeader
         title="Entradas de mercancía"
-        description="Albaranes de proveedor. Al contabilizarlos, la mercancía entra en stock."
+        description="Albaranes de proveedor, como justificante de lo que llega. El stock entra al registrar la factura del proveedor (Compras › Facturas recibidas)."
         actions={can('inventory.write') && <LinkButton href={`${base}/nuevo`} variant="primary">Registrar albarán</LinkButton>}
       />
       <Cell>

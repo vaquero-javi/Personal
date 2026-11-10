@@ -67,22 +67,17 @@ function fakeUnitOfWork(initial: { status: GoodsReceipt['status']; lines: Receip
 const line = (lineId: string, itemId: string): ReceiptLineToPost => ({ lineId, itemId, quantity: '5', unitCost: '1.25' });
 
 describe('goodsReceiptService.post', () => {
-  it('registra un movimiento por línea, en orden de artículo, y cierra el albarán', async () => {
+  it('cierra el albarán como justificante sin mover stock (el stock entra con la factura)', async () => {
     const { uow, state } = fakeUnitOfWork({ status: 'draft', lines: [line('l1', ITEM_B), line('l2', ITEM_A)] });
     const result = await createGoodsReceiptService(uow).post(ctx, RECEIPT);
 
     expect(result.alreadyPosted).toBe(false);
     expect(result.receipt.status).toBe('posted');
-    expect(state.movements.map((m) => m.itemId)).toEqual([ITEM_A, ITEM_B]);
-    expect(state.movements[0]).toMatchObject({
-      movementType: 'receipt',
-      quantity: '5',
-      source: { type: 'goods_receipt', id: RECEIPT, lineId: 'l2' },
-    });
+    expect(state.movements).toHaveLength(0);
     expect(state.transactions).toBe(1);
   });
 
-  it('es idempotente: un reintento no vuelve a mover stock', async () => {
+  it('es idempotente: un reintento no hace nada', async () => {
     const { uow, state } = fakeUnitOfWork({ status: 'posted', lines: [line('l1', ITEM_A)] });
     const result = await createGoodsReceiptService(uow).post(ctx, RECEIPT);
 

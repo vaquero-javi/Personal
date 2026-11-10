@@ -75,7 +75,12 @@ export async function InvoiceView({ org, id, back }: { org: string; id: string; 
               {inv.lines.map((l) => (
                 <Tr key={l.id}>
                   <Td>{l.description}</Td>
-                  <Td align="right">{formatQty(l.quantity)}</Td>
+                  <Td align="right">
+                    {formatQty(l.quantity)}
+                    {!issued && l.packSize && Number(l.packSize) > 1 && (
+                      <span className="block text-xs text-ink-3">= {formatQty(Number(l.quantity) * Number(l.packSize))} ud en stock</span>
+                    )}
+                  </Td>
                   <Td align="right">{formatEuro(l.unitPrice)}</Td>
                   <Td align="right" className="text-ink-2">{Number(l.discountPct) ? `${Number(l.discountPct)} %` : '—'}</Td>
                   <Td align="right" className="text-ink-2">{Number(l.taxRate)} %</Td>
@@ -129,6 +134,7 @@ export async function InvoiceView({ org, id, back }: { org: string; id: string; 
               ...(inv.operationDate && inv.operationDate !== inv.issueDate ? [['Fecha de operación', formatDate(inv.operationDate)] as [string, string]] : []),
               ['Vencimiento', formatDate(inv.dueDate)],
               ['Forma de pago', inv.paymentMethod ? paymentMethod[inv.paymentMethod] : null],
+              ...(!issued && inv.warehouseName ? [['Entró en el almacén', inv.warehouseName] as [string, string]] : []),
               ['Serie', inv.seriesCode],
               ['Rectifica a', inv.rectifiesInvoiceId ? <Link className="underline-offset-2 hover:underline" href={`/o/${org}/facturacion/${inv.rectifiesInvoiceId}`}>{inv.rectifiesNumber}</Link> : null],
               [

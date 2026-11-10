@@ -18,7 +18,7 @@ export default async function NewReceiptPage({ params }: { params: Promise<{ org
   ]);
   return (
     <>
-      <PageHeader title="Registrar albarán de proveedor" description="Escríbelo a mano o haz una foto a la hoja y se rellena solo. Queda en borrador hasta que lo contabilices." back={{ href: `/o/${org}/almacen/albaranes`, label: 'Entradas' }} />
+      <PageHeader title="Registrar albarán de proveedor" description="Escríbelo a mano o haz una foto a la hoja y se rellena solo. Es el justificante de la entrega: el stock entra al registrar la factura del proveedor." back={{ href: `/o/${org}/almacen/albaranes`, label: 'Entradas' }} />
       <Cell>
         <ReceiptEntry
           action={createReceipt.bind(null, org)}

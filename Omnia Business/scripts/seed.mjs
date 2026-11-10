@@ -206,7 +206,16 @@ export async function seed(db) {
             [org, inv.id, n++, itemId, description, qty, price],
           );
         }
-        const registered = await one('select * from app.register_received_invoice($1)', [inv.id]);
+        // Facturas históricas: su mercancía ya entró en stock con los albaranes del
+        // ejemplo (anteriores a que el stock entrara con la factura). Se cierran
+        // con sus totales sin pasar por app.register_received_invoice, que la
+        // sumaría otra vez.
+        const registered = await one(
+          `update invoices i set status = 'issued', subtotal = t.base, tax_total = t.tax, total = t.base + t.tax, fiscal_status = 'not_applicable'
+           from (select coalesce(sum(line_base), 0) as base, coalesce(sum(line_tax), 0) as tax from invoice_lines where invoice_id = $1) t
+           where i.id = $1 returning i.*`,
+          [inv.id],
+        );
         if (paid) {
           await q(`insert into invoice_payments (organization_id, invoice_id, amount, paid_at, method) values ($1,$2,$3,$4,'transfer')`, [
             org, inv.id, registered.total, isoDay(-daysAgo + 5),

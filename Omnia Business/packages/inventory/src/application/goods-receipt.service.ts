@@ -3,7 +3,6 @@ import { DomainError, parseCustomFields, singleOrganization, type TenantContext 
 import {
   CreateGoodsReceiptInput,
   assertPostable,
-  inLockOrder,
   type GoodsReceipt,
   type PostGoodsReceiptResult,
   type ReceiptDocument,
@@ -36,15 +35,13 @@ export function createGoodsReceiptService(uow: InventoryUnitOfWork) {
     },
 
     /**
-     * Contabiliza el albarán: da entrada al stock y lo cierra, todo o nada.
+     * Confirma el albarán: lo cierra como justificante de la entrega y, si
+     * viene de un pedido, marca lo recibido (trigger de la base de datos).
+     * No mueve stock: la mercancía entra en el almacén al registrar la
+     * factura del proveedor (app.register_received_invoice).
      *
-     * Garantías:
-     *  - Atomicidad: movimientos + saldo + cambio de estado en una transacción.
-     *  - Concurrencia: la cabecera se bloquea (FOR UPDATE); el segundo
-     *    "contabilizar" espera y luego ve `posted`.
-     *  - Idempotencia: un reintento devuelve el resultado sin duplicar stock
-     *    (y el índice único por línea lo impediría de todos modos).
-     *  - Sin interbloqueos: los saldos se bloquean en orden de artículo.
+     * La cabecera se bloquea (FOR UPDATE): un segundo «confirmar» espera y
+     * luego ve `posted`, sin hacer nada más.
      */
     async post(ctx: TenantContext, receiptId: unknown): Promise<PostGoodsReceiptResult> {
       const id = ReceiptId.parse(receiptId);
@@ -62,19 +59,6 @@ export function createGoodsReceiptService(uow: InventoryUnitOfWork) {
           return { receipt, alreadyPosted: true, levels };
         }
         assertPostable(receipt, lines);
-
-        await stock.record(
-          inLockOrder(lines).map((line) => ({
-            organizationId: receipt.organizationId,
-            warehouseId: receipt.warehouseId,
-            itemId: line.itemId,
-            movementType: 'receipt',
-            quantity: line.quantity,
-            unitCost: line.unitCost,
-            source: { type: 'goods_receipt', id: receipt.id, lineId: line.lineId },
-            occurredAt: receipt.receivedAt,
-          })),
-        );
 
         const posted = await receipts.markPosted(id);
         const levels = await stock.levels(receipt.organizationId, receipt.warehouseId, itemIds);

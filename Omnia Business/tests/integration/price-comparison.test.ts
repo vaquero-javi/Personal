@@ -67,8 +67,10 @@ const line = (sku: string | null, description: string, quantity: string, unitPri
   taxRate: '10',
 });
 
-const register = (supplierNumber: string, issueDate: string, lines: ReturnType<typeof line>[]) =>
-  invoicing.createDraft(lucia, { direction: 'received', partyId: supplierId, supplierNumber, issueDate, lines });
+const register = async (supplierNumber: string, issueDate: string, lines: ReturnType<typeof line>[]) => {
+  const warehouseId = (await db.query<{ id: string }>(`select id from warehouses where organization_id = $1 order by name limit 1`, [lucia.organizationIds[0]])).rows[0]!.id;
+  return invoicing.createDraft(lucia, { direction: 'received', partyId: supplierId, supplierNumber, issueDate, warehouseId, lines });
+};
 
 describe('comparador de precios', () => {
   it('compara las dos últimas facturas de los datos de ejemplo', async () => {

@@ -80,7 +80,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
             )}
             {canReceive && (
               <ActionForm action={receivePurchaseOrder.bind(null, org, po.id)} className="flex flex-col gap-3">
-                <p className="text-sm text-ink-2">Llega la mercancía: se crea un albarán en borrador con lo pendiente, que podrás ajustar antes de contabilizar.</p>
+                <p className="text-sm text-ink-2">Llega la mercancía: se crea un albarán en borrador con lo pendiente, que podrás ajustar antes de confirmarlo. El stock entra al registrar la factura del proveedor.</p>
                 <TextField label="Nº de albarán del proveedor" name="supplierDeliveryNote" required />
                 <div>
                   <SubmitButton pendingLabel="Preparando…">Recibir mercancía</SubmitButton>

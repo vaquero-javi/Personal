@@ -82,7 +82,7 @@ await step('Nuevo artículo', async () => {
   await page.waitForFunction(() => /\/articulos\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
 });
 
-await step('Registrar y contabilizar albarán', async () => {
+await step('Registrar y confirmar albarán', async () => {
   await go(`${ORG}/almacen/albaranes/nuevo`);
   await selectByLabel('select[name=supplierId]', 'Cervezas del Norte');
   await type('input[name=supplierDeliveryNote]', `TN-E2E-${Date.now() % 100000}`);
@@ -91,8 +91,8 @@ await step('Registrar y contabilizar albarán', async () => {
   await type('input[aria-label="Coste unitario de la línea 1"]', '3,10');
   await clickButton('Guardar borrador');
   await page.waitForFunction(() => /\/albaranes\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
-  await clickButton('Contabilizar entrada');
-  await waitText('Albarán contabilizado');
+  await clickButton('Confirmar recepción');
+  await waitText('Albarán confirmado');
 });
 
 await step('Registrar albarán desde una foto', async () => {
@@ -188,8 +188,8 @@ await step('Recibir pedido de compra', async () => {
   await type('input[name=supplierDeliveryNote]', `AL-E2E-${Date.now() % 100000}`);
   await clickButton('Recibir mercancía');
   await page.waitForFunction(() => /\/albaranes\/[0-9a-f-]{36}$/.test(location.pathname), { timeout: 30000 });
-  await clickButton('Contabilizar entrada');
-  await waitText('Albarán contabilizado');
+  await clickButton('Confirmar recepción');
+  await waitText('Albarán confirmado');
 });
 
 await step('Servir y facturar pedido de venta', async () => {

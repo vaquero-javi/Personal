@@ -6,7 +6,7 @@ type StatusMap = Record<string, readonly [label: string, tone: Tone]>;
 
 export const receiptStatus: StatusMap = {
   draft: ['Borrador', 'neutral'],
-  posted: ['Contabilizado', 'ok'],
+  posted: ['Confirmado', 'ok'],
   cancelled: ['Anulado', 'muted'],
 };
 

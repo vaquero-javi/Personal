@@ -68,7 +68,7 @@ export function LineItems({
   name?: string;
   /** false cuando la pantalla pinta sus propios totales (p. ej. con retención). */
   showTotals?: boolean;
-  /** Albaranes: cada línea elige si va en formato de compra (cajas) o en unidades, y se convierte sola. */
+  /** Albaranes y facturas recibidas: cada línea elige si va en formato de compra (cajas) o en unidades, y se convierte sola. */
   packs?: boolean;
   /** Para vistas previas en vivo. */
   onChange?: (lines: LineDraft[]) => void;
@@ -120,6 +120,8 @@ export function LineItems({
             unitPrice: l.unit.replace(',', '.'),
             discountPct: l.discountPct.replace(',', '.') || '0',
             taxRate: l.taxRate.replace(',', '.'),
+            // Facturas recibidas: la línea va en cajas o en unidades (entra al stock convertida).
+            ...(packOf(l.itemId) ? { packSize: l.inPacks ? packOf(l.itemId)!.size : '1' } : {}),
           },
     );
 
@@ -137,7 +139,10 @@ export function LineItems({
   // sus campos etiquetados (una tabla de 720px no cabe en 390px).
   const cols =
     mode === 'price'
-      ? 'md:grid-cols-[minmax(0,1fr)_5rem_6rem_4rem_4rem_6rem_2.5rem]'
+      ? // Con cajas (facturas recibidas), la cantidad lleva debajo el selector «caja de 24»: necesita más ancho.
+        packs
+        ? 'md:grid-cols-[minmax(0,1fr)_7.5rem_6rem_4rem_4rem_6rem_2.5rem]'
+        : 'md:grid-cols-[minmax(0,1fr)_5rem_6rem_4rem_4rem_6rem_2.5rem]'
       : 'md:grid-cols-[minmax(0,1fr)_6rem_7rem_7rem_2.5rem]';
   const mobileLabel = 'text-xs font-semibold text-ink-3 md:sr-only';
   return (

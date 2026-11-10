@@ -7,6 +7,7 @@ import { LineItems, type ItemOption, type LineDraft } from '@/components/ui/line
 export interface InvoiceInitial {
   partyId?: string;
   supplierNumber?: string;
+  warehouseId?: string;
   issueDate?: string;
   lines?: LineDraft[];
 }
@@ -16,12 +17,15 @@ export function InvoiceForm({
   direction,
   parties,
   items,
+  warehouses = [],
   initial,
 }: {
   action: FormAction;
   direction: 'issued' | 'received';
   parties: { value: string; label: string }[];
   items: ItemOption[];
+  /** Recibidas: almacenes donde puede entrar la mercancía (el primero, por defecto). */
+  warehouses?: { value: string; label: string }[];
   /** Datos con que empieza el formulario (p. ej. leídos de una foto). */
   initial?: InvoiceInitial;
 }) {
@@ -38,8 +42,22 @@ export function InvoiceForm({
           <TextField label="Vencimiento" name="dueDate" type="date" hint="Vacío = según el plazo del cliente" />
         )}
       </div>
-      <LineItems items={items} mode="price" allowFreeText {...(initial?.lines ? { initial: initial.lines } : {})} />
-      {direction === 'received' && <TextField label="Vencimiento" name="dueDate" type="date" hint="Vacío = según el plazo del proveedor" className="max-w-56" />}
+      <LineItems items={items} mode="price" allowFreeText packs={direction === 'received'} {...(initial?.lines ? { initial: initial.lines } : {})} />
+      {direction === 'received' && (
+        <div className="grid gap-4 md:grid-cols-4">
+          {warehouses.length > 0 && (
+            <SelectField
+              label="Entra en el almacén"
+              name="warehouseId"
+              options={warehouses}
+              defaultValue={initial?.warehouseId ?? warehouses[0]!.value}
+              hint="Los artículos de almacén de la factura se suman a su stock al registrarla."
+              className="md:col-span-2"
+            />
+          )}
+          <TextField label="Vencimiento" name="dueDate" type="date" hint="Vacío = según el plazo del proveedor" />
+        </div>
+      )}
       <div>
         <SubmitButton pendingLabel="Guardando…">{direction === 'issued' ? 'Guardar borrador' : 'Registrar factura'}</SubmitButton>
       </div>

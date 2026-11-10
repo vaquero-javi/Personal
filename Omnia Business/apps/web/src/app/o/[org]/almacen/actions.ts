@@ -100,10 +100,7 @@ export async function postReceipt(org: string, id: string, _: ActionState, _form
     const { ctx } = await requirePermission(org, 'inventory.post');
     const result = await container().goodsReceipts.post(ctx, id);
     revalidatePath(`/o/${org}`, 'layout');
-    const below = result.levels.filter((l) => l.belowMinimum).length;
-    return result.alreadyPosted
-      ? 'Este albarán ya estaba contabilizado'
-      : `Albarán contabilizado: stock actualizado${below ? ` (${below} artículo${below === 1 ? '' : 's'} siguen bajo mínimos)` : ''}`;
+    return result.alreadyPosted ? 'Este albarán ya estaba confirmado' : 'Albarán confirmado. El stock entrará al registrar la factura del proveedor';
   });
 }
 

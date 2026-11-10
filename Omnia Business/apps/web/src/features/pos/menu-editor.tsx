@@ -78,7 +78,7 @@ export function MenuEditor({
         />
       </Cell>
       <Cell
-        title="Productos de la carta"
+        title="Productos y precios"
         actions={
           <select value={filter} onChange={(e) => setFilter(e.target.value)} className={`${narrow} w-auto`} aria-label="Filtrar por categoría">
             <option value="">Todas las categorías</option>
@@ -203,7 +203,7 @@ function NewProductForm({ categories, candidates, busy, onCreate, onPlace }: {
   const label = 'flex flex-col gap-1 text-[13px] font-medium text-ink-2';
 
   if (categories.length === 0) {
-    return <p className="text-sm text-ink-2">Crea antes una categoría de la carta en Ajustes › TPV.</p>;
+    return <p className="text-sm text-ink-2">Crea antes una categoría de la carta (arriba, en «Añadir categoría»).</p>;
   }
 
   return (
