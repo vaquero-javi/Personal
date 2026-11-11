@@ -7,8 +7,9 @@ import { CustomWork } from './custom';
 import { OneDay } from './day';
 import { Plans } from './plans';
 import { FloatingCta } from './float-cta';
+import { ContactChat } from './contact-chat';
 import { RevealRoot } from './reveal';
-import { BUY_HREF, CONTACT_HREF, ENTER_HREF, Logo, TRIAL_HREF } from './shared';
+import { BUY_HREF, ENTER_HREF, Logo, TRIAL_HREF } from './shared';
 import './landing.css';
 
 const serif = Bodoni_Moda({ subsets: ['latin'], variable: '--ln-serif', display: 'swap' });
@@ -116,21 +117,8 @@ export function Landing() {
                   ¿Tienes dudas? Hablemos.
                 </h2>
               </div>
-              <div>
-                <p data-reveal style={{ '--i': 2 } as React.CSSProperties} className="max-w-[44ch] text-[18px] leading-[1.55]">
-                  Agenda una reunión con nuestro equipo: resolvemos tus preguntas, vemos cómo trabaja tu empresa y te enseñamos Omnia con casos como el tuyo.
-                </p>
-                <ul data-reveal style={{ '--i': 3 } as React.CSSProperties} className="mt-6 flex flex-col gap-2 text-[16px]">
-                  {['Por videollamada, cuando te venga bien', 'Te ayudamos a elegir los módulos que necesitas', 'Sin compromiso'].map((t) => (
-                    <li key={t} className="flex items-center gap-3">
-                      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <Link data-reveal style={{ '--i': 4 } as React.CSSProperties} href={CONTACT_HREF} className="ln-pill ln-pill-dark mt-8">
-                  Agendar una reunión
-                </Link>
+              <div data-reveal style={{ '--i': 2 } as React.CSSProperties}>
+                <ContactChat />
               </div>
             </div>
           </section>

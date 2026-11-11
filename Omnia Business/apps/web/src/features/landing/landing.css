@@ -298,6 +298,85 @@
   background: #3a3a3c;
 }
 
+/* Simulación de chat */
+.ln-chat {
+  position: relative;
+  height: clamp(440px, 52vw, 520px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: #efeae2;
+  color: #111b21;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 16px 40px rgb(0 0 0 / 0.12);
+}
+.ln-chat-head {
+  background: #008069;
+  color: #fff;
+}
+.ln-chat-body {
+  background-image: radial-gradient(rgb(0 0 0 / 0.045) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+.ln-chat-foot {
+  background: #f0f2f5;
+}
+.ln-bubble {
+  position: relative;
+  max-width: 82%;
+  padding: 7px 10px 6px;
+  border-radius: 10px;
+  font-size: 15px;
+  line-height: 1.4;
+  box-shadow: 0 1px 0.5px rgb(11 20 26 / 0.13);
+}
+.ln-bubble-in {
+  align-self: flex-start;
+  background: #fff;
+  border-top-left-radius: 2px;
+}
+.ln-bubble-out {
+  align-self: flex-end;
+  background: #d9fdd3;
+  border-top-right-radius: 2px;
+}
+.ln-bubble-meta {
+  float: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 6px 0 -3px 10px;
+  font-size: 11px;
+  color: #667781;
+  font-variant-numeric: tabular-nums;
+}
+.ln-dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px 2px;
+}
+.ln-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #8696a0;
+  animation: ln-dot 1.2s infinite ease-in-out;
+}
+.ln-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.ln-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes ln-dot {
+  0%, 60%, 100% {
+    opacity: 0.4;
+    translate: 0 0;
+  }
+  30% {
+    opacity: 1;
+    translate: 0 -3px;
+  }
+}
+
 /* ------------------------------------------------ Botón flotante */
 
 .ln-float {
