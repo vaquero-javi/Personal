@@ -197,6 +197,18 @@ export async function checkoutSplit(input: {
   });
 }
 
+// ------------------------------------------------------------- devoluciones
+
+/** Devolver un ticket entero (solo encargados): rectificativa y dinero fuera de la caja abierta. */
+export async function refundTicket(input: { invoiceId: string; method: 'cash' | 'card'; reason?: string }): Promise<Result<{ invoiceId: string; fullNumber: string }>> {
+  return run(async () => {
+    const { ctx, terminal } = await shiftFor('pos.manage');
+    const refund = await container().pos.refundTicket(ctx, terminal, input);
+    refresh();
+    return { invoiceId: refund.invoiceId, fullNumber: refund.fullNumber };
+  });
+}
+
 // ------------------------------------------------------------- caja
 
 export async function openCash(openingFloat: string): Promise<Result> {
@@ -269,6 +281,16 @@ export async function recount(itemId: string, counted: string): Promise<Result<s
     const delta = await container().recipes.recount(ctx, { warehouseId: terminal.warehouseId, itemId, counted });
     refresh();
     return delta;
+  });
+}
+
+/** Sumar al stock lo que acaba de llegar (cajas o unidades), con coste opcional. */
+export async function addStock(itemId: string, quantity: string, unitCost?: string): Promise<Result<string>> {
+  return run(async () => {
+    const { ctx, terminal } = await shiftFor('pos.manage');
+    const onHand = await container().recipes.addStock(ctx, { warehouseId: terminal.warehouseId, itemId, quantity, ...(unitCost ? { unitCost } : {}) });
+    refresh();
+    return onHand;
   });
 }
 

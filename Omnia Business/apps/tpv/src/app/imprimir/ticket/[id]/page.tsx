@@ -21,8 +21,9 @@ export default async function TicketPrintPage({ params, searchParams }: { params
           <p>NIF {t.issuer.taxId}</p>
           {t.issuer.address?.line && <p>{t.issuer.address.line}</p>}
           {t.issuer.address?.city && <p>{[t.issuer.address.postalCode, t.issuer.address.city].filter(Boolean).join(' ')}</p>}
-          <p className="mt-2 font-bold">FACTURA SIMPLIFICADA</p>
+          <p className="mt-2 font-bold">{t.refundOf ? 'DEVOLUCIÓN · FACTURA RECTIFICATIVA' : 'FACTURA SIMPLIFICADA'}</p>
           <p>{t.fullNumber}</p>
+          {t.refundOf && <p>Rectifica el ticket {t.refundOf}</p>}
           <p>{formatDateTime(t.fiscalRecordAt)}</p>
           {(t.tableName || t.waiterName) && <p>{[t.tableName && `Mesa ${t.tableName}`, t.waiterName && `Le atendió ${t.waiterName}`].filter(Boolean).join(' · ')}</p>}
         </header>
@@ -61,7 +62,11 @@ export default async function TicketPrintPage({ params, searchParams }: { params
             ))}
           </tbody>
         </table>
-        {t.method && <p className="mt-2">Pago: {t.method === 'card' ? 'tarjeta' : t.method === 'cash' ? 'efectivo' : t.method}</p>}
+        {t.method && (
+          <p className="mt-2">
+            {t.refundOf ? 'Devuelto en' : 'Pago:'} {t.method === 'card' ? 'tarjeta' : t.method === 'cash' ? 'efectivo' : t.method}
+          </p>
+        )}
         {qr && (
           <div className="mt-4 flex flex-col items-center gap-1 text-center">
             <p className="font-bold">QR tributario</p>
@@ -69,7 +74,7 @@ export default async function TicketPrintPage({ params, searchParams }: { params
             <p className="text-[10px]">VERI*FACTU</p>
           </div>
         )}
-        <p className="mt-4 text-center">¡Gracias por su visita!</p>
+        {!t.refundOf && <p className="mt-4 text-center">¡Gracias por su visita!</p>}
       </article>
     </div>
   );

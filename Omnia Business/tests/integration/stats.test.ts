@@ -88,6 +88,45 @@ describe('Comparación de días', () => {
     expect((await stats.day(lucia, '2001-01-01')).untilTotal).toBeNull();
   });
 
+  it('un tramo de 00:00 a 00:00 es el día entero con hora', async () => {
+    const today = madridToday();
+    const [day, all] = await Promise.all([stats.day(lucia, today), stats.window(lucia, today, '00:00', '00:00')]);
+    expect(all.hourly).toHaveLength(24);
+    expect(all.total).toBeCloseTo(day.total - day.untimedTotal, 2);
+    expect(all.hourly.reduce((t, h) => t + h.total, 0)).toBeCloseTo(all.total, 2);
+  });
+
+  it('un tramo partido por la mitad suma lo mismo que el entero', async () => {
+    const today = madridToday();
+    const [all, morning, afternoon] = await Promise.all([
+      stats.window(lucia, today, '00:00', '00:00'),
+      stats.window(lucia, today, '00:00', '12:00'),
+      stats.window(lucia, today, '12:00', '00:00'),
+    ]);
+    expect(morning.hourly).toHaveLength(12);
+    expect(afternoon.hourly.map((h) => h.hour)).toEqual(Array.from({ length: 12 }, (_, i) => 12 + i));
+    expect(morning.total + afternoon.total).toBeCloseTo(all.total, 2);
+  });
+
+  it('si el fin es anterior al inicio, el tramo sigue en la madrugada siguiente', async () => {
+    const night = await stats.window(lucia, '2001-01-01', '20:00', '03:00');
+    expect(night).toMatchObject({ from: '20:00', to: '03:00', overnight: true, isToday: false, elapsedMinutes: null, total: 0, untilTotal: null });
+    expect(night.hourly.map((h) => h.hour)).toEqual([20, 21, 22, 23, 0, 1, 2]);
+    expect((await stats.window(lucia, '2001-01-01', '20:00', '03:00', 60)).untilTotal).toBe(0);
+  });
+
+  it('un tramo de hoy en curso dice cuántos minutos lleva', async () => {
+    const w = await stats.window(lucia, madridToday(), '00:00', '00:00');
+    expect(w.isToday).toBe(true);
+    expect(w.elapsedMinutes).toBeGreaterThanOrEqual(0);
+    expect(w.elapsedMinutes).toBeLessThan(24 * 60 + 60);
+  });
+
+  it('el tramo también exige permiso de estadísticas, y horas válidas', async () => {
+    await expect(stats.window(marta, madridToday(), '10:00', '14:00')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(stats.window(lucia, madridToday(), '25:00', '14:00')).rejects.toThrow();
+  });
+
   it('una empleada sin permiso de estadísticas no ve el día', async () => {
     await expect(stats.day(marta, madridToday())).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });

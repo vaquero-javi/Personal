@@ -11,6 +11,7 @@ import type { ItemOption } from '@/components/ui/line-items';
 import { formatDate } from '@/lib/format';
 import { shrink } from '@/lib/shrink-image';
 import { ReceiptForm, type ReceiptInitial } from './receipt-form';
+import { createItemFor, missingSupplier, type CreateItem, type CreateSupplier } from '@/features/purchasing/create-from-scan';
 
 type Scan = (formData: FormData) => Promise<{ ok: true; scan: DeliveryNoteScan } | { ok: false; error: string }>;
 type Mode = 'manual' | 'scan';
@@ -29,6 +30,8 @@ export function ReceiptEntry({
   items,
   customFields,
   accept,
+  createSupplier,
+  createItem,
 }: {
   action: FormAction;
   scan: Scan;
@@ -39,6 +42,9 @@ export function ReceiptEntry({
   items: ItemOption[];
   customFields: CustomFieldDef[];
   accept: string;
+  /** Dar de alta lo que el albarán trae y no existe (null si el rol no puede). */
+  createSupplier: CreateSupplier | null;
+  createItem: CreateItem | null;
 }) {
   const [mode, setMode] = useState<Mode>('manual');
   const [file, setFile] = useState<File | null>(null);
@@ -87,13 +93,15 @@ export function ReceiptEntry({
         ...(result.date ? { notes: `Albarán del ${formatDate(result.date)} (leído de una foto).` } : {}),
         lines: result.lines.map((l) => ({
           itemId: l.itemId ?? '',
-          description: '',
+          description: l.description,
           quantity: l.quantity,
           unit: l.unitCost,
           discountPct: '0',
           taxRate: '21',
           read: l.read,
           match: l.match,
+          ...(l.reference ? { reference: l.reference } : {}),
+          ...(l.barcode ? { barcode: l.barcode } : {}),
         })),
       }
     : undefined;
@@ -197,6 +205,8 @@ export function ReceiptEntry({
               accept={accept}
               photo={result ? scanned : null}
               {...(initial ? { initial } : {})}
+              renderPartyMissing={missingSupplier(result, createSupplier)}
+              renderCreateItem={createItemFor(result !== null, createItem)}
             />
           </div>
           {result && preview && (

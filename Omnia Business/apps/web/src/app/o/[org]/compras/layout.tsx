@@ -20,7 +20,7 @@ export default async function PurchasingLayout({ children, params }: { children:
               { href: '', label: 'Pedidos a proveedor' },
               { href: 'facturas', label: 'Facturas recibidas', feature: FEATURES.receivedInvoices },
               { href: 'comparador', label: 'Comparador de precios', feature: FEATURES.priceComparison },
-              { href: 'proveedores', label: 'Proveedores' },
+              { href: 'proveedores', label: 'Proveedores', feature: FEATURES.parties },
             ]}
           />
           {children}

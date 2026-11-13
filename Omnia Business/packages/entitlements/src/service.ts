@@ -8,6 +8,7 @@ import {
   FeatureDefinition,
   RequestFeatureInput,
   SetFeatureInput,
+  SetFeatureVisibilityInput,
   hasFeature,
   type AdminOrganizationFeatures,
 } from './domain';
@@ -52,11 +53,27 @@ export function createEntitlementsService(sql: Sql) {
     catalog,
     resolve,
 
+    /** Módulos ocultos de todas mis sociedades (sin sociedad activa): sociedad → códigos. */
+    async myHidden(userId: string): Promise<Map<string, string[]>> {
+      const rows = await withUser(sql, userId, (tx) =>
+        tx<{ organization_id: string; feature_code: string }[]>`select organization_id, feature_code from app.my_hidden_features()`,
+      );
+      const byOrg = new Map<string, string[]>();
+      for (const row of rows) byOrg.set(row.organization_id, [...(byOrg.get(row.organization_id) ?? []), row.feature_code]);
+      return byOrg;
+    },
+
     /** Lista efectiva de la única sociedad activa (GET /api/v1/entitlements). */
-    async forOrganization(ctx: TenantContext): Promise<{ organizationId: string; features: string[] }> {
+    async forOrganization(ctx: TenantContext): Promise<{ organizationId: string; features: string[]; hidden: string[] }> {
       const organizationId = singleOrganization(ctx);
-      const features = [...((await resolve(ctx)).get(organizationId) ?? [])].sort();
-      return { organizationId, features };
+      const [byOrg, hiddenRows] = await Promise.all([
+        resolve(ctx),
+        withTenant(sql, ctx, (tx) =>
+          tx<{ feature_code: string }[]>`select feature_code from app.my_hidden_features() where organization_id = ${organizationId} order by feature_code`,
+        ),
+      ]);
+      const features = [...(byOrg.get(organizationId) ?? [])].sort();
+      return { organizationId, features, hidden: hiddenRows.map((r) => r.feature_code) };
     },
 
     /**
@@ -69,6 +86,13 @@ export function createEntitlementsService(sql: Sql) {
       if ([...byOrg.values()].every((features) => hasFeature(features, code))) return;
       const name = (await catalog()).find((f) => f.code === code)?.name;
       throw featureDisabled(code, name);
+    },
+
+    /** Store: quien gestiona la sociedad compra (instala) o desinstala un módulo Pro. */
+    async storeSet(ctx: TenantContext, rawCode: unknown, install: boolean): Promise<void> {
+      const code = FeatureCode.parse(rawCode);
+      singleOrganization(ctx);
+      await withTenant(sql, ctx, (tx) => tx`select app.store_set_feature(${code}, ${install})`);
     },
 
     /** La sociedad pide a Omnia que le active un módulo (exige org.manage). */
@@ -111,6 +135,17 @@ export function createEntitlementsService(sql: Sql) {
       const input = SetFeatureInput.parse(raw);
       return withUser(sql, userId, async (tx) => {
         await tx`select app.admin_set_feature(${orgId}, ${code}, ${input.isActive}, ${input.expiresAt ?? null}::text::timestamptz)`;
+        return z.array(AdminOrganizationFeature).parse(asRows(await tx`select * from app.admin_organization_features(${orgId})`));
+      });
+    },
+
+    /** Ocultar o volver a mostrar un módulo a una sociedad (cuando no lo tiene). */
+    async adminSetFeatureHidden(userId: string, rawOrgId: unknown, rawCode: unknown, raw: unknown): Promise<AdminOrganizationFeatures['features']> {
+      const orgId = OrganizationId.parse(rawOrgId);
+      const code = FeatureCode.parse(rawCode);
+      const input = SetFeatureVisibilityInput.parse(raw);
+      return withUser(sql, userId, async (tx) => {
+        await tx`select app.admin_set_feature_hidden(${orgId}, ${code}, ${input.hidden})`;
         return z.array(AdminOrganizationFeature).parse(asRows(await tx`select * from app.admin_organization_features(${orgId})`));
       });
     },

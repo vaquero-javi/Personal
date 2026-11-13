@@ -157,5 +157,21 @@ await as(MATE, [S1]);
 ok('sin el módulo, las conversaciones no se ven', (await q('select 1 from message_threads')).length === 0);
 await expectError('ni se escribe', `select app.message_send('X', 'Y', $1::uuid[])`, [[EMP]], /no está disponible/);
 
+console.log('\nTareas pendientes (0038)');
+await db.exec('reset role');
+// Tareas es Pro (0040): no viene en el alta, se activa para la prueba.
+await q(`insert into organization_features (organization_id, feature_code, is_active, activated_at) values ($1,'tasks',true,now()) on conflict (organization_id, feature_code) do update set is_active = true`, [S1]);
+await as(OWNER, [S1]);
+await q(`insert into tasks (organization_id, title, assignee_user_id) values ($1,'Limpiar cámara',$2), ($1,'Pedir hielo',$2), ($1,'Revisar caja',$2), ($1,'Mía propia',$3)`, [S1, EMP, OWNER]);
+await q(`update tasks set status='done' where title='Revisar caja'`);
+await as(EMP, []);
+ok('cuenta las que te mandan y no has hecho', (await q(`select pending from app.my_pending_tasks() where organization_id=$1`, [S1]))[0]?.pending === 2);
+await as(EMP, [S1]);
+await q(`update tasks set status='in_progress' where title='Pedir hielo'`);
+await as(EMP, []);
+ok('empezada sigue contando', (await q(`select pending from app.my_pending_tasks() where organization_id=$1`, [S1]))[0]?.pending === 2);
+await as(OWNER, []);
+ok('las que te mandas a ti no cuentan', (await q(`select 1 from app.my_pending_tasks() where organization_id=$1`, [S1])).length === 0);
+
 console.log(`\n${pass} correctas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

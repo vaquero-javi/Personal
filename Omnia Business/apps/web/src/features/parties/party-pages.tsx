@@ -6,9 +6,10 @@ import { invoiceStatus, receivedInvoiceStatus } from '@/lib/labels';
 import { container } from '@/server/container';
 import { saveParty } from '@/server/party-actions';
 import { requireOrg, requirePermission } from '@/server/session';
+import { FEATURES } from '@/server/features';
 
 export async function NewPartyPage({ org, role, base }: { org: string; role: 'customer' | 'supplier'; base: string }) {
-  const { ctx } = await requirePermission(org, 'parties.write');
+  const { ctx } = await requirePermission(org, 'parties.write', FEATURES.parties);
   const priceLists = await container().parties.priceLists(ctx);
   return (
     <>

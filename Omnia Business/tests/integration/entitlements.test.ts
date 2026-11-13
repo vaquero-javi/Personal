@@ -136,8 +136,13 @@ describe('Panel de plataforma', () => {
     expect(cards.isEffective).toBe(false);
   });
 
-  it('los módulos base no se desactivan', async () => {
-    await expect(entitlements.adminSetFeature(omnia, logistica, 'invoicing', { isActive: false })).rejects.toMatchObject({ code: 'INVALID_STATE' });
+  it('también se quitan los módulos que antes eran base, y sus submódulos con ellos', async () => {
+    const off = await entitlements.adminSetFeature(omnia, logistica, 'invoicing', { isActive: false });
+    expect(off.find((f) => f.code === 'invoicing')!.isEffective).toBe(false);
+    expect(off.find((f) => f.code === 'invoicing.series')!.isEffective).toBe(false);
+    expect((await entitlements.forOrganization(luciaLogi)).features).not.toContain('invoicing');
+    const on = await entitlements.adminSetFeature(omnia, logistica, 'invoicing', { isActive: true });
+    expect(on.find((f) => f.code === 'invoicing.series')!.isEffective).toBe(true);
   });
 
   it('sociedad inexistente → NOT_FOUND', async () => {

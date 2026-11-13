@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import type { ItemOption } from '@/components/ui/line-items';
 import { InvoiceForm, type InvoiceInitial } from '@/features/invoicing/invoice-form';
 import { shrink } from '@/lib/shrink-image';
+import { createItemFor, missingSupplier, type CreateItem, type CreateSupplier } from './create-from-scan';
 
 type Scan = (formData: FormData) => Promise<{ ok: true; scan: SupplierInvoiceScan } | { ok: false; error: string }>;
 type Mode = 'manual' | 'scan';
@@ -28,6 +29,8 @@ export function ReceivedInvoiceEntry({
   items,
   warehouses,
   accept,
+  createSupplier,
+  createItem,
 }: {
   action: FormAction;
   scan: Scan;
@@ -38,6 +41,9 @@ export function ReceivedInvoiceEntry({
   /** Almacenes donde puede entrar la mercancía de la factura. */
   warehouses: { value: string; label: string }[];
   accept: string;
+  /** Dar de alta lo que la factura trae y no existe (null si el rol no puede). */
+  createSupplier: CreateSupplier | null;
+  createItem: CreateItem | null;
 }) {
   const [mode, setMode] = useState<Mode>('manual');
   const [file, setFile] = useState<File | null>(null);
@@ -90,6 +96,8 @@ export function ReceivedInvoiceEntry({
           taxRate: comma(l.taxRate),
           read: l.read,
           match: l.match,
+          ...(l.reference ? { reference: l.reference } : {}),
+          ...(l.barcode ? { barcode: l.barcode } : {}),
         })),
       }
     : undefined;
@@ -213,7 +221,17 @@ export function ReceivedInvoiceEntry({
                 </Button>
               </div>
             )}
-            <InvoiceForm key={scans} action={action} direction="received" parties={suppliers} items={items} warehouses={warehouses} {...(initial ? { initial } : {})} />
+            <InvoiceForm
+              key={scans}
+              action={action}
+              direction="received"
+              parties={suppliers}
+              items={items}
+              warehouses={warehouses}
+              {...(initial ? { initial } : {})}
+              renderPartyMissing={missingSupplier(result, createSupplier)}
+              renderCreateItem={createItemFor(result !== null, createItem)}
+            />
           </div>
           {result && preview && (
             <figure className="hidden xl:block">

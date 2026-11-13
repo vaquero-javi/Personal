@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { container } from '@/server/container';
+import { FEATURES } from '@/server/features';
 import { formObject, runAction, type ActionState } from '@/server/actions';
 import { requirePermission } from '@/server/session';
 
@@ -11,7 +12,7 @@ const revalidate = (org: string) => revalidatePath(`/o/${org}`, 'layout');
 export async function createInvoice(org: string, direction: 'issued' | 'received', _: ActionState, formData: FormData): Promise<ActionState> {
   let id = '';
   const result = await runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.write');
+    const { ctx } = await requirePermission(org, 'invoicing.write', FEATURES.invoicing);
     id = await container().invoicing.createDraft(ctx, { ...formObject(formData), direction });
     revalidate(org);
   });
@@ -27,8 +28,8 @@ export async function saveInvoice(org: string, draftId: string | null, _: Action
   let id = '';
   const issue = formData.get('intent') === 'issue';
   const result = await runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.write');
-    if (issue) await requirePermission(org, 'invoicing.issue');
+    const { ctx } = await requirePermission(org, 'invoicing.write', FEATURES.invoicing);
+    if (issue) await requirePermission(org, 'invoicing.issue', FEATURES.invoicing);
     const data = formObject(formData);
     id = await container().invoicing.saveDraft(
       ctx,
@@ -43,7 +44,7 @@ export async function saveInvoice(org: string, draftId: string | null, _: Action
 
 export async function issueInvoice(org: string, id: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.issue');
+    const { ctx } = await requirePermission(org, 'invoicing.issue', FEATURES.invoicing);
     await container().invoicing.issue(ctx, id, String(formData.get('seriesId') ?? ''), String(formData.get('issueDate') ?? ''));
     revalidate(org);
     return 'Factura emitida: numerada y con su huella VeriFactu encadenada';
@@ -52,7 +53,7 @@ export async function issueInvoice(org: string, id: string, _: ActionState, form
 
 export async function deleteInvoiceDraft(org: string, id: string, _: ActionState, _formData: FormData): Promise<ActionState> {
   const result = await runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.write');
+    const { ctx } = await requirePermission(org, 'invoicing.write', FEATURES.invoicing);
     await container().invoicing.deleteDraft(ctx, id);
     revalidate(org);
   });
@@ -62,7 +63,7 @@ export async function deleteInvoiceDraft(org: string, id: string, _: ActionState
 
 export async function registerPayment(org: string, id: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.write');
+    const { ctx } = await requirePermission(org, 'invoicing.write', FEATURES.invoicing);
     await container().invoicing.registerPayment(ctx, { ...formObject(formData), invoiceId: id });
     revalidate(org);
     return 'Pago registrado';
@@ -72,7 +73,7 @@ export async function registerPayment(org: string, id: string, _: ActionState, f
 export async function createRectifying(org: string, id: string, _: ActionState, _formData: FormData): Promise<ActionState> {
   let newId = '';
   const result = await runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.write');
+    const { ctx } = await requirePermission(org, 'invoicing.write', FEATURES.invoicing);
     newId = await container().invoicing.createRectifying(ctx, id);
     revalidate(org);
   });
@@ -82,7 +83,7 @@ export async function createRectifying(org: string, id: string, _: ActionState, 
 
 export async function requeueFiscal(org: string, id: string, _: ActionState, _formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.issue');
+    const { ctx } = await requirePermission(org, 'invoicing.issue', FEATURES.verifactu);
     await container().invoicing.requeueFiscal(ctx, id);
     revalidate(org);
     return 'Registro devuelto a la cola de envío a la AEAT';
@@ -91,7 +92,7 @@ export async function requeueFiscal(org: string, id: string, _: ActionState, _fo
 
 export async function createSeries(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.issue');
+    const { ctx } = await requirePermission(org, 'invoicing.issue', FEATURES.invoiceSeries);
     await container().invoicing.createSeries(ctx, formObject(formData));
     revalidate(org);
     return 'Serie creada';

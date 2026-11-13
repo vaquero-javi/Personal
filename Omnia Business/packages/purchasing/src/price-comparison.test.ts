@@ -70,4 +70,10 @@ describe('matchSupplierInvoice', () => {
     expect(scan.lines).toEqual([expect.objectContaining({ itemId: 'i1', match: 'exact', unitPrice: '0.62', quantity: '2', taxRate: '10' })]);
     expect(scan.warnings).toHaveLength(1);
   });
+
+  it('sin proveedor ni artículo, deja lo leído para darlos de alta', () => {
+    const scan = matchSupplierInvoice(read, { suppliers: [], items: [] });
+    expect(scan).toMatchObject({ supplierId: null, supplierName: 'Distribuciones Bebidas del Sur SL', supplierTaxId: 'B12345678' });
+    expect(scan.lines[0]).toMatchObject({ itemId: null, match: 'none', reference: 'CC33', barcode: null, description: 'COCA COLA LATA 33CL', taxRate: '10' });
+  });
 });

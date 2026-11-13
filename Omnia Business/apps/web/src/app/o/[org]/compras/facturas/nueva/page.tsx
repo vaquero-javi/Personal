@@ -4,13 +4,14 @@ import { SCAN_ACCEPT, scanConfigured } from '@/server/delivery-note-reader';
 import { container } from '@/server/container';
 import { requirePermission } from '@/server/session';
 import { createInvoice } from '../../../facturacion/actions';
-import { scanReceivedInvoice } from '../../actions';
+import { createItemFromScan, createSupplierFromScan, scanReceivedInvoice } from '../../actions';
+import { FEATURES } from '@/server/features';
 
 export const metadata = { title: 'Registrar factura recibida · Omnia' };
 
 export default async function NewReceivedInvoicePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
-  const { ctx } = await requirePermission(org, 'invoicing.write');
+  const { ctx, can, has } = await requirePermission(org, 'invoicing.write');
   const [suppliers, items, warehouses] = await Promise.all([
     container().parties.list(ctx, { role: 'supplier' }),
     container().warehouse.items(ctx),
@@ -29,6 +30,8 @@ export default async function NewReceivedInvoicePage({ params }: { params: Promi
           scan={scanReceivedInvoice.bind(null, org)}
           scanReady={scanConfigured()}
           accept={SCAN_ACCEPT}
+          createSupplier={can('parties.write') && has(FEATURES.parties) ? createSupplierFromScan.bind(null, org) : null}
+          createItem={can('inventory.write') && has(FEATURES.inventory) ? createItemFromScan.bind(null, org) : null}
           suppliers={suppliers.map((s) => ({ value: s.id, label: s.legalName }))}
           warehouses={warehouses.filter((w) => w.isActive).map((w) => ({ value: w.id, label: w.name }))}
           items={items

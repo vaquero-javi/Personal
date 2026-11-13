@@ -32,6 +32,10 @@ export interface ScannedLine {
   match: MatchQuality;
   /** Lo que pone el papel, para que quien revisa compare. */
   read: string;
+  /** Descripción, referencia y EAN leídos (para dar de alta el artículo si no existe). */
+  description: string;
+  reference: string | null;
+  barcode: string | null;
   quantity: string;
   unitCost: string;
 }
@@ -40,6 +44,9 @@ export interface DeliveryNoteScan {
   supplierId: string | null;
   supplierMatch: MatchQuality;
   supplierRead: string | null;
+  /** Razón social y CIF leídos por separado (para dar de alta el proveedor si no existe). */
+  supplierName: string | null;
+  supplierTaxId: string | null;
   deliveryNoteNumber: string | null;
   date: string | null;
   lines: ScannedLine[];
@@ -112,6 +119,9 @@ export function matchDeliveryNote(read: DeliveryNoteExtraction, catalog: ScanCat
         itemId: item?.id ?? null,
         match,
         read: [l.reference, l.description].filter(Boolean).join(' · '),
+        description: l.description,
+        reference: l.reference ?? null,
+        barcode: l.barcode ?? null,
         quantity: decimal(l.quantity, 4),
         unitCost: l.unitPrice === null ? '' : decimal(cost, 4),
       };
@@ -121,5 +131,15 @@ export function matchDeliveryNote(read: DeliveryNoteExtraction, catalog: ScanCat
   if (unmatched) warnings.push(`${unmatched === 1 ? 'Una línea no corresponde' : `${unmatched} líneas no corresponden`} a ningún artículo: elígelo a mano o dalo de alta.`);
   if (read.lines.some((l) => l.unitPrice === null)) warnings.push('El albarán no trae precios en algunas líneas: indica el coste.');
 
-  return { supplierId, supplierMatch, supplierRead, deliveryNoteNumber: read.deliveryNoteNumber, date: read.date, lines, warnings };
+  return {
+    supplierId,
+    supplierMatch,
+    supplierRead,
+    supplierName: read.supplierName ?? null,
+    supplierTaxId: read.supplierTaxId ? normalizeTaxId(read.supplierTaxId) : null,
+    deliveryNoteNumber: read.deliveryNoteNumber,
+    date: read.date,
+    lines,
+    warnings,
+  };
 }

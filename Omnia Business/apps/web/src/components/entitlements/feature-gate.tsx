@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from 'react';
 import { Lock } from 'lucide-react';
-import { useEntitlements, useFeature, useMissingFeature } from '@/lib/entitlements';
+import { useEntitlements, useFeature, useHiddenFeature, useMissingFeature } from '@/lib/entitlements';
 import { ModuleLocked } from './module-locked';
 
 export type FeatureGateMode = 'hide' | 'upsell';
@@ -44,13 +44,15 @@ export function FeatureGate({
   children: ReactNode;
 }) {
   const { hasAccess, isLoading } = useFeature(feature);
+  const hidden = useHiddenFeature(feature);
   // Mientras se resuelve no se enseña ni el elemento ni el candado: nada de parpadeos.
   if (isLoading) return mode === 'hide' ? fallback : null;
   if (hasAccess) {
     const Wrapper = as;
     return Wrapper ? <Wrapper>{children}</Wrapper> : children;
   }
-  if (mode === 'hide') return fallback;
+  // Oculto por Omnia: como si no existiera, también para quien gestiona la sociedad.
+  if (mode === 'hide' || hidden) return fallback;
   return (
     <Upsell feature={feature} badge={badge} as={as ?? 'div'} compact={compact}>
       {children}

@@ -5,8 +5,9 @@ import { MODULES } from '@/components/shell/modules';
 import { Sidebar } from '@/components/shell/sidebar';
 import { EntitlementsProvider } from '@/lib/entitlements';
 import { unreadByOrganization } from '@omnia/messages';
+import { pendingByOrganization } from '@omnia/tasks';
 import { container } from '@/server/container';
-import { establishmentCookie, featureCatalog, me, myEstablishments, myMemberships, requireUserId } from '@/server/session';
+import { establishmentCookie, featureCatalog, me, myEstablishments, myHiddenFeatures, myMemberships, requireUserId } from '@/server/session';
 import { signOut } from '@/server/session-actions';
 
 /**
@@ -15,13 +16,15 @@ import { signOut } from '@/server/session-actions';
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const userId = await requireUserId();
-  const [memberships, user, catalog, establishments, store, unread] = await Promise.all([
+  const [memberships, user, catalog, establishments, store, unread, pendingTasks, hidden] = await Promise.all([
     myMemberships(),
     me(),
     featureCatalog(),
     myEstablishments(),
     cookies(),
     unreadByOrganization(container().sql, userId),
+    pendingByOrganization(container().sql, userId),
+    myHiddenFeatures(),
   ]);
   const establishmentsOf = (orgId: string) => establishments.filter((e) => e.organizationId === orgId).map(({ id, name }) => ({ id, name }));
   // Empresa elegida en cada sociedad (cookie), solo si sigue siendo una empresa activa suya.
@@ -36,6 +39,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         slug: m.slug,
         features: m.features,
         canRequest: hasPermission(m.permissions, 'org.manage'),
+        hidden: hidden.get(m.organizationId) ?? [],
       }))}
       catalog={catalog.map(({ code, parentCode, name, description, isCore }) => ({ code, parentCode, name, description, isCore }))}
     >
@@ -51,11 +55,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           // Por rol; lo contratado lo decide <FeatureGate> en la barra (con candado si puede pedirlo).
           modules: MODULES.filter((mod) => !mod.permission || hasPermission(m.permissions, mod.permission)).map((mod) => mod.slug),
           canManage: hasPermission(m.permissions, 'org.manage'),
+          isOwner: m.roleKey === 'owner',
           kind: m.kind,
           parentId: m.parentId,
           establishments: establishmentsOf(m.organizationId),
           activeEstablishmentId: activeEstablishmentOf(m.organizationId),
           unreadMessages: unread.get(m.organizationId) ?? 0,
+          pendingTasks: pendingTasks.get(m.organizationId) ?? 0,
         }))}
         user={{ name: user.fullName ?? user.email }}
         devMode={process.env.AUTH_MODE === 'dev'}

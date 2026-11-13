@@ -155,6 +155,9 @@ export interface ScannedInvoiceLine {
   match: MatchQuality;
   /** Lo que pone el papel, para que quien revisa compare. */
   read: string;
+  /** Referencia y EAN leídos (para dar de alta el artículo si no existe). */
+  reference: string | null;
+  barcode: string | null;
   description: string;
   quantity: string;
   unitPrice: string;
@@ -166,6 +169,9 @@ export interface SupplierInvoiceScan {
   supplierId: string | null;
   supplierMatch: MatchQuality;
   supplierRead: string | null;
+  /** Razón social y CIF leídos por separado (para dar de alta el proveedor si no existe). */
+  supplierName: string | null;
+  supplierTaxId: string | null;
   invoiceNumber: string | null;
   date: string | null;
   lines: ScannedInvoiceLine[];
@@ -219,6 +225,8 @@ export function matchSupplierInvoice(read: SupplierInvoiceExtraction, catalog: I
         itemId: item?.id ?? null,
         match,
         read: [l.reference, l.description].filter(Boolean).join(' · '),
+        reference: l.reference ?? null,
+        barcode: l.barcode ?? null,
         description: l.description,
         quantity: decimal(l.quantity, 4),
         unitPrice: decimal(l.unitPrice!, 4),
@@ -232,5 +240,15 @@ export function matchSupplierInvoice(read: SupplierInvoiceExtraction, catalog: I
   if (!read.invoiceNumber) warnings.push('No se ha leído el número de factura.');
   if (!read.date) warnings.push('No se ha leído la fecha de la factura.');
 
-  return { supplierId, supplierMatch, supplierRead, invoiceNumber: read.invoiceNumber, date: read.date, lines, warnings };
+  return {
+    supplierId,
+    supplierMatch,
+    supplierRead,
+    supplierName: read.supplierName ?? null,
+    supplierTaxId: read.supplierTaxId ? normalizeTaxId(read.supplierTaxId) : null,
+    invoiceNumber: read.invoiceNumber,
+    date: read.date,
+    lines,
+    warnings,
+  };
 }

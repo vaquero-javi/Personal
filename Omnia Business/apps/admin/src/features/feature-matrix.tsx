@@ -29,17 +29,22 @@ export function FeatureMatrix({ organizationId, initial }: { organizationId: str
 
   const byCode = new Map(rows.map((r) => [r.code, r]));
 
-  async function save(code: string, isActive: boolean, expiresAt: string | null) {
+  const save = (code: string, isActive: boolean, expiresAt: string | null) =>
+    put(code, '', { isActive, expiresAt }, (r) => ({ ...r, isActive, expiresAt: expiresAt ? new Date(expiresAt) : null }));
+
+  const setHidden = (code: string, hidden: boolean) => put(code, '/visibility', { hidden }, (r) => ({ ...r, isHidden: hidden }));
+
+  async function put(code: string, path: string, payload: object, optimistic: (row: Row) => Row) {
     const previous = rows;
     setError(null);
     setSaving((s) => new Set(s).add(code));
     // Optimista: el interruptor responde ya; si el servidor dice que no, se deshace.
-    setRows((rs) => rs.map((r) => (r.code === code ? { ...r, isActive, expiresAt: expiresAt ? new Date(expiresAt) : null } : r)));
+    setRows((rs) => rs.map((r) => (r.code === code ? optimistic(r) : r)));
     try {
-      const response = await fetch(`/api/organizations/${organizationId}/features/${encodeURIComponent(code)}`, {
+      const response = await fetch(`/api/organizations/${organizationId}/features/${encodeURIComponent(code)}${path}`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ isActive, expiresAt }),
+        body: JSON.stringify(payload),
       });
       const body: unknown = await response.json().catch(() => null);
       if (!response.ok) {
@@ -71,7 +76,7 @@ export function FeatureMatrix({ organizationId, initial }: { organizationId: str
         {paid.map((root) => (
           <section key={root.feature.code} className="min-w-0 rounded-[var(--radius-card)] bg-sheet shadow-[var(--shadow-card)]">
             <ul className="divide-y divide-line-soft">
-              <FeatureRows node={root} depth={0} byCode={byCode} saving={saving} onSave={save} />
+              <FeatureRows node={root} depth={0} byCode={byCode} saving={saving} onSave={save} onHide={setHidden} />
             </ul>
           </section>
         ))}
@@ -99,18 +104,20 @@ function FeatureRows({
   byCode,
   saving,
   onSave,
+  onHide,
 }: {
   node: FeatureNode<Row>;
   depth: number;
   byCode: ReadonlyMap<string, Row>;
   saving: ReadonlySet<string>;
   onSave: (code: string, isActive: boolean, expiresAt: string | null) => void;
+  onHide: (code: string, hidden: boolean) => void;
 }) {
   return (
     <>
-      <FeatureRow row={node.feature} depth={depth} parent={node.feature.parentCode ? byCode.get(node.feature.parentCode) : undefined} busy={saving.has(node.feature.code)} onSave={onSave} />
+      <FeatureRow row={node.feature} depth={depth} byCode={byCode} parent={node.feature.parentCode ? byCode.get(node.feature.parentCode) : undefined} busy={saving.has(node.feature.code)} onSave={onSave} onHide={onHide} />
       {node.children.map((child) => (
-        <FeatureRows key={child.feature.code} node={child} depth={depth + 1} byCode={byCode} saving={saving} onSave={onSave} />
+        <FeatureRows key={child.feature.code} node={child} depth={depth + 1} byCode={byCode} saving={saving} onSave={onSave} onHide={onHide} />
       ))}
     </>
   );
@@ -119,18 +126,32 @@ function FeatureRows({
 function FeatureRow({
   row,
   depth,
+  byCode,
   parent,
   busy,
   onSave,
+  onHide,
 }: {
   row: Row;
   depth: number;
+  byCode: ReadonlyMap<string, Row>;
   parent: Row | undefined;
   busy: boolean;
   onSave: (code: string, isActive: boolean, expiresAt: string | null) => void;
+  onHide: (code: string, hidden: boolean) => void;
 }) {
   const switchId = useId();
   const dateId = useId();
+  const visibleId = useId();
+  const hintId = useId();
+  // El módulo oculto más cercano hacia arriba (si lo oculta un padre).
+  const hiddenAncestor = row.hiddenByParent
+    ? (() => {
+        for (let code = row.parentCode; code; code = byCode.get(code)?.parentCode ?? null) if (byCode.get(code)?.isHidden) return byCode.get(code);
+        return undefined;
+      })()
+    : undefined;
+  const hidden = row.isHidden || row.hiddenByParent;
   const expired = row.isActive && row.expiresAt !== null && row.expiresAt.getTime() <= Date.now();
   const blockedByParent = row.isActive && !expired && parent !== undefined && !parent.isEffective;
 
@@ -153,6 +174,7 @@ function FeatureRow({
             ) : blockedByParent ? (
               <Badge tone="warning">Sin efecto: «{parent.name}» no está activo</Badge>
             ) : null}
+            {!row.isEffective && (hidden ? <Badge tone="neutral">No lo ve</Badge> : <Badge tone="warning">Lo ve bloqueado</Badge>)}
             {row.pendingRequestAt && (
               <Badge tone="info">Solicitado {formatDateTime(row.pendingRequestAt)}</Badge>
             )}
@@ -160,19 +182,54 @@ function FeatureRow({
           {row.pendingRequestMessage && <p className="mt-1.5 rounded-[10px] bg-fill px-3 py-2 text-[13px] text-ink-2">«{row.pendingRequestMessage}»</p>}
         </div>
         {!row.isCore && (
-          <input
-            id={switchId}
-            type="checkbox"
-            role="switch"
-            className="switch mt-0.5"
-            checked={row.isActive}
-            disabled={busy}
-            aria-busy={busy}
-            aria-describedby={row.isActive ? dateId : undefined}
-            onChange={(e) => onSave(row.code, e.target.checked, null)}
-          />
+          // Dos interruptores: si lo tiene (Acceso) y, si no lo tiene, si lo ve bloqueado o no lo ve (Visible).
+          <div className="flex shrink-0 gap-3">
+            <div className="flex flex-col items-center gap-1">
+              <span aria-hidden className="text-[11px] font-semibold text-ink-3 uppercase">Acceso</span>
+              <input
+                id={switchId}
+                type="checkbox"
+                role="switch"
+                className="switch"
+                aria-label={`Acceso a ${row.name}`}
+                checked={row.isActive}
+                disabled={busy}
+                aria-busy={busy}
+                aria-describedby={row.isActive ? dateId : undefined}
+                onChange={(e) => onSave(row.code, e.target.checked, null)}
+              />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span aria-hidden className="text-[11px] font-semibold text-ink-3 uppercase">Visible</span>
+              <input
+                id={visibleId}
+                type="checkbox"
+                role="switch"
+                className="switch"
+                aria-label={`${row.name} visible para la sociedad`}
+                aria-describedby={hintId}
+                checked={!hidden}
+                disabled={busy || row.hiddenByParent}
+                aria-busy={busy}
+                onChange={(e) => onHide(row.code, !e.target.checked)}
+              />
+            </div>
+          </div>
         )}
       </div>
+      {!row.isCore && (
+        <p id={hintId} className="text-[13px] text-ink-3">
+          {row.hiddenByParent
+            ? `No lo ve porque «${hiddenAncestor?.name ?? 'su módulo'}» está oculto.`
+            : row.isEffective
+              ? hidden
+                ? 'Lo tiene y lo ve. Si le quitas el acceso, desaparecerá.'
+                : 'Lo tiene y lo ve. Si le quitas el acceso, lo verá bloqueado.'
+              : hidden
+                ? 'No lo tiene y no lo ve: ni en el menú ni en las pestañas, y no lo puede pedir.'
+                : 'No lo tiene: lo ve bloqueado con candado «Pro» y lo puede pedir.'}
+        </p>
+      )}
       {!row.isCore && row.isActive && (
         <div className="flex items-center gap-2 text-[13px] text-ink-2">
           <label htmlFor={dateId} className="shrink-0">

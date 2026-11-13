@@ -86,6 +86,11 @@ export function createPartiesService(sql: Sql) {
       );
     },
 
+    /** Marca como proveedor a un tercero que ya existía (p. ej. solo como cliente). */
+    async markSupplier(ctx: TenantContext, id: string): Promise<void> {
+      await withTenant(sql, ctx, (tx) => tx`update parties set is_supplier = true where id = ${z.uuid().parse(id)}`);
+    },
+
     async get(ctx: TenantContext, id: string): Promise<Party> {
       return withTenant(sql, ctx, async (tx) => {
         const party = asRow<Party>(await tx`

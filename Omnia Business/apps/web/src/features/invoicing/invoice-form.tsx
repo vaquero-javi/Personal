@@ -1,6 +1,8 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { ActionForm, SelectField, TextField, type FormAction } from '@/components/ui/form';
+import { PartySelect } from '@/components/ui/party-select';
 import { SubmitButton } from '@/components/ui/button';
 import { LineItems, type ItemOption, type LineDraft } from '@/components/ui/line-items';
 
@@ -19,6 +21,8 @@ export function InvoiceForm({
   items,
   warehouses = [],
   initial,
+  renderPartyMissing,
+  renderCreateItem,
 }: {
   action: FormAction;
   direction: 'issued' | 'received';
@@ -28,11 +32,25 @@ export function InvoiceForm({
   warehouses?: { value: string; label: string }[];
   /** Datos con que empieza el formulario (p. ej. leídos de una foto). */
   initial?: InvoiceInitial;
+  /**
+   * El documento traía un tercero que no está dado de alta: qué ofrecer debajo
+   * del selector (p. ej. «Crear proveedor»). `select` lo añade y lo deja elegido.
+   */
+  renderPartyMissing?: (select: (option: { value: string; label: string }) => void) => ReactNode;
+  /** Ver LineItems: dar de alta en el almacén un artículo leído que no existe. */
+  renderCreateItem?: Parameters<typeof LineItems>[0]['renderCreateItem'];
 }) {
   return (
     <ActionForm action={action} className="flex flex-col gap-5">
       <div className="grid gap-4 md:grid-cols-4">
-        <SelectField label={direction === 'issued' ? 'Cliente' : 'Proveedor'} name="partyId" options={parties} placeholder="Elige…" required className="md:col-span-2" defaultValue={initial?.partyId ?? ''} />
+        <PartySelect
+          label={direction === 'issued' ? 'Cliente' : 'Proveedor'}
+          name="partyId"
+          options={parties}
+          defaultValue={initial?.partyId ?? ''}
+          className="md:col-span-2"
+          renderMissing={renderPartyMissing}
+        />
         {direction === 'received' ? (
           <>
             <TextField label="Nº de factura del proveedor" name="supplierNumber" required defaultValue={initial?.supplierNumber ?? ''} />
@@ -42,7 +60,14 @@ export function InvoiceForm({
           <TextField label="Vencimiento" name="dueDate" type="date" hint="Vacío = según el plazo del cliente" />
         )}
       </div>
-      <LineItems items={items} mode="price" allowFreeText packs={direction === 'received'} {...(initial?.lines ? { initial: initial.lines } : {})} />
+      <LineItems
+        items={items}
+        mode="price"
+        allowFreeText
+        packs={direction === 'received'}
+        {...(initial?.lines ? { initial: initial.lines } : {})}
+        {...(renderCreateItem ? { renderCreateItem } : {})}
+      />
       {direction === 'received' && (
         <div className="grid gap-4 md:grid-cols-4">
           {warehouses.length > 0 && (

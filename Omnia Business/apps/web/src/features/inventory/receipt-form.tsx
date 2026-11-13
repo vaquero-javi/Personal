@@ -1,10 +1,12 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Paperclip } from 'lucide-react';
 import { ActionForm, SelectField, TextAreaField, TextField, type FormAction } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import { CustomFieldInputs, type CustomFieldDef } from '@/components/ui/custom-fields';
 import { LineErrors, LineItems, type ItemOption, type LineDraft } from '@/components/ui/line-items';
+import { PartySelect } from '@/components/ui/party-select';
 
 export interface ReceiptInitial {
   supplierId?: string;
@@ -22,6 +24,8 @@ export function ReceiptForm({
   initial = {},
   photo,
   accept,
+  renderPartyMissing,
+  renderCreateItem,
 }: {
   action: FormAction;
   suppliers: { value: string; label: string }[];
@@ -34,6 +38,10 @@ export function ReceiptForm({
   photo?: File | null;
   /** Tipos admitidos para adjuntar la foto a mano. */
   accept: string;
+  /** El albarán traía un proveedor que no está dado de alta (ver PartySelect). */
+  renderPartyMissing?: (select: (option: { value: string; label: string }) => void) => ReactNode;
+  /** Ver LineItems: dar de alta en el almacén un artículo leído que no existe. */
+  renderCreateItem?: Parameters<typeof LineItems>[0]['renderCreateItem'];
 }) {
   const submit: FormAction = photo
     ? (state, formData) => {
@@ -44,12 +52,19 @@ export function ReceiptForm({
   return (
     <ActionForm action={submit} className="flex flex-col gap-5">
       <div className="grid gap-4 md:grid-cols-4">
-        <SelectField label="Proveedor" name="supplierId" options={suppliers} placeholder="Elige…" required defaultValue={initial.supplierId ?? ''} className="md:col-span-2" />
+        <PartySelect
+          label="Proveedor"
+          name="supplierId"
+          options={suppliers}
+          defaultValue={initial.supplierId ?? ''}
+          className="md:col-span-2"
+          renderMissing={renderPartyMissing}
+        />
         <SelectField label="Almacén" name="warehouseId" options={warehouses} defaultValue={warehouses[0]?.value} />
         <TextField label="Nº de albarán del proveedor" name="supplierDeliveryNote" required defaultValue={initial.supplierDeliveryNote ?? ''} />
       </div>
       <div>
-        <LineItems items={items} mode="cost" initial={initial.lines ?? []} packs />
+        <LineItems items={items} mode="cost" initial={initial.lines ?? []} packs {...(renderCreateItem ? { renderCreateItem } : {})} />
         <LineErrors />
       </div>
       <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">

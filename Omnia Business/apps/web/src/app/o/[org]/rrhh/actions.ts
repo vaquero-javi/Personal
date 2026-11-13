@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { container } from '@/server/container';
+import { FEATURES } from '@/server/features';
 import { flag, formObject, runAction, type ActionState } from '@/server/actions';
-import { requireOrg, requirePermission } from '@/server/session';
+import { requireOrg, requirePermission, requireFeature } from '@/server/session';
 import { entryType } from '@/lib/labels';
 import { DomainError } from '@omnia/core';
 import { toPayslipFile } from '@omnia/hr';
@@ -15,7 +16,7 @@ export async function clock(
   payload: { entryType: 'clock_in' | 'clock_out' | 'break_start' | 'break_end'; latitude?: number; longitude?: number; accuracy?: number; geoConsent: boolean; establishmentId?: string },
 ): Promise<ActionState> {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.time.self');
+    const { ctx } = await requirePermission(org, 'hr.time.self', FEATURES.hr);
     await container().hr.clock(ctx, { ...payload, source: 'web' });
     revalidate(org);
     return `${entryType[payload.entryType]} registrada`;
@@ -24,7 +25,7 @@ export async function clock(
 
 export async function manualEntry(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.time.manage');
+    const { ctx } = await requirePermission(org, 'hr.time.manage', FEATURES.hrTimeLog);
     await container().hr.manualEntry(ctx, formObject(formData));
     revalidate(org);
     return 'Fichaje manual registrado con su motivo';
@@ -33,7 +34,7 @@ export async function manualEntry(org: string, _: ActionState, formData: FormDat
 
 export async function createShift(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.shifts.manage');
+    const { ctx } = await requirePermission(org, 'hr.shifts.manage', FEATURES.hrShifts);
     await container().hr.createShift(ctx, formObject(formData));
     revalidate(org);
     return 'Turno creado';
@@ -42,7 +43,7 @@ export async function createShift(org: string, _: ActionState, formData: FormDat
 
 export async function deleteShift(org: string, id: string, _: ActionState, _fd: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.shifts.manage');
+    const { ctx } = await requirePermission(org, 'hr.shifts.manage', FEATURES.hrShifts);
     await container().hr.deleteShift(ctx, id);
     revalidate(org);
   });
@@ -50,7 +51,7 @@ export async function deleteShift(org: string, id: string, _: ActionState, _fd: 
 
 export async function requestLeave(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.leave.request');
+    const { ctx } = await requirePermission(org, 'hr.leave.request', FEATURES.hrLeave);
     await container().hr.requestLeave(ctx, { ...formObject(formData), halfDay: flag(formData, 'halfDay') });
     revalidate(org);
     return 'Solicitud enviada';
@@ -59,7 +60,7 @@ export async function requestLeave(org: string, _: ActionState, formData: FormDa
 
 export async function reviewLeave(org: string, id: string, decision: 'approved' | 'rejected' | 'cancelled', _: ActionState, _fd: FormData) {
   return runAction(async () => {
-    const { ctx } = decision === 'cancelled' ? await requireOrg(org) : await requirePermission(org, 'hr.leave.approve');
+    const { ctx } = decision === 'cancelled' ? await requireFeature(org, FEATURES.hrLeave) : await requirePermission(org, 'hr.leave.approve', FEATURES.hrLeave);
     await container().hr.reviewLeave(ctx, id, decision);
     revalidate(org);
     return { approved: 'Solicitud aprobada', rejected: 'Solicitud rechazada', cancelled: 'Solicitud cancelada' }[decision];
@@ -68,7 +69,7 @@ export async function reviewLeave(org: string, id: string, decision: 'approved' 
 
 export async function uploadPayslip(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.payroll.manage');
+    const { ctx } = await requirePermission(org, 'hr.payroll.manage', FEATURES.hrPayroll);
     const file = formData.get('file');
     if (!(file instanceof File) || file.size === 0) throw new DomainError('VALIDATION', 'Adjunta el PDF de la nómina');
     await container().payroll.upload(ctx, formObject(formData), toPayslipFile(file.name, new Uint8Array(await file.arrayBuffer())));
@@ -79,7 +80,7 @@ export async function uploadPayslip(org: string, _: ActionState, formData: FormD
 
 export async function deletePayslip(org: string, id: string, _: ActionState, _fd: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'hr.payroll.manage');
+    const { ctx } = await requirePermission(org, 'hr.payroll.manage', FEATURES.hrPayroll);
     await container().payroll.remove(ctx, id);
     revalidatePath(`/o/${org}/rrhh/nominas`, 'layout');
     return 'Nómina borrada';

@@ -4,6 +4,8 @@ import { LinkButton } from '@/components/ui/button';
 import { EmptyNote, Gauge, LimitBar, Panel } from '@/features/home/panels';
 import { formatDate, formatEuro, formatLongDate, formatQty, formatShortDate, formatTime, percent } from '@/lib/format';
 import { homeSummary } from '@/server/queries/home';
+import { RequireFeature } from '@/components/entitlements/require-feature';
+import { FEATURES } from '@/server/features';
 import { requireOrg } from '@/server/session';
 
 const priorityDot = { urgent: 'bg-danger', high: 'bg-warning-line', normal: 'bg-shelf-edge', low: 'bg-line' } as const;
@@ -12,19 +14,34 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export default async function InicioPage({ params }: { params: Promise<{ org: string }> }) {
   const { org: slug } = await params;
-  const { ctx, can } = await requireOrg(slug);
+  const { ctx, can: roleAndPlanCan, has } = await requireOrg(slug);
+  if (!has(FEATURES.base)) return <RequireFeature org={slug} feature={FEATURES.base}>{null}</RequireFeature>;
   const home = await homeSummary(ctx);
   const base = `/o/${slug}`;
 
+  // Cada panel sale solo si la sociedad tiene su módulo (los da o quita el equipo de Omnia).
+  const MODULE_OF: [string, string][] = [
+    ['hr.time.read', FEATURES.hrTimeLog],
+    ['hr.leave', FEATURES.hrLeave],
+    ['inventory.post', FEATURES.goodsReceipts],
+    ['inventory', FEATURES.inventory],
+    ['invoicing', FEATURES.invoicing],
+  ];
+  const can = (permission: string) => {
+    const gate = MODULE_OF.find(([prefix]) => permission === prefix || permission.startsWith(`${prefix}.`))?.[1];
+    return roleAndPlanCan(permission) && (!gate || has(gate));
+  };
   const canInvoicing = can('invoicing.read');
   const canInventory = can('inventory.read');
   const canHrAll = can('hr.time.read');
+  const hasHr = has(FEATURES.hr);
+  const hasIncidents = has(FEATURES.incidents);
 
   const selfMissing = home.missing.find((m) => m.userId === ctx.userId);
 
   // La siguiente acción: lo más urgente que ESTE rol puede resolver.
   const next =
-    selfMissing
+    hasHr && selfMissing
       ? {
           text: `Tu turno empezó a las ${formatTime(selfMissing.startsAt)} y aún no has fichado la entrada`,
           primary: { label: 'Fichar ahora', href: `${base}/rrhh` },
@@ -125,7 +142,7 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
           </Gauge>
         </>
       )}
-      <Gauge
+      {hasHr && <Gauge
         label={canHrAll ? 'Fichajes de hoy' : 'Tu fichaje de hoy'}
         value={canHrAll ? `${home.staff.present} / ${home.staff.staff}` : home.staff.present ? 'Fichado' : selfMissing ? 'Sin fichar' : 'Aún no'}
         detail={
@@ -146,25 +163,25 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
         }
       >
         {canHrAll && <LimitBar value={attendancePct} tone="neutral" label="Presentes sobre plantilla disponible" />}
-      </Gauge>
-      {!canInvoicing && (
+      </Gauge>}
+      {!canInvoicing && (hasHr || hasIncidents) && (
         <Panel title="Accesos" className="xl:col-span-3">
           <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-            <li>
+            {hasHr && <li>
               <Link className="underline-offset-2 hover:underline" href={`${base}/rrhh`}>
                 Fichar y ver mis turnos
               </Link>
-            </li>
-            <li>
+            </li>}
+            {has(FEATURES.hrLeave) && <li>
               <Link className="underline-offset-2 hover:underline" href={`${base}/rrhh/ausencias`}>
                 Solicitar vacaciones
               </Link>
-            </li>
-            <li>
+            </li>}
+            {hasIncidents && <li>
               <Link className="underline-offset-2 hover:underline" href={`${base}/incidencias/nueva`}>
                 Abrir una incidencia
               </Link>
-            </li>
+            </li>}
           </ul>
         </Panel>
       )}
@@ -244,7 +261,7 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
         </Panel>
       )}
 
-      <Panel title="Incidencias abiertas" action={{ label: home.openIncidents > 0 ? `Ver ${home.openIncidents}` : 'Ver', href: `${base}/incidencias` }}>
+      {hasIncidents && <Panel title="Incidencias abiertas" action={{ label: home.openIncidents > 0 ? `Ver ${home.openIncidents}` : 'Ver', href: `${base}/incidencias` }}>
         {home.incidents.length === 0 ? (
           <EmptyNote>Sin incidencias abiertas. Clientes, proveedores y empleados pueden abrirlas desde Incidencias.</EmptyNote>
         ) : (
@@ -261,7 +278,7 @@ export default async function InicioPage({ params }: { params: Promise<{ org: st
             {home.openIncidents > home.incidents.length && <li className="py-2 text-ink-3">+{home.openIncidents - home.incidents.length} más</li>}
           </ul>
         )}
-      </Panel>
+      </Panel>}
 
       {canInvoicing && (
         <Panel title="Próximos 14 días" action={{ label: 'Pendientes', href: `${base}/facturacion?estado=unpaid` }} className="md:col-span-2">

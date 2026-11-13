@@ -4,12 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { container } from '@/server/container';
 import { flag, formObject, runAction, type ActionState } from '@/server/actions';
 import { requireOrg, requirePermission } from '@/server/session';
+import { FEATURES } from '@/server/features';
 
 const revalidate = (org: string) => revalidatePath('/', 'layout');
 
 export async function updateOrganization(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.base);
     await container().organizations.update(ctx, formObject(formData));
     revalidate(org);
     return 'Datos de la sociedad guardados';
@@ -18,7 +19,7 @@ export async function updateOrganization(org: string, _: ActionState, formData: 
 
 export async function addMember(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'members.manage');
+    const { ctx } = await requirePermission(org, 'members.manage', FEATURES.members);
     await container().organizations.addMember(ctx, formObject(formData));
     revalidate(org);
     return 'Miembro añadido';
@@ -27,7 +28,7 @@ export async function addMember(org: string, _: ActionState, formData: FormData)
 
 export async function updateMember(org: string, userId: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'members.manage');
+    const { ctx } = await requirePermission(org, 'members.manage', FEATURES.members);
     await container().organizations.updateMember(ctx, { ...formObject(formData), userId });
     revalidate(org);
     return 'Cambios guardados';
@@ -36,7 +37,7 @@ export async function updateMember(org: string, userId: string, _: ActionState, 
 
 export async function saveRole(org: string, id: string | null, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'roles.manage');
+    const { ctx } = await requirePermission(org, 'roles.manage', FEATURES.roles);
     const permissions = formData.getAll('permissions').map(String);
     await container().organizations.saveRole(ctx, { id: id ?? '', name: formData.get('name'), permissions });
     revalidate(org);
@@ -46,7 +47,7 @@ export async function saveRole(org: string, id: string | null, _: ActionState, f
 
 export async function deleteRole(org: string, id: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'roles.delete');
+    const { ctx } = await requirePermission(org, 'roles.delete', FEATURES.roles);
     const replacementId = formData.get('replacementId');
     await container().organizations.deleteRole(ctx, id, typeof replacementId === 'string' && replacementId ? replacementId : null);
     revalidate(org);
@@ -56,7 +57,7 @@ export async function deleteRole(org: string, id: string, _: ActionState, formDa
 
 export async function createCustomField(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.customFields);
     const options = String(formData.get('options') ?? '')
       .split(',')
       .map((o) => o.trim())
@@ -69,7 +70,7 @@ export async function createCustomField(org: string, _: ActionState, formData: F
 
 export async function deleteCustomField(org: string, id: string, _: ActionState, _fd: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.customFields);
     await container().organizations.deleteCustomField(ctx, id);
     revalidate(org);
   });
@@ -181,7 +182,7 @@ export async function removePosCategory(org: string, categoryId: string, _: Acti
 
 export async function setNegativeStock(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.base);
     await container().pos.setAllowNegativeStock(ctx, flag(formData, 'allowNegativeStock'));
     revalidate(org);
     return 'Ajuste de stock guardado';
@@ -190,7 +191,7 @@ export async function setNegativeStock(org: string, _: ActionState, formData: Fo
 
 export async function setPosTicketsVerifactu(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.base);
     const enabled = formData.get('ticketsVerifactu') === 'on';
     await container().pos.setTicketsVerifactu(ctx, enabled);
     revalidate(org);
@@ -293,7 +294,7 @@ export async function saveRecipe(org: string, productId: string, lines: { ingred
 
 export async function setOrganizationParent(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.base);
     await container().organizations.setParent(ctx, formObject(formData));
     revalidate(org);
     return formData.get('parentId') ? 'Sociedad añadida al holding' : 'La sociedad ya no pertenece a ningún holding';
@@ -302,7 +303,7 @@ export async function setOrganizationParent(org: string, _: ActionState, formDat
 
 export async function saveEstablishment(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.establishments);
     const input = formObject(formData);
     await container().organizations.saveEstablishment(ctx, input);
     revalidate(org);
@@ -312,7 +313,7 @@ export async function saveEstablishment(org: string, _: ActionState, formData: F
 
 export async function deleteEstablishment(org: string, id: string, _: ActionState, _fd: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'org.manage');
+    const { ctx } = await requirePermission(org, 'org.manage', FEATURES.establishments);
     await container().organizations.deleteEstablishment(ctx, id);
     revalidate(org);
     return 'Empresa eliminada; sus almacenes siguen en la sociedad';
@@ -321,7 +322,7 @@ export async function deleteEstablishment(org: string, id: string, _: ActionStat
 
 export async function setEstablishmentMember(org: string, establishmentId: string, userId: string, assigned: boolean, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'members.manage');
+    const { ctx } = await requirePermission(org, 'members.manage', FEATURES.establishments);
     const person = userId || String(formData.get('userId') ?? '');
     await container().organizations.setEstablishmentMember(ctx, { establishmentId, userId: person, assigned: assigned ? 'on' : '' });
     revalidate(org);

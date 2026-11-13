@@ -29,6 +29,10 @@ export function CashReport({ session, movements }: { session: CashSession; movem
   const cardDiff = Number(session.cardDifference ?? 0);
   const transfers = Number(s.cashToCard) > 0 || Number(s.cardToCash) > 0;
   const tone = (d: number) => (d === 0 ? 'ok' : Math.abs(d) <= 1 ? 'warning' : 'danger');
+  // Devoluciones (0044): los Z cerrados antes no las traen.
+  const refunds = s.refunds ?? 0;
+  const refundsCash = s.refundsCash ?? '0';
+  const refundsCard = s.refundsCard ?? '0';
   return (
     <article className="rounded-[20px] bg-sheet shadow-[var(--shadow-card)] print:rounded-none print:shadow-none">
       <header className="border-b border-line px-5 py-4">
@@ -53,6 +57,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
             ) : (
               <Row label="Ventas en efectivo" value={formatEuro(s.cashSales)} />
             )}
+            {Number(refundsCash) > 0 && <Row label="Devoluciones en efectivo" value={`−${formatEuro(refundsCash)}`} tone="danger" />}
             <Row label="Entradas" value={formatEuro(s.deposits)} />
             <Row label="Retiradas" value={`−${formatEuro(s.withdrawals)}`} />
             <Row label="Efectivo esperado" value={formatEuro(closed ? session.expectedCash! : s.expectedCash)} strong />
@@ -70,6 +75,7 @@ export function CashReport({ session, movements }: { session: CashSession; movem
             <Row label="Cobrado con tarjeta (TPV)" value={formatEuro(s.cardRecorded)} />
             {Number(s.cashToCard) > 0 && <Row label="Corregido de efectivo a tarjeta" value={`+${formatEuro(s.cashToCard)}`} />}
             {Number(s.cardToCash) > 0 && <Row label="Corregido de tarjeta a efectivo" value={`−${formatEuro(s.cardToCash)}`} />}
+            {Number(refundsCard) > 0 && <Row label="Devoluciones con tarjeta" value={`−${formatEuro(refundsCard)}`} tone="danger" />}
             <Row label="Tarjeta esperada (datáfono)" value={formatEuro(closed && session.expectedCard !== null ? session.expectedCard : s.expectedCard)} strong />
             {closed && session.countedCard !== null && (
               <>
@@ -89,6 +95,12 @@ export function CashReport({ session, movements }: { session: CashSession; movem
             <Row label="Tarjeta" value={formatEuro(s.cardSales)} />
             <Row label="Efectivo" value={formatEuro(s.cashSales)} />
             <Row label="Total vendido" value={formatEuro(s.totalSales)} strong />
+            {refunds > 0 && (
+              <>
+                <Row label={`Devoluciones · ${refunds} ${refunds === 1 ? 'ticket' : 'tickets'}`} value={`−${formatEuro(s.refundsTotal ?? '0')}`} tone="danger" />
+                <Row label="Total neto" value={formatEuro(s.netSales ?? s.totalSales)} strong />
+              </>
+            )}
             {s.cancelledTabs > 0 && <Row label="Cuentas anuladas" value={String(s.cancelledTabs)} tone="warning" />}
           </dl>
         </section>
@@ -129,6 +141,21 @@ export function CashReport({ session, movements }: { session: CashSession; movem
             </dl>
           )}
         </section>
+        {refunds > 0 && (
+          <section className="bg-sheet px-5 py-4 md:col-span-2">
+            <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Devoluciones</h2>
+            <dl className="text-sm">
+              {(s.refundList ?? []).map((r) => (
+                <Row
+                  key={r.number}
+                  label={`${r.number}${r.originalNumber ? ` · devuelve ${r.originalNumber}` : ''} · ${r.method === 'card' ? 'tarjeta' : 'efectivo'} (${formatTime(r.at)})`}
+                  value={`−${formatEuro(r.amount)}`}
+                />
+              ))}
+              <Row label="Total devuelto" value={`−${formatEuro(s.refundsTotal ?? '0')}`} strong tone="danger" />
+            </dl>
+          </section>
+        )}
         <section className="bg-sheet px-5 py-4 md:col-span-2">
           <h2 className="mb-2 text-[13px] font-semibold text-ink-3 uppercase">Movimientos de caja</h2>
           {movements.length === 0 ? (

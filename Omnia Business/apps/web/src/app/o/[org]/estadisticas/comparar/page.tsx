@@ -10,13 +10,16 @@ import { change } from '@/features/stats/period';
 import { addDays, formatEuro, formatQty, formatShortDate, todayIso } from '@/lib/format';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
-import type { DayFigures } from '@omnia/stats/types';
+import type { DayFigures, WindowFigures } from '@omnia/stats/types';
 
 export const metadata = { title: 'Comparación · Estadísticas · Omnia' };
 // Siempre al momento: con el día de hoy, las cifras son en tiempo real.
 export const dynamic = 'force-dynamic';
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** Hora pedida en la URL (HH:MM) o null. */
+const parseClock = (raw: string | undefined) => (raw && HHMM.test(raw) ? raw : null);
 const clock = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Madrid' });
 
 /** Día pedido en la URL: válido y nunca futuro. */
@@ -34,7 +37,9 @@ function dayLabel(iso: string, today: string) {
 
 const ratio = (a: number, b: number) => (b === 0 ? null : Math.round((a / b) * 100) / 100);
 
-export default async function ComparePage({ params, searchParams }: { params: Promise<{ org: string }>; searchParams: Promise<{ a?: string; b?: string }> }) {
+type Query = { a?: string; b?: string; af?: string; at?: string; bf?: string; bt?: string };
+
+export default async function ComparePage({ params, searchParams }: { params: Promise<{ org: string }>; searchParams: Promise<Query> }) {
   const { org } = await params;
   const query = await searchParams;
   const { ctx, can } = await requireOrg(org);
@@ -45,15 +50,41 @@ export default async function ComparePage({ params, searchParams }: { params: Pr
   const b = parseDay(query.b, addDays(a, -7), today);
   const stats = container().stats;
 
-  // Con hoy en la comparación, el otro día se mide también «hasta la misma hora».
-  const live = a === today || b === today;
-  const until = live ? clock.format(new Date()) : null;
-  const [dayA, dayB] = await Promise.all([stats.day(ctx, a, until), stats.day(ctx, b, until)]);
+  // Horario opcional de cada día. Sin horas, el día entero. Solo «desde»: hasta
+  // el cierre (medianoche); solo «hasta»: desde las 00:00. Si el día B no trae
+  // horas, usa las del A.
+  const raw = { af: parseClock(query.af), at: parseClock(query.at), bf: parseClock(query.bf), bt: parseClock(query.bt) };
+  const byHours = Object.values(raw).some(Boolean);
+  const hoursA = { from: raw.af ?? '00:00', to: raw.at ?? '00:00' };
+  const hoursB = raw.bf || raw.bt ? { from: raw.bf ?? '00:00', to: raw.bt ?? '00:00' } : hoursA;
 
-  const labelA = dayLabel(a, today);
-  const labelB = dayLabel(b, today);
+  let dayA: DayFigures | WindowFigures;
+  let dayB: DayFigures | WindowFigures;
+  let live: boolean;
+  if (byHours) {
+    // Si un tramo está en curso ahora, el otro se mide hasta el mismo punto de su tramo.
+    let [wA, wB] = await Promise.all([stats.window(ctx, a, hoursA.from, hoursA.to), stats.window(ctx, b, hoursB.from, hoursB.to)]);
+    if (wA.elapsedMinutes !== null && wB.elapsedMinutes === null) wB = await stats.window(ctx, b, hoursB.from, hoursB.to, wA.elapsedMinutes);
+    else if (wB.elapsedMinutes !== null && wA.elapsedMinutes === null) wA = await stats.window(ctx, a, hoursA.from, hoursA.to, wB.elapsedMinutes);
+    [dayA, dayB] = [wA, wB];
+    live = wA.isToday || wB.isToday;
+  } else {
+    // Con hoy en la comparación, el otro día se mide también «hasta la misma hora».
+    live = a === today || b === today;
+    const until = live ? clock.format(new Date()) : null;
+    [dayA, dayB] = await Promise.all([stats.day(ctx, a, until), stats.day(ctx, b, until)]);
+  }
+
+  const span = (h: { from: string; to: string }) => (h.from === '00:00' && h.to === '00:00' ? 'todo el día' : `${h.from}–${h.to}`);
+  const labelA = byHours ? `${dayLabel(a, today)} · ${span(hoursA)}` : dayLabel(a, today);
+  const labelB = byHours ? `${dayLabel(b, today)} · ${span(hoursB)}` : dayLabel(b, today);
   const base = `/o/${org}/estadisticas/comparar`;
-  const href = (na: string, nb: string) => `${base}?a=${na}&b=${nb}`;
+  // Los atajos conservan las horas elegidas.
+  const hoursQuery = Object.entries(raw)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `&${k}=${v}`)
+    .join('');
+  const href = (na: string, nb: string) => `${base}?a=${na}&b=${nb}${hoursQuery}`;
 
   const quick = [
     { label: 'Día anterior', day: addDays(a, -1) },
@@ -65,18 +96,31 @@ export default async function ComparePage({ params, searchParams }: { params: Pr
     <>
       <PageHeader
         title="Comparación"
-        description="Compara la facturación de dos días. Con el día de hoy, las cifras se actualizan solas y el otro día se mide también hasta la misma hora."
+        description="Compara la facturación de dos días, enteros o entre las horas que elijas. Con el día de hoy, las cifras se actualizan solas y el otro día se mide también hasta el mismo punto."
         actions={live ? <LiveRefresh seconds={30} /> : undefined}
       />
 
       <Cell>
-        <form action={base} className="flex flex-wrap items-end gap-3">
-          <DayField label="Día A" name="a" value={a} max={today} />
-          <span aria-hidden className="hidden pb-2 text-[15px] font-semibold text-ink-3 sm:inline">frente a</span>
-          <DayField label="Día B" name="b" value={b} max={today} />
-          <button type="submit" className={buttonClass('primary')}>
-            Comparar
-          </button>
+        <form action={base} className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+            <DayFields legend="Día A" prefix="a" day={a} from={raw.af} to={raw.at} max={today} />
+            <span aria-hidden className="hidden pb-2 text-[15px] font-semibold text-ink-3 lg:inline">frente a</span>
+            <DayFields legend="Día B" prefix="b" day={b} from={raw.bf} to={raw.bt} max={today} placeholder={byHours && !(raw.bf || raw.bt) ? hoursA : undefined} />
+            <button type="submit" className={buttonClass('primary')}>
+              Comparar
+            </button>
+          </div>
+          <p className="text-[13px] text-ink-3">
+            Horas opcionales: sin horas se compara el día entero. Si el «hasta» es anterior al «desde» (p. ej. de 20:00 a 03:00), el tramo sigue en la madrugada del día siguiente. Si el día B no lleva horas, usa las del A.
+            {byHours && (
+              <>
+                {' '}
+                <Link href={`${base}?a=${a}&b=${b}`} className="font-medium text-tint underline-offset-2 hover:underline">
+                  Quitar las horas
+                </Link>
+              </>
+            )}
+          </p>
         </form>
         <nav aria-label="Atajos" className="mt-4 flex flex-wrap items-center gap-2 text-sm">
           {a !== today && <Shortcut href={href(today, addDays(today, -7))}>Hoy frente a la semana pasada</Shortcut>}
@@ -89,24 +133,64 @@ export default async function ComparePage({ params, searchParams }: { params: Pr
         </nav>
       </Cell>
 
-      {live && a !== b && <LiveHeadline today={a === today ? dayA : dayB} other={a === today ? dayB : dayA} otherLabel={a === today ? labelB : labelA} />}
+      {live && (a !== b || byHours) && (
+        <LiveHeadline
+          today={dayA.isToday ? dayA : dayB}
+          other={dayA.isToday ? dayB : dayA}
+          otherLabel={dayA.isToday ? labelB : labelA}
+          sameMoment={byHours ? 'en el mismo punto de su tramo' : 'a la misma hora'}
+        />
+      )}
 
       <Cell title="Cifras del día">
         <Figures dayA={dayA} dayB={dayB} labelA={labelA} labelB={labelB} />
       </Cell>
       <Cell title="Ventas por hora">
-        <Hourly dayA={dayA} dayB={dayB} labelA={labelA} labelB={labelB} />
+        {byHours ? (
+          <WindowHourly dayA={dayA} dayB={dayB} labelA={labelA} labelB={labelB} />
+        ) : (
+          <Hourly dayA={dayA} dayB={dayB} labelA={labelA} labelB={labelB} />
+        )}
       </Cell>
     </>
   );
 }
 
-function DayField({ label, name, value, max }: { label: string; name: string; value: string; max: string }) {
+/** Fecha y, opcionalmente, el tramo horario de uno de los dos días. */
+function DayFields({
+  legend,
+  prefix,
+  day,
+  from,
+  to,
+  max,
+  placeholder,
+}: {
+  legend: string;
+  prefix: 'a' | 'b';
+  day: string;
+  from: string | null;
+  to: string | null;
+  max: string;
+  /** Horas que se usarán si se dejan vacías (las del día A). */
+  placeholder?: { from: string; to: string } | undefined;
+}) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="px-0.5 text-[13px] font-medium text-ink-2">{label}</span>
-      <input type="date" name={name} defaultValue={value} max={max} required className={`${inputClass} w-44`} />
-    </label>
+    <fieldset className="flex flex-wrap items-end gap-2">
+      <legend className="sr-only">{legend}</legend>
+      <label className="flex flex-col gap-1.5">
+        <span className="px-0.5 text-[13px] font-medium text-ink-2">{legend}</span>
+        <input type="date" name={prefix} defaultValue={day} max={max} required className={`${inputClass} w-44`} />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="px-0.5 text-[13px] font-medium text-ink-2">Desde</span>
+        <input type="time" name={`${prefix}f`} defaultValue={from ?? ''} step={900} placeholder={placeholder?.from} className={`${inputClass} w-28`} />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="px-0.5 text-[13px] font-medium text-ink-2">Hasta</span>
+        <input type="time" name={`${prefix}t`} defaultValue={to ?? ''} step={900} placeholder={placeholder?.to} className={`${inputClass} w-28`} />
+      </label>
+    </fieldset>
   );
 }
 
@@ -137,7 +221,7 @@ function Delta({ now, before, money = true }: { now: number; before: number; mon
 }
 
 /** Lo principal con el día de hoy: hasta ahora frente al otro día a la misma hora. */
-function LiveHeadline({ today, other, otherLabel }: { today: DayFigures; other: DayFigures; otherLabel: string }) {
+function LiveHeadline({ today, other, otherLabel, sameMoment }: { today: DayFigures; other: DayFigures; otherLabel: string; sameMoment: string }) {
   const sameTime = other.untilTotal ?? 0;
   return (
     <section aria-label="Hoy en directo" className="grid gap-4 rounded-[var(--radius-card)] bg-sheet p-5 shadow-[var(--shadow-card)] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] md:p-6">
@@ -145,11 +229,11 @@ function LiveHeadline({ today, other, otherLabel }: { today: DayFigures; other: 
         <p className="text-[13px] font-medium text-ink-3">Hoy hasta las {today.now}</p>
         <p className="mt-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em]">{formatEuro(today.total)}</p>
         <p className="mt-2 text-[14px]">
-          <Delta now={today.total} before={sameTime} /> <span className="text-ink-3">frente a {otherLabel === 'Ayer' ? 'ayer' : otherLabel} a la misma hora</span>
+          <Delta now={today.total} before={sameTime} /> <span className="text-ink-3">frente a {otherLabel === 'Ayer' ? 'ayer' : otherLabel} {sameMoment}</span>
         </p>
       </div>
       <div className="md:border-l md:border-line-soft md:pl-5">
-        <p className="text-[13px] font-medium text-ink-3">{otherLabel} hasta las {today.now}</p>
+        <p className="text-[13px] font-medium text-ink-3">{otherLabel} {sameMoment === 'a la misma hora' ? `hasta las ${today.now}` : 'hasta el mismo punto'}</p>
         <p className="mt-1 font-display text-[28px] leading-tight font-bold tracking-[-0.02em] text-ink-2">{formatEuro(sameTime)}</p>
         <p className="mt-2 text-[14px] text-ink-3">
           Cerró el día con <b className="font-semibold text-ink">{formatEuro(other.total)}</b>
@@ -261,5 +345,33 @@ function Hourly({ dayA, dayB, labelA, labelB }: { dayA: DayFigures; dayB: DayFig
         </p>
       )}
     </>
+  );
+}
+
+/**
+ * Ventas por hora de dos tramos: hora a hora desde el inicio de cada uno. Si
+ * empiezan a horas distintas, cada barra lleva las dos horas («20 h / 18 h»).
+ */
+function WindowHourly({ dayA, dayB, labelA, labelB }: { dayA: DayFigures; dayB: DayFigures; labelA: string; labelB: string }) {
+  const length = Math.max(dayA.hourly.length, dayB.hourly.length);
+  if (dayA.total === 0 && dayB.total === 0) {
+    return <EmptyState title="Sin ventas en estos tramos">Aquí aparecerán, hora a hora, los tickets y facturas emitidos en cada tramo.</EmptyState>;
+  }
+  const sameHours = dayA.hourly.every((h, i) => dayB.hourly[i] === undefined || dayB.hourly[i]!.hour === h.hour);
+  const labels = Array.from({ length }, (_, i) => {
+    const hA = dayA.hourly[i]?.hour;
+    const hB = dayB.hourly[i]?.hour;
+    if (sameHours || hA === undefined || hB === undefined) return `${hA ?? hB} h`;
+    return `${hA} h / ${hB} h`;
+  });
+  return (
+    <BarChart
+      title={`Ventas por hora: ${labelA} frente a ${labelB}`}
+      labels={labels}
+      series={[
+        { name: labelA, color: CHART_INK, values: Array.from({ length }, (_, i) => dayA.hourly[i]?.total ?? 0) },
+        { name: labelB, color: CHART_GRAY, values: Array.from({ length }, (_, i) => dayB.hourly[i]?.total ?? 0) },
+      ]}
+    />
   );
 }

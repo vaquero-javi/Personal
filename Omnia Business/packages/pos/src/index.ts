@@ -176,6 +176,17 @@ export interface CashSummary {
   byWaiter: { name: string; tickets: number; total: string }[];
   topProducts: { name: string; quantity: string; total: string }[];
   cancelledTabs: number;
+  /**
+   * Devoluciones de tickets (0044). Opcionales: los Z cerrados antes no las traen.
+   * Lo devuelto en efectivo ya está restado de `expectedCash`; con tarjeta, de `expectedCard`.
+   */
+  refunds?: number;
+  refundsCash?: string;
+  refundsCard?: string;
+  refundsTotal?: string;
+  /** Vendido menos devuelto. */
+  netSales?: string;
+  refundList?: { number: string; originalNumber: string | null; amount: string; method: 'cash' | 'card' | null; at: string }[];
 }
 
 export interface CashSession {
@@ -240,6 +251,8 @@ export interface PrintableTicket {
   method: string | null;
   tableName: string | null;
   waiterName: string | null;
+  /** Devolución (R5): el ticket que devuelve. */
+  refundOf: string | null;
 }
 
 // ---------------------------------------------------------------------
@@ -308,6 +321,12 @@ const CheckoutInput = z.object({
   tabId: z.uuid(),
   method: z.enum(['cash', 'card']),
   tendered: z.preprocess((v) => (v === '' || v === null ? undefined : v), Money.optional()),
+});
+
+const RefundInput = z.object({
+  invoiceId: z.uuid(),
+  method: z.enum(['cash', 'card']),
+  reason: z.string().trim().max(200).optional(),
 });
 
 const SplitCheckoutInput = CheckoutInput.extend({
@@ -918,13 +937,15 @@ export function createPosService(sql: Sql) {
                  coalesce(i.issuer_snapshot, '{}'::jsonb) as issuer,
                  (o.fiscal_regime = 'verifactu' and i.fiscal_status <> 'not_applicable') as verifactu,
                  (select case m.kind when 'cash_to_card' then 'card' when 'card_to_cash' then 'cash' else p.method end from invoice_payments p left join cash_movements m on m.invoice_id = p.invoice_id where p.invoice_id = i.id limit 1) as method,
-                 coalesce(pt.name, t.label) as table_name, coalesce(u.full_name, u.email) as waiter_name
+                 coalesce(pt.name, t.label) as table_name, coalesce(u.full_name, u.email) as waiter_name,
+                 r.full_number as refund_of
           from invoices i
           join organizations o on o.id = i.organization_id
           left join pos_tabs t on t.invoice_id = i.id
           left join pos_tables pt on pt.id = t.table_id
           left join users u on u.id = t.waiter_id
-          where i.id = ${id} and i.invoice_type = 'F2' and i.status <> 'draft'`);
+          left join invoices r on r.id = i.rectifies_invoice_id
+          where i.id = ${id} and i.invoice_type in ('F2', 'R5') and i.party_id is null and i.status <> 'draft'`);
         if (!ticket) throw new DomainError('NOT_FOUND', 'Ticket no encontrado');
         const lines = asRows<PrintableTicket['lines'][number]>(await tx`
           select description, quantity::text, (line_base + line_tax)::text as total from invoice_lines where invoice_id = ${id} order by line_no`);
@@ -937,8 +958,20 @@ export function createPosService(sql: Sql) {
 
     async recentTickets(ctx: TenantContext, terminalId: string) {
       return withTenant(sql, ctx, async (tx) =>
-        asRows<{ invoiceId: string; fullNumber: string; total: string; method: string; closedAt: Date; tableName: string | null; label: string | null }>(await tx`
-          select t.invoice_id, i.full_number, i.total::text, p.method, t.closed_at, pt.name as table_name, t.label
+        asRows<{
+          invoiceId: string;
+          fullNumber: string;
+          total: string;
+          method: string;
+          closedAt: Date;
+          tableName: string | null;
+          label: string | null;
+          /** Devolución ya hecha de este ticket, si la hay. */
+          refundId: string | null;
+          refundNumber: string | null;
+        }>(await tx`
+          select t.invoice_id, i.full_number, i.total::text, p.method, t.closed_at, pt.name as table_name, t.label,
+                 rf.id as refund_id, rf.full_number as refund_number
           from pos_tabs t
           join invoices i on i.id = t.invoice_id
           left join pos_tables pt on pt.id = t.table_id
@@ -946,9 +979,51 @@ export function createPosService(sql: Sql) {
             select case m.kind when 'cash_to_card' then 'card' when 'card_to_cash' then 'cash' else p.method end as method from invoice_payments p left join cash_movements m on m.invoice_id = p.invoice_id
             where p.invoice_id = i.id limit 1
           ) p on true
+          left join invoices rf on rf.rectifies_invoice_id = i.id and rf.invoice_type = 'R5' and rf.status <> 'draft'
           where t.terminal_id = ${z.uuid().parse(terminalId)} and t.status = 'paid'
           order by t.closed_at desc limit 15`),
       );
+    },
+
+    /**
+     * Devolución de un ticket entero (solo encargados, ver 0044): rectificativa R5
+     * con las líneas en negativo en la serie TR, y el dinero devuelto en la caja
+     * abierta de este terminal. Un ticket solo se devuelve una vez.
+     */
+    async refundTicket(ctx: TenantContext, terminal: PosTerminal, raw: unknown): Promise<{ invoiceId: string; fullNumber: string; total: string }> {
+      const input = RefundInput.parse(raw);
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) => {
+        const [orig] = await tx<{ id: string; invoice_type: string; status: string; party_id: string | null; full_number: string; total: string }[]>`
+          select id, invoice_type, status, party_id, full_number, total::text from invoices where id = ${input.invoiceId} for update`;
+        if (!orig || orig.invoice_type !== 'F2' || orig.party_id !== null || orig.status === 'draft' || orig.status === 'cancelled') {
+          throw new DomainError('NOT_FOUND', 'Ticket no encontrado');
+        }
+        const [done] = await tx<{ full_number: string }[]>`
+          select full_number from invoices where rectifies_invoice_id = ${orig.id} and invoice_type = 'R5'`;
+        if (done) throw new DomainError('INVALID_STATE', `Este ticket ya está devuelto (${done.full_number})`);
+
+        const [session] = await tx<{ id: string }[]>`
+          select id from cash_sessions where terminal_id = ${terminal.terminalId} and status = 'open'`;
+        if (!session) throw new DomainError('VALIDATION', 'La caja de este terminal está cerrada: ábrela para devolver el dinero');
+
+        const [series] = await tx<{ id: string }[]>`select app.pos_refund_series(${orgId}) as id`;
+        const note = `Devolución del ticket ${orig.full_number}${input.reason ? `: ${input.reason}` : ''}`;
+        const [inv] = await tx<{ id: string }[]>`
+          insert into invoices (organization_id, direction, party_id, invoice_type, rectifies_invoice_id, due_date, notes)
+          values (${orgId}, 'issued', null, 'R5', ${orig.id}, current_date, ${note}) returning id`;
+        await tx`
+          insert into invoice_lines (organization_id, invoice_id, line_no, item_id, description, quantity, unit_price, discount_pct, tax_rate)
+          select organization_id, ${inv!.id}, line_no, item_id, description, -quantity, unit_price, discount_pct, tax_rate
+          from invoice_lines where invoice_id = ${orig.id}`;
+        const [issued] = await tx<{ full_number: string; total: string }[]>`
+          select full_number, total::text from app.issue_invoice(${inv!.id}, ${series!.id}, current_date, true)`;
+        // El dinero sale de la caja: «cobro» de la rectificativa por su importe en positivo.
+        await tx`
+          insert into invoice_payments (organization_id, invoice_id, amount, method, cash_session_id)
+          values (${orgId}, ${inv!.id}, ${String(Math.abs(Number(issued!.total)).toFixed(2))}, ${input.method}, ${session.id})`;
+        return { invoiceId: inv!.id, fullNumber: issued!.full_number, total: issued!.total };
+      });
     },
 
     // ----------------------------------------------------------- caja
@@ -1136,6 +1211,13 @@ function normalizeSummary(raw: CashSummary): CashSummary {
     byWaiter: (raw.byWaiter ?? []).map((w) => ({ name: w.name, tickets: Number(w.tickets), total: money(w.total) })),
     topProducts: (raw.topProducts ?? []).map((p) => ({ name: p.name, quantity: Number(p.quantity).toString(), total: money(p.total) })),
     cancelledTabs: Number(raw.cancelledTabs ?? 0),
+    // Reportes Z anteriores a las devoluciones (0044) no las traen: cero.
+    refunds: Number(raw.refunds ?? 0),
+    refundsCash: money(raw.refundsCash),
+    refundsCard: money(raw.refundsCard),
+    refundsTotal: money(raw.refundsTotal),
+    netSales: money(raw.netSales ?? raw.totalSales),
+    refundList: (raw.refundList ?? []).map((r) => ({ number: r.number, originalNumber: r.originalNumber ?? null, amount: money(r.amount), method: r.method ?? null, at: r.at })),
   };
 }
 

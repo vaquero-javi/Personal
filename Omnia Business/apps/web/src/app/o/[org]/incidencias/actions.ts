@@ -3,13 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { container } from '@/server/container';
+import { FEATURES } from '@/server/features';
 import { formObject, runAction, type ActionState } from '@/server/actions';
 import { requirePermission } from '@/server/session';
 
 export async function createIncident(org: string, _: ActionState, formData: FormData): Promise<ActionState> {
   let id = '';
   const result = await runAction(async () => {
-    const { ctx } = await requirePermission(org, 'incidents.write');
+    const { ctx } = await requirePermission(org, 'incidents.write', FEATURES.incidents);
     id = await container().incidents.create(ctx, formObject(formData));
     revalidatePath(`/o/${org}`, 'layout');
   });
@@ -19,7 +20,7 @@ export async function createIncident(org: string, _: ActionState, formData: Form
 
 export async function updateIncident(org: string, id: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'incidents.write');
+    const { ctx } = await requirePermission(org, 'incidents.write', FEATURES.incidents);
     await container().incidents.update(ctx, id, formObject(formData));
     revalidatePath(`/o/${org}`, 'layout');
     return 'Incidencia actualizada';
@@ -28,7 +29,7 @@ export async function updateIncident(org: string, id: string, _: ActionState, fo
 
 export async function commentIncident(org: string, id: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'incidents.write');
+    const { ctx } = await requirePermission(org, 'incidents.write', FEATURES.incidents);
     await container().incidents.comment(ctx, id, formData.get('body'));
     revalidatePath(`/o/${org}/incidencias/${id}`);
   });

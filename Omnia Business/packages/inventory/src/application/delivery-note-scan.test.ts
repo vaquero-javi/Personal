@@ -69,4 +69,13 @@ describe('lectura de albaranes', () => {
     expect(scan.lines[0]).toMatchObject({ itemId: 'i3', unitCost: '' });
     expect(scan.warnings).toHaveLength(2);
   });
+
+  it('sin proveedor ni artículo, deja lo leído para darlos de alta', () => {
+    const scan = matchDeliveryNote(
+      read({ supplierTaxId: 'es-b99999999', supplierName: 'Ferretería Nueva SL', lines: [{ reference: 'BRO-8', barcode: '8400000000017', description: 'Broca widia 8 mm', quantity: 3, unitPrice: 2, discountPct: null }] }),
+      catalog,
+    );
+    expect(scan).toMatchObject({ supplierId: null, supplierName: 'Ferretería Nueva SL', supplierTaxId: 'B99999999' });
+    expect(scan.lines[0]).toMatchObject({ itemId: null, description: 'Broca widia 8 mm', reference: 'BRO-8', barcode: '8400000000017' });
+  });
 });

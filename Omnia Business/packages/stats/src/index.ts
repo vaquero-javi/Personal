@@ -72,6 +72,41 @@ export interface DayFigures {
   hourly: { hour: number; total: number; count: number }[];
 }
 
+/** Cifras de un tramo horario de un día (ver app.stats_window). */
+export interface WindowFigures extends DayFigures {
+  /** Inicio y fin del tramo (HH:MM). Con `overnight`, el fin es de la madrugada siguiente. */
+  from: string;
+  to: string;
+  overnight: boolean;
+  /** Si el tramo está en curso ahora: minutos transcurridos desde su inicio. */
+  elapsedMinutes: number | null;
+}
+
+/** Respuesta jsonb de app.stats_day / app.stats_window → DayFigures. */
+function dayFigures(d: Record<string, unknown>): DayFigures {
+  return {
+    day: String(d.day),
+    isToday: Boolean(d.isToday),
+    now: String(d.now),
+    total: num(d.total),
+    base: num(d.base),
+    tax: num(d.tax),
+    count: num(d.count),
+    posTotal: num(d.posTotal),
+    posCount: num(d.posCount),
+    untimedTotal: num(d.untimedTotal),
+    untilTotal: d.untilTotal == null ? null : num(d.untilTotal),
+    untilCount: d.untilCount == null ? null : num(d.untilCount),
+    guests: num(d.guests),
+    cash: num(d.cash),
+    card: num(d.card),
+    otherPayments: num(d.otherPayments),
+    openTabs: num(d.openTabs),
+    openTotal: num(d.openTotal),
+    hourly: ((d.hourly as { hour: unknown; total: unknown; count: unknown }[]) ?? []).map((h) => ({ hour: num(h.hour), total: num(h.total), count: num(h.count) })),
+  };
+}
+
 const IsoDate = z.iso.date();
 const Clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
@@ -169,27 +204,28 @@ export function createStatsService(sql: Sql) {
       const cutoff = until ? Clock.parse(until) : null;
       return withTenant(sql, ctx, async (tx) => {
         const [row] = await tx<{ d: Record<string, unknown> }[]>`select app.stats_day(${orgId}, ${IsoDate.parse(day)}, ${cutoff}::time) as d`;
+        return dayFigures(row!.d);
+      });
+    },
+
+    /**
+     * Cifras de `day` entre `from` y `to` (HH:MM). Si `to` <= `from`, el tramo
+     * sigue en la madrugada del día siguiente. `untilMinutes`: además, lo
+     * vendido en los primeros minutos del tramo (para comparar con uno en curso).
+     */
+    async window(ctx: TenantContext, day: string, from: string, to: string, untilMinutes?: number | null): Promise<WindowFigures> {
+      const orgId = singleOrganization(ctx);
+      const minutes = untilMinutes == null ? null : z.number().int().min(0).max(48 * 60).parse(untilMinutes);
+      return withTenant(sql, ctx, async (tx) => {
+        const [row] = await tx<{ d: Record<string, unknown> }[]>`
+          select app.stats_window(${orgId}, ${IsoDate.parse(day)}, ${Clock.parse(from)}::time, ${Clock.parse(to)}::time, ${minutes}::int) as d`;
         const d = row!.d;
         return {
-          day: String(d.day),
-          isToday: Boolean(d.isToday),
-          now: String(d.now),
-          total: num(d.total),
-          base: num(d.base),
-          tax: num(d.tax),
-          count: num(d.count),
-          posTotal: num(d.posTotal),
-          posCount: num(d.posCount),
-          untimedTotal: num(d.untimedTotal),
-          untilTotal: d.untilTotal == null ? null : num(d.untilTotal),
-          untilCount: d.untilCount == null ? null : num(d.untilCount),
-          guests: num(d.guests),
-          cash: num(d.cash),
-          card: num(d.card),
-          otherPayments: num(d.otherPayments),
-          openTabs: num(d.openTabs),
-          openTotal: num(d.openTotal),
-          hourly: ((d.hourly as { hour: unknown; total: unknown; count: unknown }[]) ?? []).map((h) => ({ hour: num(h.hour), total: num(h.total), count: num(h.count) })),
+          ...dayFigures(d),
+          from: String(d.from),
+          to: String(d.to),
+          overnight: Boolean(d.overnight),
+          elapsedMinutes: d.elapsedMinutes == null ? null : num(d.elapsedMinutes),
         };
       });
     },

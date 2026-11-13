@@ -20,6 +20,7 @@ import {
   Settings,
   Store,
   ShoppingBag,
+  ShoppingCart,
   TriangleAlert,
   Truck,
   Users,
@@ -48,8 +49,12 @@ export interface SidebarOrg {
   establishments: { id: string; name: string }[];
   /** La elegida para filtrar la app en esta sociedad (null = todas). */
   activeEstablishmentId: string | null;
+  /** Es propietario de la sociedad: ve la Store. */
+  isOwner: boolean;
   /** Conversaciones sin leer en Mensajes. */
   unreadMessages: number;
+  /** Tareas que te han mandado y aún no has hecho. */
+  pendingTasks: number;
 }
 
 /** Holdings con sus sociedades dentro; luego las sociedades sueltas (o cuyo holding no ves). */
@@ -376,22 +381,27 @@ function SidebarContent({
                       <Icon className="size-[15px]" strokeWidth={2.2} />
                     </Tile>
                     <span className="min-w-0 flex-1 truncate">{m.label}</span>
-                    {m.slug === 'mensajes' && active.unreadMessages > 0 && (
-                      <span
-                        aria-label={`${active.unreadMessages} sin leer`}
-                        className={`min-w-5 shrink-0 rounded-full px-1.5 text-center text-[11px] leading-[18px] font-semibold ${on ? 'bg-on-tint text-tint' : 'bg-sys-red text-white'}`}
-                      >
-                        {active.unreadMessages}
-                      </span>
-                    )}
+                    {(() => {
+                      const badge =
+                        m.slug === 'mensajes' ? { n: active.unreadMessages, label: 'sin leer' }
+                        : m.slug === 'tareas' ? { n: active.pendingTasks, label: active.pendingTasks === 1 ? 'tarea pendiente' : 'tareas pendientes' }
+                        : null;
+                      return badge && badge.n > 0 ? (
+                        <span
+                          aria-label={`${badge.n} ${badge.label}`}
+                          className={`min-w-5 shrink-0 rounded-full px-1.5 text-center text-[11px] leading-[18px] font-semibold ${on ? 'bg-on-tint text-tint' : 'bg-sys-red text-white'}`}
+                        >
+                          {badge.n}
+                        </span>
+                      ) : null;
+                    })()}
                   </Row>
                 );
-                return m.feature ? (
-                  <FeatureGate key={m.slug} as="li" feature={m.feature} mode={active.canManage ? 'upsell' : 'hide'}>
+                // Todos los módulos se dan o se quitan desde el panel de Omnia.
+                return (
+                  <FeatureGate key={m.slug || 'inicio'} as="li" feature={m.feature} mode={active.canManage ? 'upsell' : 'hide'}>
                     {row}
                   </FeatureGate>
-                ) : (
-                  <li key={m.slug || 'inicio'}>{row}</li>
                 );
               })}
             </ul>
@@ -427,6 +437,23 @@ function SidebarContent({
             <OrgNode key={h.id} org={h} childOrgs={children} slug={slug} current={current} collapsed={collapsed} toggle={toggleHolding} />
           ))}
         </ul>
+
+        {/* Store: módulos Pro de la sociedad abierta. Solo la ven sus propietarios. */}
+        {active?.isOwner && (
+          <>
+            <SectionTitle>Store</SectionTitle>
+            <ul className="flex flex-col gap-px">
+              <li>
+                <Row href={`/o/${active.slug}/store`} active={current === 'store'}>
+                  <Tile className="bg-gradient-to-b from-[#0a84ff] to-[#5e5ce6]">
+                    <ShoppingCart className="size-[15px]" strokeWidth={2.2} />
+                  </Tile>
+                  Módulos Pro
+                </Row>
+              </li>
+            </ul>
+          </>
+        )}
       </nav>
 
       <div className="border-t border-line-soft px-3 pt-3">
@@ -469,7 +496,7 @@ export function Sidebar(props: { organizations: SidebarOrg[]; user: SidebarUser;
   // Un solo estado para la barra de escritorio y la hoja del móvil.
   const [collapsed, toggleHolding] = useCollapsedHoldings();
   const active = props.organizations.find((o) => o.slug === slug);
-  const title = pathname === '/o/grupo' ? 'Vista de grupo' : pathname === '/o/nueva' ? 'Nueva sociedad' : (moduleLabel(pathname.split('/')[3] ?? '') ?? 'Omnia');
+  const title = pathname === '/o/grupo' ? 'Vista de grupo' : pathname === '/o/nueva' ? 'Nueva sociedad' : (pathname.split('/')[3] === 'store' ? 'Store' : (moduleLabel(pathname.split('/')[3] ?? '') ?? 'Omnia'));
 
   // Al navegar, la hoja se cierra.
   useEffect(() => {

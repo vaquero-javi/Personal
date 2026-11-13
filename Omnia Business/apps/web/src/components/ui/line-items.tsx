@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from './button';
 import { inputClass, useFieldErrors } from './form';
@@ -32,6 +32,9 @@ export interface LineDraft {
   /** Texto leído de un documento escaneado, para cotejar la línea. */
   read?: string;
   match?: 'exact' | 'probable' | 'none';
+  /** Referencia y código de barras leídos del documento (para dar de alta el artículo). */
+  reference?: string;
+  barcode?: string;
 }
 
 interface Line extends LineDraft {
@@ -60,6 +63,7 @@ export function LineItems({
   showTotals = true,
   packs = false,
   onChange,
+  renderCreateItem,
 }: {
   items: ItemOption[];
   mode: Mode;
@@ -72,8 +76,16 @@ export function LineItems({
   packs?: boolean;
   /** Para vistas previas en vivo. */
   onChange?: (lines: LineDraft[]) => void;
+  /**
+   * Líneas leídas de un documento sin artículo: botón para darlo de alta en el
+   * almacén. Al crearlo, se añade a la lista y queda elegido en la línea.
+   */
+  renderCreateItem?: (line: LineDraft, onCreated: (item: ItemOption) => void) => ReactNode;
 }) {
-  const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+  // Artículos dados de alta desde aquí (aún no están en `items`, que viene del servidor).
+  const [created, setCreated] = useState<ItemOption[]>([]);
+  const allItems = useMemo(() => [...items, ...created.filter((c) => !items.some((i) => i.id === c.id))], [items, created]);
+  const byId = useMemo(() => new Map(allItems.map((i) => [i.id, i])), [allItems]);
   const blank = (key: number): Line => ({ key, itemId: '', description: '', quantity: '1', unit: '', discountPct: '0', taxRate: '21' });
   const packOf = (itemId: string) => (packs ? byId.get(itemId)?.pack : undefined);
   const [lines, setLines] = useState<Line[]>(() =>
@@ -169,7 +181,7 @@ export function LineItems({
                 <span className={mobileLabel}>Línea {n}</span>
                 <select aria-label={`Artículo de la línea ${n}`} value={l.itemId} onChange={(e) => pick(l.key, e.target.value)} className={inputClass}>
                   <option value="">{allowFreeText ? 'Concepto libre…' : 'Elige un artículo…'}</option>
-                  {items.map((i) => (
+                  {allItems.map((i) => (
                     <option key={i.id} value={i.id}>
                       {i.sku} · {i.name}
                     </option>
@@ -181,6 +193,10 @@ export function LineItems({
                     En {allowFreeText ? 'la factura' : 'el albarán'}: «{l.read}»
                   </p>
                 )}
+                {l.read && !l.itemId && renderCreateItem?.(l, (item) => {
+                  setCreated((cs) => [...cs, item]);
+                  update(l.key, { itemId: item.id, taxRate: item.taxRate, inPacks: false });
+                })}
                 {allowFreeText && (
                   <input
                     aria-label={`Descripción de la línea ${n}`}

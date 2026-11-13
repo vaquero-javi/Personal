@@ -46,6 +46,9 @@ export const myMemberships = cache(async (): Promise<Membership[]> => {
   return container().organizations.memberships(userId);
 });
 
+/** Módulos que Omnia oculta en cada una de mis sociedades (sociedad → códigos), una vez por petición. */
+export const myHiddenFeatures = cache(async (): Promise<Map<string, string[]>> => container().entitlements.myHidden(await requireUserId()));
+
 /** Catálogo de módulos (igual para todas las sociedades), una vez por petición. */
 export const featureCatalog = cache((): Promise<FeatureDefinition[]> => container().entitlements.catalog());
 
@@ -54,6 +57,8 @@ export interface OrgScope {
   org: Membership;
   /** Rol Y módulo contratado: lo mismo que decide la RLS (app.authorized_org_ids). */
   can: (permission: string) => boolean;
+  /** Módulo oculto por Omnia: si no se tiene, ni se enseña con candado ni existe la página. */
+  hidden: (feature: string) => boolean;
   /** Solo el rol, sin mirar lo contratado (para decidir si se ofrece activar un módulo). */
   roleCan: (permission: string) => boolean;
   /** ¿La sociedad tiene el módulo (y todos sus padres)? */
@@ -64,7 +69,7 @@ export interface OrgScope {
 /** Resuelve /o/<slug> contra las membresías: fuera de ellas, 404 (no se revela que existe). */
 export const requireOrg = cache(async (slug: string): Promise<OrgScope> => {
   const userId = await requireUserId();
-  const [memberships, catalog] = await Promise.all([myMemberships(), featureCatalog()]);
+  const [memberships, catalog, hiddenByOrg] = await Promise.all([myMemberships(), featureCatalog(), myHiddenFeatures()]);
   const org = memberships.find((m) => m.slug === slug);
   if (!org) notFound();
   const features = new Set(org.features);
@@ -76,6 +81,7 @@ export const requireOrg = cache(async (slug: string): Promise<OrgScope> => {
     roleCan,
     can: (permission) => roleCan(permission) && isPermissionEntitled(catalog, features, permission),
     has: (feature) => hasFeature(features, feature),
+    hidden: (feature) => (hiddenByOrg.get(org.organizationId) ?? []).includes(feature),
   };
 });
 

@@ -28,6 +28,8 @@ export type FeatureDefinition = z.infer<typeof FeatureDefinition>;
 export const EntitlementsResponse = z.object({
   organizationId: z.uuid(),
   features: z.array(FeatureCode),
+  /** Módulos que Omnia oculta a la sociedad (con sus submódulos). */
+  hidden: z.array(FeatureCode).default([]),
 });
 export type EntitlementsResponse = z.infer<typeof EntitlementsResponse>;
 
@@ -76,6 +78,10 @@ export const AdminOrganizationFeature = z.object({
   updatedAt: z.coerce.date().nullable(),
   pendingRequestAt: z.coerce.date().nullable(),
   pendingRequestMessage: z.string().nullable(),
+  /** Omnia lo ha ocultado: si la sociedad no lo tiene, no lo ve (ni con candado). */
+  isHidden: z.boolean(),
+  /** Oculto porque lo está un módulo padre. */
+  hiddenByParent: z.boolean(),
 });
 export type AdminOrganizationFeature = z.infer<typeof AdminOrganizationFeature>;
 
@@ -98,6 +104,10 @@ export const SetFeatureInput = z
     path: ['expiresAt'],
   });
 export type SetFeatureInput = z.infer<typeof SetFeatureInput>;
+
+/** PUT /api/organizations/:id/features/:code/visibility (panel) */
+export const SetFeatureVisibilityInput = z.object({ hidden: z.boolean() }).strict();
+export type SetFeatureVisibilityInput = z.infer<typeof SetFeatureVisibilityInput>;
 
 /** POST /api/v1/entitlements/requests */
 export const RequestFeatureInput = z

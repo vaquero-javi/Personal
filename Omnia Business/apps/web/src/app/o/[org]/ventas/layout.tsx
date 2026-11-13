@@ -18,7 +18,7 @@ export default async function SalesLayout({ children, params }: { children: Reac
             upsell={roleCan('org.manage')}
             items={[
               { href: '', label: 'Pedidos B2B' },
-              { href: 'clientes', label: 'Clientes' },
+              { href: 'clientes', label: 'Clientes', feature: FEATURES.parties },
               { href: 'tarifas', label: 'Tarifas', feature: FEATURES.salesPriceLists },
             ]}
           />

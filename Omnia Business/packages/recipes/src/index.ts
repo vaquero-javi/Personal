@@ -66,6 +66,14 @@ const RecountInput = z.object({
   counted: decimalString({ scale: 4, sign: 'any' }),
 });
 
+const AddStockInput = z.object({
+  warehouseId: z.uuid(),
+  itemId: z.uuid(),
+  quantity: decimalString({ scale: 4, sign: 'positive' }),
+  /** Coste por unidad de stock de lo que entra (opcional: recalcula el coste medio). */
+  unitCost: z.preprocess((v) => (v === '' || v === null ? undefined : v), decimalString({ scale: 6, sign: 'non-negative' }).optional()),
+});
+
 const MinimumInput = z.object({
   warehouseId: z.uuid(),
   itemId: z.uuid(),
@@ -199,6 +207,24 @@ export function createRecipeService(sql: Sql) {
           insert into stock_movements (organization_id, warehouse_id, item_id, movement_type, quantity, note)
           values (${orgId}, ${input.warehouseId}, ${input.itemId}, 'adjustment', ${delta}, 'Recuento en TPV')`;
         return delta;
+      });
+    },
+
+    /**
+     * Entrada rápida desde el TPV (p. ej. una caja de agua que acaba de llegar):
+     * se suma a lo que hay. Con coste, recalcula el coste medio; sin él, lo deja igual.
+     * Devuelve el stock resultante.
+     */
+    async addStock(ctx: TenantContext, raw: unknown): Promise<string> {
+      const input = AddStockInput.parse(raw);
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) => {
+        await tx`
+          insert into stock_movements (organization_id, warehouse_id, item_id, movement_type, quantity, unit_cost, note)
+          values (${orgId}, ${input.warehouseId}, ${input.itemId}, 'adjustment', ${input.quantity}, ${input.unitCost ?? null}, 'Entrada en TPV')`;
+        const [level] = await tx<{ on_hand: string }[]>`
+          select on_hand::text from stock_levels where warehouse_id = ${input.warehouseId} and item_id = ${input.itemId}`;
+        return level?.on_hand ?? input.quantity;
       });
     },
   };

@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import type { Ingredient } from '@omnia/recipes/types';
 import { Button, Modal, Notice, useFlash } from '@/components/ui';
 import { formatEuro, formatQty } from '@/lib/format';
-import { recount, setMinimum } from '@/server/actions';
+import { addStock, recount, setMinimum } from '@/server/actions';
 
 export function StockTable({ ingredients, warehouseName, allowNegative }: { ingredients: Ingredient[]; warehouseName: string; allowNegative: boolean }) {
   const router = useRouter();
   const [flash, show] = useFlash();
   const [pending, start] = useTransition();
   const [counting, setCounting] = useState<Ingredient | null>(null);
+  const [adding, setAdding] = useState<Ingredient | null>(null);
   const [counted, setCounted] = useState('');
   const [packs, setPacks] = useState('');
   const [onlyLow, setOnlyLow] = useState(false);
@@ -35,7 +36,7 @@ export function StockTable({ ingredients, warehouseName, allowNegative }: { ingr
           <div>
             <h1 className="text-[30px] leading-[1.1] font-bold tracking-[-0.022em]">Materia prima · {warehouseName}</h1>
             <p className="text-sm text-ink-3">
-              {ingredients.filter(low).length} bajo mínimo · valor del stock {formatEuro(value)}. Las entradas se registran con albaranes en el backoffice.
+              {ingredients.filter(low).length} bajo mínimo · valor del stock {formatEuro(value)}. Lo que llegue lo puedes sumar con «Añadir»; con albarán, regístralo en el backoffice.
             </p>
           </div>
           <label className="ml-auto flex items-center gap-2.5 text-[15px] font-medium">
@@ -79,7 +80,12 @@ export function StockTable({ ingredients, warehouseName, allowNegative }: { ingr
                   <td className="px-3 py-2 text-right">{formatEuro(Math.max(0, Number(i.onHand)) * Number(i.avgUnitCost))}</td>
                   <td className="px-3 py-2 text-right">{i.usedIn}</td>
                   <td className="px-3 py-2 text-right">
-                    <Button size="sm" className="h-10" onClick={() => { setCounting(i); setCounted(''); setPacks(''); }}>Recontar</Button>
+                    <span className="inline-flex gap-2">
+                      <Button size="sm" variant="primary" className="h-10" onClick={() => setAdding(i)} aria-label={`Añadir stock de ${i.name}`}>
+                        Añadir
+                      </Button>
+                      <Button size="sm" className="h-10" onClick={() => { setCounting(i); setCounted(''); setPacks(''); }}>Recontar</Button>
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -126,8 +132,79 @@ export function StockTable({ ingredients, warehouseName, allowNegative }: { ingr
           );
         })()}
       </Modal>
+      <Modal open={adding !== null} onClose={() => setAdding(null)} title={`Añadir ${adding?.name ?? ''}`}>
+        {adding && (
+          <AddStockForm
+            key={adding.id}
+            item={adding}
+            pending={pending}
+            onSubmit={(quantity, unitCost) =>
+              act(async () => {
+                const r = await addStock(adding.id, quantity, unitCost);
+                return r.ok ? { ok: true, message: `Añadido: ${formatQty(quantity)} ${adding.unit}. Ahora hay ${formatQty(r.data)} ${adding.unit}` } : r;
+              }, () => setAdding(null))
+            }
+          />
+        )}
+      </Modal>
       {flash}
     </div>
+  );
+}
+
+/**
+ * Lo que llega se suma a lo que hay: en cajas (formato de compra) y/o en
+ * unidades sueltas. El coste es opcional; si se pone, ajusta el coste medio.
+ */
+function AddStockForm({ item, pending, onSubmit }: { item: Ingredient; pending: boolean; onSubmit: (quantity: string, unitCost?: string) => void }) {
+  const [packs, setPacks] = useState('');
+  const [loose, setLoose] = useState('');
+  const [cost, setCost] = useState('');
+  const n = (t: string) => (t.trim() === '' ? 0 : Number(t.trim().replace(',', '.')));
+  const okNum = (t: string) => t.trim() === '' || /^\d+([.,]\d{1,4})?$/.test(t.trim());
+  const pack = item.purchaseUnit ? Number(item.purchasePackSize) : 0;
+  const total = Number((n(packs) * pack + n(loose)).toFixed(4));
+  // El coste se escribe por caja si hay formato de compra y se entra en cajas; si no, por unidad de stock.
+  const costPerPack = pack > 0 && n(packs) > 0;
+  const unitCost = cost.trim() === '' ? undefined : (costPerPack ? n(cost) / pack : n(cost)).toFixed(6);
+  const ready = okNum(packs) && okNum(loose) && okNum(cost) && total > 0;
+  const field = 'h-12 rounded-[12px] px-3.5 bg-fill outline-none focus:ring-[3px] focus:ring-tint/45 text-right text-lg font-semibold text-ink';
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ready) onSubmit(String(total), unitCost);
+      }}
+    >
+      <p className="text-sm text-ink-2">
+        Ahora hay <b>{formatQty(item.onHand)} {item.unit}</b>. Lo que pongas se suma.
+      </p>
+      <div className={`grid gap-3 ${pack ? 'grid-cols-2' : ''}`}>
+        {pack > 0 && (
+          <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
+            {item.purchaseUnit} (de {formatQty(pack)} {item.unit})
+            <input value={packs} onChange={(e) => setPacks(e.target.value)} inputMode="decimal" autoFocus className={field} />
+          </label>
+        )}
+        <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
+          {pack ? `${item.unit} sueltas` : `Cantidad (${item.unit})`}
+          <input value={loose} onChange={(e) => setLoose(e.target.value)} inputMode="decimal" autoFocus={!pack} className={field} />
+        </label>
+      </div>
+      <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
+        Coste {costPerPack ? `por ${item.purchaseUnit}` : `por ${item.unit}`} (opcional, sin IVA)
+        <input value={cost} onChange={(e) => setCost(e.target.value)} inputMode="decimal" placeholder={`Ahora ${formatEuro(Number(item.avgUnitCost) * (costPerPack ? pack : 1))}`} className={field} />
+      </label>
+      {ready && (
+        <p className="text-right text-sm font-semibold text-ok">
+          +{formatQty(total)} {item.unit} → quedarán {formatQty(Number((Number(item.onHand) + total).toFixed(4)))} {item.unit}
+        </p>
+      )}
+      <Button type="submit" variant="primary" size="lg" disabled={pending || !ready}>
+        Añadir al stock
+      </Button>
+    </form>
   );
 }
 

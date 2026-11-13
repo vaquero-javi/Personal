@@ -143,6 +143,10 @@ describe('Cuenta y cobro', () => {
       expect(fuera.fiscal_record_hash).toBeTruthy();
       expect(fuera.fiscal_status).toBe('not_applicable');
       expect((await pos.ticket(marta, fuera.invoiceId)).verifactu).toBe(false);
+      // Su devolución también va fuera de la cadena registrada.
+      const back = await pos.refundTicket(carmen, terminal, { invoiceId: fuera.invoiceId, method: 'card' });
+      const [r] = (await db.query<{ fiscal_status: string }>(`select fiscal_status from invoices where id = $1`, [back.invoiceId])).rows;
+      expect(r!.fiscal_status).toBe('not_applicable');
     } finally {
       await db.query(`update organizations set settings = settings || '{"pos_tickets_verifactu": true}' where id = $1`, [bar]);
     }
@@ -235,6 +239,24 @@ describe('Escandallos', () => {
     const detail = await recipes.get(carmen, vodka.id, terminal.warehouseId);
     expect(detail.lines.map((l) => l.name)).toEqual(['Tónica (botellín)']);
   });
+
+  it('añadir al stock suma a lo que hay; con coste, recalcula el coste medio', async () => {
+    const before = await stockOf('Tónica (botellín)');
+    const onHand = await recipes.addStock(carmen, { warehouseId: terminal.warehouseId, itemId: before.id, quantity: '24' });
+    expect(Number(onHand)).toBeCloseTo(Number(before.onHand) + 24, 4);
+    const same = await stockOf('Tónica (botellín)');
+    expect(Number(same.avgUnitCost)).toBeCloseTo(Number(before.avgUnitCost), 6); // sin coste, el medio no cambia
+
+    // 24 más a 1,00 €: el medio se pondera con lo que había.
+    await recipes.addStock(carmen, { warehouseId: terminal.warehouseId, itemId: before.id, quantity: '24', unitCost: '1' });
+    const after = await stockOf('Tónica (botellín)');
+    const had = Math.max(0, Number(same.onHand));
+    expect(Number(after.onHand)).toBeCloseTo(Number(same.onHand) + 24, 4);
+    expect(Number(after.avgUnitCost)).toBeCloseTo((had * Number(same.avgUnitCost) + 24 * 1) / (had + 24), 4);
+
+    await expect(recipes.addStock(carmen, { warehouseId: terminal.warehouseId, itemId: before.id, quantity: '0' })).rejects.toThrow();
+    await expect(recipes.addStock(carmen, { warehouseId: terminal.warehouseId, itemId: before.id, quantity: '-3' })).rejects.toThrow();
+  });
 });
 
 describe('Caja', () => {
@@ -290,6 +312,56 @@ describe('Caja', () => {
     await pos.addCashMovement(carmen, session.id, { kind: 'cash_to_card', amount: '2.20', reason: 'Datáfono: cobro sin ticket' });
     const after = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
     expect(after.cashToCard).not.toBe('0.00');
+  });
+
+  it('devolver un ticket: rectificativa en negativo, resta de la facturación y sale de la caja', async () => {
+    const before = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    const sold = await sell(3, 'cash');
+    expect(sold.total).toBe('6.60');
+
+    // Solo un encargado devuelve.
+    await expect(pos.refundTicket(marta, terminal, { invoiceId: sold.invoiceId, method: 'cash' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+
+    const refund = await pos.refundTicket(carmen, terminal, { invoiceId: sold.invoiceId, method: 'cash', reason: 'Cobro duplicado' });
+    expect(refund.total).toBe('-6.60');
+    expect(refund.fullNumber).toMatch(/^TR-\d{4}-\d{6}$/);
+    const [row] = (await db.query<{ invoice_type: string; rectifies_invoice_id: string; status: string; notes: string }>(
+      `select invoice_type, rectifies_invoice_id, status, notes from invoices where id = $1`, [refund.invoiceId])).rows;
+    expect(row).toMatchObject({ invoice_type: 'R5', rectifies_invoice_id: sold.invoiceId, status: 'paid' });
+    expect(row!.notes).toContain('Cobro duplicado');
+
+    // Una sola vez por ticket.
+    await expect(pos.refundTicket(carmen, terminal, { invoiceId: sold.invoiceId, method: 'cash' })).rejects.toThrow(/ya está devuelto/);
+    // Una devolución no se devuelve.
+    await expect(pos.refundTicket(carmen, terminal, { invoiceId: refund.invoiceId, method: 'cash' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+
+    // Caja: la venta cuenta como venta y la devolución aparte, restada de lo esperado en efectivo.
+    const after = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    const plus = (a: string | undefined, b: number) => (Number(a ?? 0) + b).toFixed(2);
+    expect(Number(after.totalSales)).toBeCloseTo(Number(plus(before.totalSales, 6.6)), 2);
+    expect(after.refunds).toBe((before.refunds ?? 0) + 1);
+    expect(Number(after.refundsCash)).toBeCloseTo(Number(plus(before.refundsCash, 6.6)), 2);
+    expect(Number(after.refundsCard)).toBeCloseTo(Number(before.refundsCard ?? 0), 2);
+    expect(Number(after.expectedCash)).toBeCloseTo(Number(before.expectedCash), 2); // +6,60 vendido −6,60 devuelto
+    expect(Number(after.netSales)).toBeCloseTo(Number(after.totalSales) - Number(after.refundsTotal), 2);
+    // Dos devoluciones en el mismo segundo empatan en hora: se busca por número.
+    expect(after.refundList?.find((r) => r.number === refund.fullNumber)).toMatchObject({ originalNumber: sold.fullNumber, method: 'cash', amount: '6.60' });
+    expect(after.tickets).toBe(before.tickets + 1);
+
+    // La lista de tickets la marca como devuelta y la devolución se imprime.
+    const listed = (await pos.recentTickets(carmen, terminal.terminalId)).find((t) => t.invoiceId === sold.invoiceId);
+    expect(listed).toMatchObject({ refundId: refund.invoiceId, refundNumber: refund.fullNumber });
+    const printed = await pos.ticket(carmen, refund.invoiceId);
+    expect(printed).toMatchObject({ refundOf: sold.fullNumber, total: '-6.60', method: 'cash' });
+  });
+
+  it('una devolución con tarjeta resta de lo esperado en el datáfono', async () => {
+    const before = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    const sold = await sell(1, 'card');
+    await pos.refundTicket(carmen, terminal, { invoiceId: sold.invoiceId, method: 'card' });
+    const after = (await pos.cashSession(carmen, terminal.terminalId))!.summary;
+    expect(Number(after.expectedCard)).toBeCloseTo(Number(before.expectedCard), 2);
+    expect(Number(after.expectedCash)).toBeCloseTo(Number(before.expectedCash), 2);
   });
 
   it('no cierra con cuentas abiertas y, cerrada, cuadra con lo contado', async () => {

@@ -21,6 +21,8 @@ export interface OrganizationEntitlements {
   features: string[];
   /** Puede pedir a Omnia que active módulos (permiso org.manage). */
   canRequest: boolean;
+  /** Módulos que Omnia le oculta: si no los tiene, no se enseñan ni con candado. */
+  hidden: string[];
 }
 
 interface EntitlementsValue {
@@ -28,6 +30,8 @@ interface EntitlementsValue {
   /** Sociedad abierta (/o/[org]); null en /o/grupo o /o/nueva. */
   active: OrganizationEntitlements | null;
   features: ReadonlySet<string> | null;
+  /** Módulos que Omnia oculta a la sociedad abierta. */
+  hidden: ReadonlySet<string>;
   isLoading: boolean;
 }
 
@@ -71,20 +75,29 @@ export function EntitlementsProvider({
     queryKey: ['org', active?.id ?? 'none', 'entitlements'],
     queryFn: ({ signal }) => fetchEntitlements(active!.id, signal),
     enabled: active !== null,
-    initialData: active ? { organizationId: active.id, features: active.features } : undefined,
+    initialData: active ? { organizationId: active.id, features: active.features, hidden: active.hidden } : undefined,
     staleTime: 15_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     retry: 1,
   });
 
-  const fresh = query.data?.organizationId === active?.id ? query.data?.features : undefined;
+  const current = query.data?.organizationId === active?.id ? query.data : undefined;
+  const fresh = current?.features;
+  const freshHidden = current?.hidden;
   const serverSnapshot = active?.features;
+  const serverHidden = active?.hidden;
 
-  // Lo de servidor (páginas, barra lateral) va con la foto del render: si ha cambiado, se repinta.
+  // Lo de servidor (páginas, barra lateral) va con la foto del render: si ha cambiado
+  // lo contratado o lo que Omnia oculta, se repinta.
   useEffect(() => {
-    if (fresh && serverSnapshot && !sameList(fresh, serverSnapshot)) router.refresh();
-  }, [fresh, serverSnapshot, router]);
+    if (
+      (fresh && serverSnapshot && !sameList(fresh, serverSnapshot)) ||
+      (freshHidden && serverHidden && !sameList(freshHidden, serverHidden))
+    ) {
+      router.refresh();
+    }
+  }, [fresh, serverSnapshot, freshHidden, serverHidden, router]);
 
   const value = useMemo<EntitlementsValue>(() => {
     const list = fresh ?? serverSnapshot;
@@ -92,9 +105,10 @@ export function EntitlementsProvider({
       catalog: new Map(catalog.map((f) => [f.code, f])),
       active,
       features: list ? new Set(list) : null,
+      hidden: new Set(freshHidden ?? serverHidden ?? []),
       isLoading: active !== null && !list && query.isPending,
     };
-  }, [catalog, active, fresh, serverSnapshot, query.isPending]);
+  }, [catalog, active, fresh, serverSnapshot, freshHidden, serverHidden, query.isPending]);
 
   return <EntitlementsContext.Provider value={value}>{children}</EntitlementsContext.Provider>;
 }
@@ -103,6 +117,13 @@ export function useEntitlements(): EntitlementsValue {
   const value = useContext(EntitlementsContext);
   if (!value) throw new Error('useEntitlements() fuera de <EntitlementsProvider>');
   return value;
+}
+
+/** ¿Omnia oculta este módulo (o el que falta de su cadena) a la sociedad abierta? */
+export function useHiddenFeature(featureCode: string): boolean {
+  const { hidden } = useEntitlements();
+  const missing = useMissingFeature(featureCode);
+  return hidden.has(featureCode) || (missing !== null && hidden.has(missing.code));
 }
 
 /** ¿La sociedad abierta tiene el módulo (y todos sus padres)? */

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DomainError, optionalIsoDate, optionalText, optionalUuid, requiredText, singleOrganization, type TenantContext } from '@omnia/core';
-import { asRow, asRows, withTenant, type Sql } from '@omnia/db';
+import { asRow, asRows, withTenant, withUser, type Sql } from '@omnia/db';
 
 export type TaskStatus = 'pending' | 'in_progress' | 'done';
 
@@ -108,3 +108,9 @@ export function createTasksService(sql: Sql) {
 }
 
 export type TasksService = ReturnType<typeof createTasksService>;
+
+/** Tareas que te han mandado y no has hecho, de todas mis sociedades (barra lateral), sin sociedad activa. */
+export async function pendingByOrganization(sql: Sql, userId: string): Promise<Map<string, number>> {
+  const rows = await withUser(sql, userId, (tx) => tx<{ organization_id: string; pending: number }[]>`select * from app.my_pending_tasks()`);
+  return new Map(rows.map((r) => [r.organization_id, r.pending]));
+}

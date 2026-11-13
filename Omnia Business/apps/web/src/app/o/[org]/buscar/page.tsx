@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Cell, EmptyState, PageHeader } from '@/components/ui/layout';
 import { formatEuro } from '@/lib/format';
 import { container } from '@/server/container';
+import { FEATURES } from '@/server/features';
 import { requireOrg } from '@/server/session';
 
 export const metadata = { title: 'Buscar · Omnia' };
@@ -9,14 +10,14 @@ export const metadata = { title: 'Buscar · Omnia' };
 export default async function SearchPage({ params, searchParams }: { params: Promise<{ org: string }>; searchParams: Promise<{ q?: string }> }) {
   const { org } = await params;
   const { q = '' } = await searchParams;
-  const { ctx, can } = await requireOrg(org);
+  const { ctx, can, has } = await requireOrg(org);
   const term = q.trim();
   const [items, parties, invoices, incidents] = term
     ? await Promise.all([
-        can('inventory.read') ? container().warehouse.items(ctx, { search: term }) : [],
-        can('parties.read') ? container().parties.list(ctx, { search: term }) : [],
-        can('invoicing.read') ? container().invoicing.listPage(ctx, { search: term, limit: 20 }).then((p) => p.items) : [],
-        container().incidents.list(ctx, { status: 'all', search: term }),
+        can('inventory.read') && has(FEATURES.inventory) ? container().warehouse.items(ctx, { search: term }) : [],
+        can('parties.read') && has(FEATURES.parties) ? container().parties.list(ctx, { search: term }) : [],
+        can('invoicing.read') && has(FEATURES.invoicing) ? container().invoicing.listPage(ctx, { search: term, limit: 20 }).then((p) => p.items) : [],
+        has(FEATURES.incidents) ? container().incidents.list(ctx, { status: 'all', search: term }) : [],
       ])
     : [[], [], [], []];
   const base = `/o/${org}`;
