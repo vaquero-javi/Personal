@@ -255,6 +255,45 @@
   .pressable:active:not(:disabled) {
     transform: scale(0.97);
   }
+
+  /* Interruptor de iOS sobre un checkbox nativo (accesible y con teclado). Igual que en el TPV. */
+  .switch {
+    appearance: none;
+    position: relative;
+    flex: none;
+    width: 51px;
+    height: 31px;
+    border-radius: 9999px;
+    background: var(--color-fill-strong);
+    transition: background-color 200ms ease;
+    cursor: pointer;
+  }
+  .switch::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 27px;
+    height: 27px;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.15), 0 1px 1px rgb(0 0 0 / 0.16);
+    transition: transform 260ms var(--ease-spring);
+  }
+  .switch:checked {
+    background: var(--color-sys-green);
+  }
+  .switch:checked::before {
+    transform: translateX(20px);
+  }
+  .switch:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-tint) 40%, transparent);
+  }
+  .switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -311,4 +350,16 @@
 /* Pantalla de carga: oculta antes de pintar si ya se vio en la sesión (ver components/splash.tsx). */
 html[data-splash='off'] .splash {
   display: none;
+}
+
+/* Hoja centrada (diálogo de módulo no contratado). */
+@keyframes sheet-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

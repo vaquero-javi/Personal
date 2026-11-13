@@ -5,7 +5,7 @@ import { RowLink, Table, Td, Th, Tr } from '@/components/ui/table';
 import { formatDate, formatEuro } from '@/lib/format';
 import { salesOrderStatus } from '@/lib/labels';
 import { container } from '@/server/container';
-import { requireOrg } from '@/server/session';
+import { activeEstablishment, requireOrg } from '@/server/session';
 
 export const metadata = { title: 'Pedidos de venta · Omnia' };
 
@@ -13,14 +13,15 @@ export default async function SalesOrdersPage({ params, searchParams }: { params
   const { org } = await params;
   const { estado } = await searchParams;
   const { ctx, can } = await requireOrg(org);
-  const orders = await container().sales.list(ctx, estado ? { status: estado } : {});
+  const est = await activeEstablishment(org);
+  const orders = await container().sales.list(ctx, { ...(estado ? { status: estado } : {}), establishmentId: est?.id ?? null });
   const base = `/o/${org}/ventas`;
   const filters = [undefined, 'draft', 'confirmed', 'delivered', 'invoiced'] as const;
   return (
     <>
       <PageHeader
         title="Pedidos de cliente (B2B)"
-        description="Confirma, sirve (sale del almacén) y factura: cada paso en una transacción."
+        description={`${est ? `${est.name}: pedidos que salen de sus almacenes. ` : ''}Confirma, sirve (sale del almacén) y factura: cada paso en una transacción.`}
         actions={can('sales.write') && <LinkButton href={`${base}/pedidos/nuevo`} variant="primary">Nuevo pedido</LinkButton>}
       />
       <Cell>

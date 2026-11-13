@@ -5,7 +5,9 @@ export type DomainErrorCode =
   | 'VALIDATION'
   | 'CONFLICT'
   | 'INVALID_STATE'
-  | 'INSUFFICIENT_STOCK';
+  | 'INSUFFICIENT_STOCK'
+  /** La sociedad no tiene contratado el módulo (no depende del rol de la persona). */
+  | 'FEATURE_DISABLED';
 
 /**
  * Error de negocio con un código estable. La capa HTTP lo traduce a un estado;

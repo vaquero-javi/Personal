@@ -1,10 +1,11 @@
 import { after } from 'next/server';
 import { container } from '@/server/container';
+import { STAFF_CARDS } from '@/server/features';
 import { handle, readJson } from '@/server/http';
 
 /** GET /api/v1/staff-discount-policies — política general y por rol. */
 export async function GET(request: Request) {
-  return handle(request, (ctx) => container().staffCards.policies(ctx));
+  return handle(request, (ctx) => container().staffCards.policies(ctx), { feature: STAFF_CARDS });
 }
 
 /**
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
  */
 export async function PUT(request: Request) {
   const input = await readJson(request);
-  const response = await handle(request, (ctx) => container().staffCards.savePolicy(ctx, input));
+  const response = await handle(request, (ctx) => container().staffCards.savePolicy(ctx, input), { feature: STAFF_CARDS });
   after(() => container().staffCards.processWalletUpdates(50));
   return response;
 }

@@ -17,7 +17,19 @@ cd apps/web && npx next dev -p 3100     # en otra terminal; usa apps/web/.env.lo
 ```
 
 Abre http://localhost:3100/entrar y elige una persona de ejemplo. Cada una tiene un rol distinto:
-Lucía (propietaria de todas las sociedades), Carmen (administración; encargada en el bar), Marta e Iván (empleados; camareros en el bar), Rubén (empleado en dos sociedades).
+Lucía (propietaria del holding Grupo Albar y de sus cuatro sociedades; en el bar hay dos empresas: Bar La Plaza y Cafetería Centro, e Iván trabaja en las dos), Carmen (administración; encargada en el bar), Marta e Iván (empleados; camareros en el bar), Rubén (empleado en dos sociedades).
+
+### Panel del equipo de Omnia (`apps/admin`)
+
+App aparte, solo para quien gestiona Omnia: decide qué módulos tiene cada sociedad. Se llega con el botón **Equipo Omnia** de la portada (arriba a la derecha) y pide **email y contraseña propios del panel**: no sirven las cuentas de las empresas.
+
+```bash
+cd apps/admin && npx next dev -p 3300      # usa apps/admin/.env.local
+```
+
+En local: **`equipo@omnia.local`** / **`equipo-omnia-local`**. Para cambiarla: `npm run admin:password -- equipo@omnia.local --local`.
+
+Producción, una vez: tu usuario en `public.platform_admins`, la contraseña con `npm run admin:password -- <tu email>` (muestra el SQL para Supabase), el rol `omnia_admin` con contraseña (`alter role omnia_admin with password '…'`) y su cadena del pooler como `DATABASE_URL` del panel, `ADMIN_SESSION_SECRET` (`openssl rand -base64 32`) y `ADMIN_APP_URL` en la web.
 
 ### TPV de hostelería (`apps/tpv`)
 
@@ -40,10 +52,12 @@ Para registrar albaranes y facturas de proveedor con foto o PDF, añade a `apps/
 ## Pruebas
 
 ```bash
-npm run db:test                              # esquema: RLS, FKs compuestas, stock, facturación, RBAC, nóminas, TPV (85)
+npm run db:test                              # esquema: RLS, FKs compuestas, stock, facturación, RBAC, nóminas, TPV (96) + módulos contratados y acceso del panel (62) + holding, sociedades, empresas y mensajes (49)
 npx vitest run --root packages/inventory     # albaranes, lectura de fotos y justificante: unitarias + integración (22)
 npx vitest run --root packages/pos           # importes del ticket con la misma aritmética que Postgres (9)
-npm run test:integration                     # servicios de TPV (terminal, PIN, cobro, escandallos, caja), ventas, compras, fichajes y permisos (22)
+npm run test:integration                     # servicios de TPV, ventas, compras, fichajes, permisos y módulos contratados
+npx vitest run --root packages/entitlements  # reglas de módulos (réplica en TS de la RLS) (7)
+npx vitest run --root apps/admin             # contraseñas y sesión firmada del panel (8)
 npm run db:reset && npm run e2e -w @omnia/web   # 17 flujos completos en el navegador (con la app arrancada)
 npm run db:reset                             # después: los flujos dejan datos «(prueba)» en la base local
 ```

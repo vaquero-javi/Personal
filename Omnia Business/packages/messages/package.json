@@ -1,0 +1,17 @@
+{
+  "name": "@omnia/messages",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@omnia/core": "*",
+    "@omnia/db": "*",
+    "zod": "^4.6.7"
+  }
+}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { ChainFragment, ClockFragment, IncidentFragment, PosFragment, StatsFragment, TasksFragment } from './fragments';
 import { ENTER_HREF, Logo, TRIAL_HREF } from './shared';
 
@@ -64,6 +65,17 @@ export function Hero() {
           Ventas, facturas, almacén, fichajes y turnos de tu empresa en una sola app.
         </p>
         <nav aria-label="Principal" className="flex items-center gap-2">
+          {/* Panel del equipo de Omnia: otra app (apps/admin), vía /equipo. */}
+          {/* En móvil solo el escudo (44 px de diana táctil); desde sm, con texto. */}
+          <a
+            href="/equipo"
+            aria-label="Equipo Omnia"
+            title="Equipo Omnia"
+            className="inline-flex size-11 items-center justify-center gap-1.5 rounded-full text-[15px] font-medium hover:bg-white/10 sm:size-auto sm:px-4 sm:py-2"
+          >
+            <ShieldCheck aria-hidden className="size-5 sm:size-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Equipo Omnia</span>
+          </a>
           <Link href={ENTER_HREF} className="hidden rounded-full px-4 py-2 text-[15px] font-medium hover:bg-white/10 sm:inline-block">
             Entrar
           </Link>

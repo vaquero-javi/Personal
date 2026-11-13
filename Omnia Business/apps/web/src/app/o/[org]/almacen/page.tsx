@@ -5,7 +5,7 @@ import { RowLink, Table, Td, Th, Tr } from '@/components/ui/table';
 import { MinimumEditor } from '@/features/inventory/minimum-editor';
 import { formatEuro, formatQty } from '@/lib/format';
 import { container } from '@/server/container';
-import { requireOrg } from '@/server/session';
+import { activeEstablishment, requireOrg } from '@/server/session';
 import { setMinimum } from './actions';
 
 export const metadata = { title: 'Existencias · Omnia' };
@@ -14,10 +14,13 @@ export default async function StockPage({ params, searchParams }: { params: Prom
   const { org } = await params;
   const { almacen, bajo } = await searchParams;
   const { ctx, can } = await requireOrg(org);
-  const [warehouses, stock] = await Promise.all([
+  // Con una empresa elegida arriba, solo sus almacenes y su stock.
+  const est = await activeEstablishment(org);
+  const [allWarehouses, stock] = await Promise.all([
     container().warehouse.warehouses(ctx),
-    container().warehouse.stock(ctx, { ...(almacen ? { warehouseId: almacen } : {}), onlyBelowMinimum: bajo === '1' }),
+    container().warehouse.stock(ctx, { ...(almacen ? { warehouseId: almacen } : {}), onlyBelowMinimum: bajo === '1', establishmentId: est?.id ?? null }),
   ]);
+  const warehouses = est ? allWarehouses.filter((w) => w.establishmentId === est.id) : allWarehouses;
   const base = `/o/${org}/almacen`;
   const below = stock.filter((s) => s.belowMinimum).length;
   const value = stock.reduce((sum, s) => sum + Number(s.onHand) * Number(s.avgUnitCost), 0);
@@ -32,7 +35,7 @@ export default async function StockPage({ params, searchParams }: { params: Prom
     <>
       <PageHeader
         title="Existencias"
-        description={`${stock.length} saldos · valorado a coste medio ${formatEuro(value)}${below ? ` · ${below} bajo mínimos` : ''}`}
+        description={`${est ? `${est.name} · ` : ''}${stock.length} saldos · valorado a coste medio ${formatEuro(value)}${below ? ` · ${below} bajo mínimos` : ''}`}
         actions={
           can('inventory.post') && (
             <LinkButton href={`${base}/movimientos`} variant="secondary">

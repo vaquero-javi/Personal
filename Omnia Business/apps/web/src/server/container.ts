@@ -2,9 +2,11 @@ import 'server-only';
 import { authConfigFromEnv, createAccessTokenVerifier } from '@omnia/auth';
 import { createSql, type Sql } from '@omnia/db';
 import { createHrService, createPayrollService } from '@omnia/hr';
+import { createEntitlementsService } from '@omnia/entitlements';
 import { createIncidentsService } from '@omnia/incidents';
 import { createGoodsReceiptService, createPostgresInventoryUnitOfWork, createWarehouseService } from '@omnia/inventory';
 import { createInvoicingService } from '@omnia/invoicing';
+import { createMessagesService } from '@omnia/messages';
 import { createOrganizationsService } from '@omnia/organizations';
 import { createPartiesService } from '@omnia/parties';
 import { createPosService } from '@omnia/pos';
@@ -36,6 +38,7 @@ function build() {
     sql,
     verifyAccessToken: process.env.AUTH_MODE === 'dev' ? null : createAccessTokenVerifier(authConfigFromEnv()),
     organizations: createOrganizationsService(sql),
+    entitlements: createEntitlementsService(sql),
     parties: createPartiesService(sql),
     warehouse: createWarehouseService(sql),
     goodsReceipts: createGoodsReceiptService(createPostgresInventoryUnitOfWork(sql)),
@@ -46,6 +49,7 @@ function build() {
     payroll: createPayrollService(sql),
     incidents: createIncidentsService(sql),
     tasks: createTasksService(sql),
+    messages: createMessagesService(sql),
     stats: createStatsService(sql),
     pos: createPosService(sql),
     recipes: createRecipeService(sql),

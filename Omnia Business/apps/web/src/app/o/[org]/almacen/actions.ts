@@ -32,6 +32,15 @@ export async function createWarehouse(org: string, _: ActionState, formData: For
   });
 }
 
+export async function setWarehouseEstablishment(org: string, warehouseId: string, _: ActionState, formData: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'inventory.write');
+    await container().warehouse.setWarehouseEstablishment(ctx, { warehouseId, establishmentId: formData.get('establishmentId') });
+    revalidatePath(path(org, '/almacenes'));
+    return 'Empresa del almacén guardada';
+  });
+}
+
 export async function setMinimum(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
     const { ctx } = await requirePermission(org, 'inventory.write');

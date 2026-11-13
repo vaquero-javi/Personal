@@ -4,7 +4,7 @@ import { LimitBar } from '@/features/home/panels';
 import { capitalizeFirst, formatMinutes, formatTime } from '@/lib/format';
 import { entryType } from '@/lib/labels';
 import { container } from '@/server/container';
-import { requireOrg } from '@/server/session';
+import { activeEstablishment, requireOrg } from '@/server/session';
 import { clock } from './actions';
 
 export const metadata = { title: 'Fichar · Omnia' };
@@ -15,7 +15,10 @@ const dayLabel = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numer
 export default async function ClockPage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
   const { ctx, can } = await requireOrg(org);
-  const day = await container().hr.myDay(ctx);
+  const [day, mine, active] = await Promise.all([container().hr.myDay(ctx), container().organizations.myEstablishments(ctx), activeEstablishment(org)]);
+  const todayShift0 = day.shifts.find((s) => new Date(s.startsAt).toDateString() === new Date().toDateString());
+  // Por defecto: el local de tu turno de hoy; si no, el elegido arriba (si trabajas en él).
+  const defaultEst = mine.find((e) => e.id === todayShift0?.establishmentId)?.id ?? mine.find((e) => e.id === active?.id)?.id;
   const todayShift = day.shifts.find((s) => new Date(s.startsAt).toDateString() === new Date().toDateString());
   const shiftMinutes = todayShift ? Math.round((new Date(todayShift.endsAt).getTime() - new Date(todayShift.startsAt).getTime()) / 60000) : 0;
   const weekTotal = day.week.reduce((s, d) => s + d.minutes, 0);
@@ -27,7 +30,13 @@ export default async function ClockPage({ params }: { params: Promise<{ org: str
       <Ruled cols="lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Cell title="Hoy">
           {can('hr.time.self') ? (
-            <ClockPanel state={day.state} clock={clock.bind(null, org)} {...(missingNow ? { lateSince: formatTime(todayShift!.startsAt) } : {})} />
+            <ClockPanel
+              state={day.state}
+              clock={clock.bind(null, org)}
+              establishments={mine}
+              {...(defaultEst ? { defaultEstablishmentId: defaultEst } : {})}
+              {...(missingNow ? { lateSince: formatTime(todayShift!.startsAt) } : {})}
+            />
           ) : (
             <p className="text-sm text-ink-2">Tu rol no ficha en esta sociedad.</p>
           )}
@@ -57,6 +66,7 @@ export default async function ClockPage({ params }: { params: Promise<{ org: str
                     {entryType[e.entryType]}
                     {e.source === 'manual' && <span className="text-ink-3"> · corrección de {e.createdByName}</span>}
                     {e.latitude && <span className="text-ink-3"> · con ubicación</span>}
+                    {mine.length > 1 && e.establishmentName && <span className="text-ink-3"> · {e.establishmentName}</span>}
                   </span>
                   <b>{formatTime(e.occurredAt)}</b>
                 </li>

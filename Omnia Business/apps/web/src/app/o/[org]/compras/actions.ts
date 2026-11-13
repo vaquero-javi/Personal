@@ -7,6 +7,7 @@ import { matchSupplierInvoice, type SupplierInvoiceScan } from '@omnia/purchasin
 import { container } from '@/server/container';
 import { readSupplierInvoice } from '@/server/delivery-note-reader';
 import { formObject, runAction, type ActionState } from '@/server/actions';
+import { FEATURES } from '@/server/features';
 import { requirePermission } from '@/server/session';
 
 export async function createPurchaseOrder(org: string, _: ActionState, formData: FormData): Promise<ActionState> {
@@ -59,7 +60,7 @@ export type InvoiceScanState = { ok: true; scan: SupplierInvoiceScan } | { ok: f
 export async function scanReceivedInvoice(org: string, formData: FormData): Promise<InvoiceScanState> {
   let scan: SupplierInvoiceScan | undefined;
   const result = await runAction(async () => {
-    const { ctx } = await requirePermission(org, 'invoicing.write');
+    const { ctx } = await requirePermission(org, 'invoicing.write', FEATURES.receivedInvoices);
     const file = formData.get('photo');
     if (!(file instanceof File) || file.size === 0) throw new DomainError('VALIDATION', 'Elige o haz una foto de la factura');
     const [read, suppliers, items] = await Promise.all([

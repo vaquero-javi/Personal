@@ -12,7 +12,7 @@ const revalidate = (org: string) => revalidatePath(`/o/${org}`, 'layout');
 
 export async function clock(
   org: string,
-  payload: { entryType: 'clock_in' | 'clock_out' | 'break_start' | 'break_end'; latitude?: number; longitude?: number; accuracy?: number; geoConsent: boolean },
+  payload: { entryType: 'clock_in' | 'clock_out' | 'break_start' | 'break_end'; latitude?: number; longitude?: number; accuracy?: number; geoConsent: boolean; establishmentId?: string },
 ): Promise<ActionState> {
   return runAction(async () => {
     const { ctx } = await requirePermission(org, 'hr.time.self');

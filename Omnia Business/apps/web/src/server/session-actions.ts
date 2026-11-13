@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -90,6 +91,8 @@ export async function createOrganization(_: ActionState, formData: FormData): Pr
     const input = formObject(formData);
     await container().organizations.create(userId, input);
     slug = String(input.slug).trim().toLowerCase();
+    // La barra lateral (layout de /o) no se vuelve a pintar al navegar: sin esto, la nueva no aparece hasta recargar.
+    revalidatePath('/', 'layout');
   });
   if (result.ok) redirect(`/o/${slug}`);
   return result;

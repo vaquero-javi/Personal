@@ -288,3 +288,43 @@ export async function saveRecipe(org: string, productId: string, lines: { ingred
     return 'Escandallo guardado';
   });
 }
+
+// ------------------------------------------------------------------ grupo y empresas
+
+export async function setOrganizationParent(org: string, _: ActionState, formData: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'org.manage');
+    await container().organizations.setParent(ctx, formObject(formData));
+    revalidate(org);
+    return formData.get('parentId') ? 'Sociedad añadida al holding' : 'La sociedad ya no pertenece a ningún holding';
+  });
+}
+
+export async function saveEstablishment(org: string, _: ActionState, formData: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'org.manage');
+    const input = formObject(formData);
+    await container().organizations.saveEstablishment(ctx, input);
+    revalidate(org);
+    return input.id ? 'Empresa guardada' : 'Empresa creada';
+  });
+}
+
+export async function deleteEstablishment(org: string, id: string, _: ActionState, _fd: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'org.manage');
+    await container().organizations.deleteEstablishment(ctx, id);
+    revalidate(org);
+    return 'Empresa eliminada; sus almacenes siguen en la sociedad';
+  });
+}
+
+export async function setEstablishmentMember(org: string, establishmentId: string, userId: string, assigned: boolean, _: ActionState, formData: FormData) {
+  return runAction(async () => {
+    const { ctx } = await requirePermission(org, 'members.manage');
+    const person = userId || String(formData.get('userId') ?? '');
+    await container().organizations.setEstablishmentMember(ctx, { establishmentId, userId: person, assigned: assigned ? 'on' : '' });
+    revalidate(org);
+    return assigned ? 'Persona añadida a la empresa' : 'Persona quitada de la empresa';
+  });
+}

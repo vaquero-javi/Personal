@@ -5,6 +5,7 @@ import {
   decimalString,
   parseCustomFields,
   optionalText,
+  optionalUuid,
   requiredText,
   singleOrganization,
   type TenantContext,
@@ -41,6 +42,9 @@ export interface Warehouse {
   code: string;
   name: string;
   isActive: boolean;
+  /** Empresa (negocio o local) de la sociedad a la que pertenece, si tiene. */
+  establishmentId: string | null;
+  establishmentName: string | null;
   itemCount: number;
   stockValue: string;
 }
@@ -129,7 +133,8 @@ export const ConvertUnitInput = z.object({
   factor: decimalString({ scale: 4, sign: 'positive' }),
 });
 
-export const WarehouseInput = z.object({ code: requiredText(10), name: requiredText(80) });
+export const WarehouseInput = z.object({ code: requiredText(10), name: requiredText(80), establishmentId: optionalUuid() });
+export const WarehouseEstablishmentInput = z.object({ warehouseId: z.uuid(), establishmentId: optionalUuid() });
 
 export const StockAdjustmentInput = z
   .object({
@@ -245,21 +250,40 @@ export function createWarehouseService(sql: Sql) {
     async warehouses(ctx: TenantContext): Promise<Warehouse[]> {
       return withTenant(sql, ctx, async (tx) =>
         asRows<Warehouse>(await tx`
-          select w.id, w.code, w.name, w.is_active,
+          select w.id, w.code, w.name, w.is_active, w.establishment_id, e.name as establishment_name,
                  count(sl.item_id) filter (where sl.on_hand > 0)::int as item_count,
                  coalesce(sum(sl.on_hand * sl.avg_unit_cost), 0)::numeric(18,2)::text as stock_value
-          from warehouses w left join stock_levels sl on sl.warehouse_id = w.id
-          group by w.id order by w.name`),
+          from warehouses w
+          left join establishments e on e.organization_id = w.organization_id and e.id = w.establishment_id
+          left join stock_levels sl on sl.warehouse_id = w.id
+          group by w.id, e.name order by w.name`),
       );
     },
 
     async createWarehouse(ctx: TenantContext, raw: unknown) {
       const input = WarehouseInput.parse(raw);
       const orgId = singleOrganization(ctx);
-      await withTenant(sql, ctx, (tx) => tx`insert into warehouses (organization_id, code, name) values (${orgId}, ${input.code.toUpperCase()}, ${input.name})`);
+      await withTenant(sql, ctx, (tx) => tx`
+        insert into warehouses (organization_id, code, name, establishment_id)
+        values (${orgId}, ${input.code.toUpperCase()}, ${input.name}, ${input.establishmentId ?? null})`);
     },
 
-    async stock(ctx: TenantContext, { warehouseId, onlyBelowMinimum = false }: { warehouseId?: string; onlyBelowMinimum?: boolean } = {}): Promise<StockLevel[]> {
+    /** Asigna (o quita) la empresa de un almacén. La FK compuesta impide usar una de otra sociedad. */
+    async setWarehouseEstablishment(ctx: TenantContext, raw: unknown) {
+      const input = WarehouseEstablishmentInput.parse(raw);
+      const orgId = singleOrganization(ctx);
+      await withTenant(sql, ctx, async (tx) => {
+        const rows = await tx`
+          update warehouses set establishment_id = ${input.establishmentId ?? null}
+          where id = ${input.warehouseId} and organization_id = ${orgId} returning id`;
+        if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Almacén no encontrado');
+      });
+    },
+
+    async stock(
+      ctx: TenantContext,
+      { warehouseId, onlyBelowMinimum = false, establishmentId }: { warehouseId?: string; onlyBelowMinimum?: boolean; establishmentId?: string | null } = {},
+    ): Promise<StockLevel[]> {
       return withTenant(sql, ctx, async (tx) =>
         asRows<StockLevel>(await tx`
           select sl.warehouse_id, w.name as warehouse_name, sl.item_id, i.sku, i.name as item_name, i.unit_of_measure,
@@ -269,6 +293,7 @@ export function createWarehouseService(sql: Sql) {
           join warehouses w on w.id = sl.warehouse_id
           join inventory_items i on i.id = sl.item_id
           where (${warehouseId ?? null}::uuid is null or sl.warehouse_id = ${warehouseId ?? null})
+            and (${establishmentId ?? null}::uuid is null or w.establishment_id = ${establishmentId ?? null})
             and (not ${onlyBelowMinimum} or (sl.on_hand <= sl.min_quantity and sl.min_quantity > 0))
           order by (sl.on_hand <= sl.min_quantity and sl.min_quantity > 0) desc, i.name, w.name`),
       );

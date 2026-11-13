@@ -6,7 +6,7 @@ import { SubmitButton } from '@/components/ui/button';
 import { buttonClass } from '@/components/ui/button-styles';
 import { addDays, capitalizeFirst, formatTime, mondayOf, todayIso } from '@/lib/format';
 import { container } from '@/server/container';
-import { requireOrg } from '@/server/session';
+import { activeEstablishment, orgEstablishments, requireOrg } from '@/server/session';
 import { ShiftCell } from '@/features/hr/shift-cell';
 import { createShift, deleteShift } from '../actions';
 
@@ -21,10 +21,18 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
   const { ctx, can } = await requireOrg(org);
   const monday = mondayOf(semana && /^\d{4}-\d{2}-\d{2}$/.test(semana) ? semana : todayIso());
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-  const [shifts, people] = await Promise.all([container().hr.shifts(ctx, monday, 7), container().hr.people(ctx)]);
+  const [est, establishments] = await Promise.all([activeEstablishment(org), orgEstablishments(org)]);
+  const [shifts, people] = await Promise.all([
+    container().hr.shifts(ctx, monday, 7, { establishmentId: est?.id ?? null }),
+    container().hr.people(ctx),
+  ]);
   const manage = can('hr.shifts.manage');
+  // Con una empresa elegida: su personal y quien tenga turno en ella esa semana.
+  const members = new Set(est ? (establishments.find((e) => e.id === est.id)?.memberIds ?? []) : []);
+  const inScope = (userId: string) => !est || members.has(userId) || shifts.some((s) => s.userId === userId);
   // Ver el cuadrante de todo el equipo: permiso «Ver los turnos de todo el equipo» (o poder planificarlos).
-  const visiblePeople = manage || can('hr.shifts.read') ? people : people.filter((p) => p.userId === ctx.userId);
+  const visiblePeople = (manage || can('hr.shifts.read') ? people : people.filter((p) => p.userId === ctx.userId)).filter((p) => inScope(p.userId));
+  const activeEstablishments = establishments.filter((e) => e.isActive);
   const base = `/o/${org}/rrhh/turnos`;
   const today = todayIso();
 
@@ -32,7 +40,7 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
     <>
       <PageHeader
         title="Turnos"
-        description={`Semana del ${head.format(new Date(`${monday}T00:00:00Z`))} al ${head.format(new Date(`${days[6]}T00:00:00Z`))}`}
+        description={`${est ? `${est.name} · ` : ''}Semana del ${head.format(new Date(`${monday}T00:00:00Z`))} al ${head.format(new Date(`${days[6]}T00:00:00Z`))}`}
         actions={
           <div className="flex flex-wrap items-center gap-1">
             {manage && (
@@ -72,13 +80,14 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
                     {days.map((d) => {
                       const own = shifts.filter((s) => s.userId === p.userId && isoInMadrid(new Date(s.startsAt)) === d);
                       return (
-                        <ShiftCell key={d} action={createShift.bind(null, org)} userId={p.userId} date={d} label={`${p.name}, ${head.format(new Date(`${d}T00:00:00Z`))}`} editable={manage}>
+                        <ShiftCell key={d} action={createShift.bind(null, org)} userId={p.userId} date={d} label={`${p.name}, ${head.format(new Date(`${d}T00:00:00Z`))}`} editable={manage} establishmentId={est?.id ?? null}>
                           {own.map((s) => (
                             <div key={s.id} className="group mb-1 flex items-start justify-between gap-1 rounded bg-carton px-2 py-1 text-xs">
                               <span>
                                 <b>{formatTime(s.startsAt)}–{formatTime(s.endsAt)}</b>
                                 {isoInMadrid(new Date(s.endsAt)) !== d && <span className="ml-1 text-ink-3" title="Termina al día siguiente">+1</span>}
                                 {s.area && <span className="block text-ink-3">{s.area}</span>}
+                                {!est && s.establishmentName && <span className="block text-ink-3">{s.establishmentName}</span>}
                               </span>
                               {manage && (
                                 <ActionForm action={deleteShift.bind(null, org, s.id)}>
@@ -109,6 +118,16 @@ export default async function ShiftsPage({ params, searchParams }: { params: Pro
               </div>
               <p className="-mt-1 text-xs text-ink-3">Si la salida es antes que la entrada, el turno acaba al día siguiente.</p>
               <TextField label="Área o puesto" name="area" placeholder="Almacén" />
+              {activeEstablishments.length > 0 && (
+                <SelectField
+                  key={est?.id ?? 'all'}
+                  label="Empresa"
+                  name="establishmentId"
+                  defaultValue={est?.id ?? ''}
+                  placeholder="La de la persona (si trabaja en una sola)"
+                  options={activeEstablishments.map((e) => ({ value: e.id, label: e.name }))}
+                />
+              )}
               <div>
                 <SubmitButton>Crear turno</SubmitButton>
               </div>

@@ -2,9 +2,22 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FeatureGate } from '@/components/entitlements/feature-gate';
 
-/** Secciones de un módulo como control segmentado (segmented control). */
-export function SubNav({ base, items }: { base: string; items: { href: string; label: string; count?: number }[] }) {
+export interface SubNavItem {
+  href: string;
+  label: string;
+  count?: number;
+  /** Submódulo contratado que exige (p. ej. 'purchasing.price_comparison'). */
+  feature?: string;
+}
+
+/**
+ * Secciones de un módulo como control segmentado (segmented control).
+ * Las que dependen de un submódulo no contratado se ocultan, o salen con candado
+ * si `upsell` (quien gestiona la sociedad puede pedirlas).
+ */
+export function SubNav({ base, items, upsell = false }: { base: string; items: SubNavItem[]; upsell?: boolean }) {
   const pathname = usePathname();
   const matches = (href: string) => {
     const full = href ? `${base}/${href}` : base;
@@ -18,8 +31,7 @@ export function SubNav({ base, items }: { base: string; items: { href: string; l
       <ul className="inline-flex min-w-max gap-0.5 rounded-[10px] bg-fill p-0.5">
         {items.map((item) => {
           const on = active(item.href);
-          return (
-            <li key={item.href}>
+          const link = (
               <Link
                 href={item.href ? `${base}/${item.href}` : base}
                 aria-current={on ? 'page' : undefined}
@@ -32,10 +44,17 @@ export function SubNav({ base, items }: { base: string; items: { href: string; l
                   <span className="min-w-5 rounded-full bg-sys-red px-1.5 text-center text-[11px] leading-[18px] font-semibold text-white">{item.count}</span>
                 )}
               </Link>
-            </li>
+          );
+          return item.feature ? (
+            <FeatureGate key={item.href} as="li" compact feature={item.feature} mode={upsell ? 'upsell' : 'hide'}>
+              {link}
+            </FeatureGate>
+          ) : (
+            <li key={item.href}>{link}</li>
           );
         })}
       </ul>
     </nav>
   );
 }
+

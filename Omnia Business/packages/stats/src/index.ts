@@ -98,6 +98,20 @@ export function results(months: MonthFigures[]): Results {
   };
 }
 
+/** Cifras de una empresa (negocio o local) en un periodo. `establishmentId` null = sin empresa asignada. */
+export interface EstablishmentFigures {
+  establishmentId: string | null;
+  name: string | null;
+  isActive: boolean;
+  salesBase: number;
+  posBase: number;
+  tickets: number;
+  b2bBase: number;
+  stockValue: number;
+  staff: number;
+  shiftHours: number;
+}
+
 /** Gastos totales de un mes: compras, otros gastos y nóminas. */
 export const monthExpenses = (m: MonthFigures) => round2(m.suppliesBase + m.expensesBase + m.payrollNet);
 /** Caja que entra menos la que sale (cobros − pagos − nóminas). */
@@ -125,6 +139,26 @@ export function createStatsService(sql: Sql) {
           payrollNet: num(r.payroll_net),
           collected: num(r.collected),
           paidOut: num(r.paid_out),
+        }));
+      });
+    },
+
+    /** Comparativa por empresa (locales) de la sociedad entre dos fechas (incluidas). */
+    async establishments(ctx: TenantContext, from: string, to: string): Promise<EstablishmentFigures[]> {
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) => {
+        const rows = await tx`select * from app.stats_establishments(${orgId}, ${IsoDate.parse(from)}, ${IsoDate.parse(to)})`;
+        return rows.map((r) => ({
+          establishmentId: (r.establishment_id as string | null) ?? null,
+          name: (r.name as string | null) ?? null,
+          isActive: r.is_active !== false,
+          salesBase: num(r.sales_base),
+          posBase: num(r.pos_base),
+          tickets: num(r.tickets),
+          b2bBase: num(r.b2b_base),
+          stockValue: num(r.stock_value),
+          staff: num(r.staff),
+          shiftHours: num(r.shift_hours),
         }));
       });
     },

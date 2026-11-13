@@ -9,7 +9,7 @@ import { Notice } from '@/components/ui/form';
 import { buttonClass } from '@/components/ui/button';
 
 type EntryType = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
-type Clock = (payload: { entryType: EntryType; latitude?: number; longitude?: number; accuracy?: number; geoConsent: boolean }) => Promise<ActionState>;
+type Clock = (payload: { entryType: EntryType; latitude?: number; longitude?: number; accuracy?: number; geoConsent: boolean; establishmentId?: string }) => Promise<ActionState>;
 
 const ACTIONS: Record<ClockState, { type: EntryType; label: string; icon: typeof LogIn; primary?: boolean }[]> = {
   out: [{ type: 'clock_in', label: 'Fichar entrada', icon: LogIn, primary: true }],
@@ -29,8 +29,24 @@ const STATE_LABEL: Record<ClockState, string> = { out: 'Fuera de jornada', worki
  * Botonera de fichaje. La ubicación es opcional y solo se envía con el
  * consentimiento explícito de la persona (RGPD); el servidor lo comprueba.
  */
-export function ClockPanel({ state, clock, lateSince }: { state: ClockState; clock: Clock; /** Turno ya empezado sin entrada (hh:mm). */ lateSince?: string }) {
+export function ClockPanel({
+  state,
+  clock,
+  lateSince,
+  establishments = [],
+  defaultEstablishmentId,
+}: {
+  state: ClockState;
+  clock: Clock;
+  /** Turno ya empezado sin entrada (hh:mm). */
+  lateSince?: string;
+  /** Locales en los que trabaja la persona. Con más de uno, elige dónde ficha. */
+  establishments?: { id: string; name: string }[];
+  defaultEstablishmentId?: string;
+}) {
   const [geo, setGeo] = useState(false);
+  const [establishmentId, setEstablishmentId] = useState(defaultEstablishmentId ?? establishments[0]?.id ?? '');
+  const choose = establishments.length > 1;
   const [result, setResult] = useState<ActionState | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -47,6 +63,7 @@ export function ClockPanel({ state, clock, lateSince }: { state: ClockState; clo
       const res = await clock({
         entryType: type,
         geoConsent: geo && !!pos,
+        ...(choose && establishmentId ? { establishmentId } : {}),
         ...(pos ? { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy } : {}),
       });
       setResult(res);
@@ -61,6 +78,20 @@ export function ClockPanel({ state, clock, lateSince }: { state: ClockState; clo
           {state === 'out' && lateSince ? `Sin fichar · tu turno empezó a las ${lateSince}` : STATE_LABEL[state]}
         </b>
       </p>
+      {choose && (
+        <label className="flex flex-col gap-1.5 text-[13px] text-ink-2 sm:max-w-xs">
+          Local donde fichas
+          <select
+            value={establishmentId}
+            onChange={(e) => setEstablishmentId(e.target.value)}
+            className="h-9 rounded-[10px] bg-fill px-3 text-[15px] text-ink focus:bg-sheet focus:ring-[3px] focus:ring-tint/45 focus:outline-none"
+          >
+            {establishments.map((e) => (
+              <option key={e.id} value={e.id}>{e.name}</option>
+            ))}
+          </select>
+        </label>
+      )}
       {result?.error && <Notice tone="danger">{result.error}</Notice>}
       {result?.ok && result.message && <Notice tone="ok">{result.message}</Notice>}
       <div className="flex flex-wrap gap-2">

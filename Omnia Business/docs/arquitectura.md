@@ -10,6 +10,7 @@ ERP/CRM modular y multiempresa. Este documento explica las decisiones; el códig
 | JWT y organización activa | `packages/auth/src/` |
 | Módulo de ejemplo (albaranes) | `packages/inventory/src/` |
 | API y caché del cliente | `apps/web/src/` |
+| Módulos contratados por sociedad | migración `0032_entitlements` · `packages/entitlements/` · `apps/web/src/{lib/entitlements.tsx,components/entitlements/}` · panel en `apps/admin` |
 | TPV de hostelería (app aparte) | `apps/tpv/` · `packages/pos/` · `packages/recipes/` · migración `0012_pos` |
 
 ---
@@ -34,7 +35,11 @@ ERP/CRM modular y multiempresa. Este documento explica las decisiones; el códig
 
 ### 2.1 Modelo
 
-- `organizations` es la razón social, y `parent_id` modela holdings y grupos.
+- `organizations` es la razón social (tenant). `kind` distingue **holding** (matriz) de **sociedad**, y `parent_id` cuelga una sociedad de su holding: solo dos niveles; lo impone el trigger `guard_organization_tree` (migración `0034`). Holdings se crean con `app.create_holding()`; para meter o sacar una sociedad de un holding (`app.set_organization_parent()`) hay que gestionar las dos.
+- `establishments` son las **empresas**: negocios o locales DENTRO de una sociedad. Comparten su NIF y su facturación, y cada almacén puede pertenecer a una (`warehouses.establishment_id`, FK compuesta: nunca la de otra sociedad). El TPV va con el almacén. Las ven todos los miembros; las gestiona quien tiene `org.manage` (Ajustes › Empresas). Un holding no tiene empresas propias.
+- Por empresa (migración `0035`): **personal** (`establishment_members`, lo gestiona `members.manage`), **turnos** (`shifts.establishment_id`) y **fichajes** (`time_entries.establishment_id`). El fichaje se guarda con su local: el que se elige al fichar, el del terminal del TPV o, si la persona solo trabaja en uno, ese (trigger `fill_time_entry_establishment`). Una persona no puede fichar en un local en el que no trabaja. Como los fichajes son registros legales, una empresa con fichajes no se borra (FK `RESTRICT`): se desactiva.
+- **Empresa activa**: el selector de la barra superior (cookie `omnia_empresa_<sociedad>`, validada contra las empresas activas en cada petición) filtra Almacén, pedidos de venta, Turnos y Registro de jornada. *Estadísticas › Por empresa* (`app.stats_establishments`) compara facturación, tickets, stock y horas de turno; cada venta se atribuye por el almacén del que sale (ticket → terminal → almacén; pedido B2B → almacén).
+- Ser miembro de un holding **no** da acceso a sus sociedades: la vista de grupo (que se puede acotar a un holding) suma lo que cada persona ve en cada una con sus propios permisos.
 - `user_organizations` es la membresía (usuario × empresa × **un rol**), con estado `invited | active | suspended`.
 - `roles` son por empresa y `role_permissions` usa códigos como `inventory.post` y comodines `inventory.*` y `*`.
 - `app.create_organization()` crea la empresa con tres roles base (`owner`, `admin`, `employee`) y deja al creador como propietario.
@@ -438,3 +443,61 @@ Revocar o cambiar algo es inmediato en la base: la siguiente lectura en el TPV y
 | Probar con Apple y Google reales | La firma del .pkpass está verificada con OpenSSL frente a una CA de pruebas, y el JWT de Google con su clave pública. Falta probarlos con los certificados reales y en un iPhone/Android. |
 | Cabeceras APNs | Se envía `apns-topic` = Pass Type ID con payload `{}`; confirmar contra la documentación vigente de Wallet al dar de alta el certificado. |
 | Cron en Vercel Hobby | Solo permite una ejecución al día; los avisos inmediatos van con `after()`. Para reintentos frecuentes, plan Pro o un cron externo. |
+
+---
+
+## 11. Módulos contratados por sociedad (entitlements)
+
+Qué tiene cada sociedad lo decide **Omnia**; qué puede hacer cada persona dentro lo decide **la sociedad** (roles). Los roles operan siempre *por debajo* de lo contratado: ni un propietario (`*`) entra en un módulo que su sociedad no tiene.
+
+| Pieza | Dónde |
+|---|---|
+| Catálogo jerárquico, asignación, historial, solicitudes, super-admins | `supabase/migrations/20261112000032_entitlements.sql` |
+| Contratos Zod y réplica en TS de las reglas | `packages/entitlements/src/domain.ts` (`/contracts`, también en el navegador) |
+| Servicio (resolución, guarda, solicitudes, panel) | `packages/entitlements/src/service.ts` |
+| API | Web: `GET /api/v1/entitlements` · `POST /api/v1/entitlements/requests`. Panel (`apps/admin`): `GET /api/organizations[/:id/features]` · `PUT /api/organizations/:id/features/:code` |
+| Interfaz | `EntitlementsProvider` + `useFeature()` (`lib/entitlements.tsx`), `<FeatureGate mode="hide\|upsell">`, `<RequireFeature>` en los layouts |
+| Pruebas | `supabase/tests/entitlements.test.mjs` (62) · `apps/admin` (8) · `tests/integration/entitlements.test.ts` (17) · `packages/entitlements` (7) |
+
+**Modelo.** Las sociedades son los tenants (`organizations`). `features` es el catálogo: el código lleva la jerarquía (`sales.pos.staff_cards` cuelga de `sales.pos`), `is_core` = incluido siempre, `default_enabled` = plan de entrada al crear la sociedad, `permission_gates` = prefijos de permisos de rol que tapa. `organization_features` dice qué tiene cada sociedad (`is_active`, `expires_at`). Un módulo es **efectivo** si es base o está activo y sin caducar, **y** su padre es efectivo.
+
+**Cuatro capas de defensa:**
+
+1. **RLS, vía permisos.** `app.authorized_org_ids(perm)` añade la condición: si un módulo tapa `perm` (`stats` tapa `stats.read`), la sociedad debe tenerlo. Todas las políticas existentes lo heredan sin tocarlas.
+2. **RLS, política restrictiva por tabla** (`app.apply_feature_gate(tabla, módulo)`): tapa también los accesos «a lo propio» que no pasan por permisos (mis nóminas, mis turnos, mi tarjeta). **Toda tabla nueva de un módulo de pago debe llevar su gate.**
+3. **Aplicación.** `requireOrg().can()` replica la regla (rol **y** módulo); `requirePermission(slug, perm, feature?)` lanza `FEATURE_DISABLED`; `handle(req, uc, { feature })` responde `403 { error: 'FEATURE_DISABLED', required_feature }`. Los submódulos de interfaz (tarifas, facturas recibidas, comparador) solo se protegen aquí: no tienen permiso ni tabla propios.
+4. **Interfaz.** `<RequireFeature>` en el layout de cada módulo/submódulo enseña «módulo no contratado» a quien entra por URL; `<FeatureGate>` oculta o enseña con candado (upsell, solo a quien tiene `org.manage`) en la barra lateral y en los segmentados.
+
+**Aislamiento.** La sociedad nunca va en un parámetro: sale de la URL/cabecera validada contra las membresías. `app.org_entitled_features(uuid)` es interna (sin `GRANT`); la aplicación solo llama a `app.entitled_features()`, limitada a las sociedades activas de la sesión. `organization_features` no tiene `INSERT/UPDATE` para `app_user`.
+
+**Equipo de Omnia: app aparte (`apps/admin`, puerto 3300).** El panel no vive en la web de las sociedades: es otra aplicación, con otro dominio en producción y su propio inicio de sesión. La web solo tiene un enlace: el botón de la portada lleva a `/equipo`, que redirige a `ADMIN_APP_URL`.
+- **Credenciales propias** (migración `0033`): email + contraseña del equipo en `platform_admins.password_hash` (scrypt), no las cuentas de Supabase Auth de las sociedades. Se comprueban en el servidor del panel, en tiempo constante y también para emails inexistentes. El mensaje de error es siempre el mismo. Tras 5 fallos seguidos, la cuenta se bloquea 15 min.
+- **Rol de conexión propio**, `omnia_admin`: solo él ejecuta `app.platform_admin_credentials()` y compañía. Ni `omnia_api` (la web), ni `app_user`, ni `authenticated` pueden leer los hashes. Para las funciones `app.admin_*` hace `SET ROLE app_user` como el resto.
+- **Sesión**: cookie `omnia_admin_session` firmada con HMAC (`ADMIN_SESSION_SECRET`), `httpOnly`, `SameSite=Strict`, 12 h. En cada petición se comprueba en la base que la persona sigue en el equipo y que su `session_version` es la vigente: cambiar la contraseña (`app.set_platform_admin_password`, sin `GRANT`; `npm run admin:password`) cierra todas sus sesiones.
+- **Escrituras** (API de la matriz y salir): solo con `Origin` del propio panel. Cabeceras `noindex`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`, `no-store`; `robots.txt` lo cierra todo.
+- Ser del equipo no da acceso a los datos de ninguna sociedad: solo a sus módulos.
+
+**Tiempo real.** El cambio es inmediato en la RLS. La interfaz arranca con lo que resolvió el servidor (sin carga) y se revalida al volver a la pestaña y cada minuto; si cambia, `router.refresh()` repinta lo decidido en el servidor.
+
+**Rendimiento.** Los módulos de cada sociedad vienen en `app.my_memberships()` (la misma consulta que ya pinta la barra lateral) y el catálogo, una vez por petición. Las comprobaciones de la RLS son subconsultas no correlacionadas: una evaluación por consulta.
+
+**Al migrar**, las sociedades que ya existían reciben todos los módulos (nadie pierde acceso). Las nuevas reciben el plan de entrada: Ventas, Tarifas, Compras, Facturas recibidas y Turnos. TPV, Tarjetas, Comparador, Estadísticas y Nóminas se activan desde el panel (`apps/admin`).
+
+| Pendiente | Estado |
+|---|---|
+| TPV (`apps/tpv`) | Sin módulo, la RLS bloquea mesas, cuentas y caja, pero la pantalla de bloqueo no explica por qué. Falta un aviso propio. |
+| Avisos de solicitudes | Se ven en el panel; no se envía correo al equipo de Omnia. |
+| Segundo factor en el panel | Hoy, email + contraseña con bloqueo. Para producción conviene añadir un código TOTP (app de autenticación) al login del panel. |
+| Facturación/cobro del plan | Fuera de alcance: los módulos se activan a mano. |
+
+---
+
+## 12. Mensajes (correo interno)
+
+Módulo contratable `messages` (plan de entrada; se quita por sociedad desde el panel). Migración `0037_messages`, paquete `packages/messages`, pantallas en `apps/web/src/app/o/[org]/mensajes`.
+
+- **Modelo**: `message_threads` (asunto, dentro de una sociedad) → `message_participants` (estado por persona: leído, archivado, destacado) → `messages` (inmutables: ni se editan ni se borran).
+- **Privacidad**: la RLS solo deja leer las conversaciones en las que participas (`app.message_thread_ids()`); ningún rol, ni el propietario, ve conversaciones ajenas. `app_user` no tiene `INSERT/UPDATE` sobre estas tablas: se escribe con `app.message_send`, `app.message_reply` y `app.message_set_state` (DEFINER), que exigen el módulo, una sola sociedad activa y destinatarios que sean miembros activos de ella.
+- **Bandejas**: Recibidos (no archivadas), Destacados, Enviados (en las que has escrito) y Archivados. Una respuesta nueva devuelve la conversación a Recibidos de todos.
+- **No leídos**: `app.my_unread_messages()` para la barra lateral de todas tus sociedades en una consulta; la bandeja y la conversación se refrescan solas (cada 15–20 s y al volver a la pestaña).
+- **Alcance**: dentro de una sociedad. Escribir entre sociedades de un holding rompería el aislamiento por tenant; si hace falta, irá como función aparte que lo autorice explícitamente.

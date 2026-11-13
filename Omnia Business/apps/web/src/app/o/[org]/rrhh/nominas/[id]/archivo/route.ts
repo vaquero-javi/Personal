@@ -1,4 +1,5 @@
 import { container } from '@/server/container';
+import { FEATURES } from '@/server/features';
 import { requireOrg } from '@/server/session';
 
 /**
@@ -7,7 +8,8 @@ import { requireOrg } from '@/server/session';
  */
 export async function GET(request: Request, ctx: { params: Promise<{ org: string; id: string }> }) {
   const { org, id } = await ctx.params;
-  const { ctx: tenant } = await requireOrg(org);
+  const { ctx: tenant, has } = await requireOrg(org);
+  if (!has(FEATURES.hrPayroll)) return new Response('Módulo no contratado', { status: 403 });
 
   const doc = await container().payroll.file(tenant, id).catch(() => null);
   if (!doc) return new Response('Nómina no encontrada', { status: 404 });

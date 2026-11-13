@@ -1,5 +1,6 @@
 import { after } from 'next/server';
 import { container } from '@/server/container';
+import { STAFF_CARDS } from '@/server/features';
 import { handle, readJson } from '@/server/http';
 
 /**
@@ -13,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const response = await handle(request, async (ctx) => {
     await container().staffCards.revoke(ctx, id, input);
     return { revoked: true };
-  });
+  }, { feature: STAFF_CARDS });
   after(() => container().staffCards.processWalletUpdates(20));
   return response;
 }

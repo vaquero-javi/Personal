@@ -1,4 +1,5 @@
 import { container } from '@/server/container';
+import { STAFF_CARDS } from '@/server/features';
 import { handle } from '@/server/http';
 
 /** GET /api/v1/staff-cards/:id/apple — descarga el .pkpass (titular o responsable). */
@@ -9,7 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const response = await handle(request, async (ctx) => {
     pass = await container().staffCards.applePass(ctx, id);
     return null;
-  });
+  }, { feature: STAFF_CARDS });
   if (!pass) return response;
   return new Response(new Uint8Array(pass), {
     headers: {

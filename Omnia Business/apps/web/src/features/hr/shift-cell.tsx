@@ -23,8 +23,11 @@ export function ShiftCell({
   date,
   label,
   editable,
+  establishmentId,
   children,
 }: {
+  /** Empresa elegida arriba: el turno nuevo se crea en ella. */
+  establishmentId?: string | null;
   action: FormAction;
   userId: string;
   date: string;
@@ -64,6 +67,7 @@ export function ShiftCell({
           <ActionForm action={action} successMessage="Turno creado" onSuccess={close} errorPlacement="manual" className="flex flex-col gap-1.5">
             <input type="hidden" name="userId" value={userId} />
             <input type="hidden" name="date" value={date} />
+            {establishmentId && <input type="hidden" name="establishmentId" value={establishmentId} />}
             <div className="grid grid-cols-2 gap-1">
               <input
                 ref={fromRef}

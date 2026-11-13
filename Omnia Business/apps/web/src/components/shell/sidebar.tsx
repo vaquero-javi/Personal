@@ -2,25 +2,30 @@
 
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { useEffect, useRef, type ComponentType, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react';
 import {
   ChartColumn,
+  ChevronRight,
   House,
+  Landmark,
   Layers,
   ListChecks,
   LogOut,
+  Mail,
   Package,
   PanelLeft,
   Plus,
   Receipt,
   Search,
   Settings,
+  Store,
   ShoppingBag,
   TriangleAlert,
   Truck,
   Users,
   type LucideProps,
 } from 'lucide-react';
+import { FeatureGate } from '@/components/entitlements/feature-gate';
 import { MODULES, moduleLabel } from './modules';
 import { ThemePicker } from './theme-picker';
 import { spineCss, type SpineColor } from './spines';
@@ -32,8 +37,60 @@ export interface SidebarOrg {
   label: string;
   spine: SpineColor;
   roleName: string;
-  /** Módulos visibles con los permisos del usuario en esta sociedad. */
+  /** Módulos que el ROL del usuario permite en esta sociedad (lo contratado se decide con FeatureGate). */
   modules: string[];
+  /** Gestiona la sociedad: ve los módulos no contratados con candado para pedirlos. */
+  canManage: boolean;
+  kind: 'holding' | 'company';
+  /** Holding del que cuelga (si el usuario también es miembro de él). */
+  parentId: string | null;
+  /** Empresas (negocios o locales) activas de la sociedad. */
+  establishments: { id: string; name: string }[];
+  /** La elegida para filtrar la app en esta sociedad (null = todas). */
+  activeEstablishmentId: string | null;
+  /** Conversaciones sin leer en Mensajes. */
+  unreadMessages: number;
+}
+
+/** Holdings con sus sociedades dentro; luego las sociedades sueltas (o cuyo holding no ves). */
+function orgGroups(organizations: SidebarOrg[]): { org: SidebarOrg; children: SidebarOrg[] }[] {
+  const ids = new Set(organizations.map((o) => o.id));
+  const out = organizations.filter((o) => o.kind === 'holding').map((h) => ({ org: h, children: organizations.filter((o) => o.parentId === h.id) }));
+  for (const o of organizations) if (o.kind !== 'holding' && !(o.parentId && ids.has(o.parentId))) out.push({ org: o, children: [] });
+  return out;
+}
+
+const COLLAPSED_KEY = 'omnia-sidebar-collapsed';
+
+/**
+ * Holdings recogidos en la barra lateral. Es una preferencia de este navegador
+ * (localStorage): no se guarda en la cuenta. Se lee tras montar para no
+ * descuadrar el HTML del servidor; si falla el almacenamiento, todo desplegado.
+ */
+function useCollapsedHoldings(): [ReadonlySet<string>, (id: string) => void] {
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSED_KEY);
+      if (raw) setCollapsed(new Set((JSON.parse(raw) as unknown[]).filter((v): v is string => typeof v === 'string')));
+    } catch {
+      /* sin almacenamiento: desplegado */
+    }
+  }, []);
+  const toggle = useCallback((id: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]));
+      } catch {
+        /* se pierde al recargar; no importa */
+      }
+      return next;
+    });
+  }, []);
+  return [collapsed, toggle];
 }
 
 export interface SidebarUser {
@@ -50,6 +107,7 @@ const MODULE_ICON: Record<string, { Icon: ComponentType<LucideProps>; tile: stri
   rrhh: { Icon: Users, tile: 'bg-sys-indigo' },
   incidencias: { Icon: TriangleAlert, tile: 'bg-sys-red' },
   tareas: { Icon: ListChecks, tile: 'bg-sys-teal' },
+  mensajes: { Icon: Mail, tile: 'bg-sys-blue' },
   estadisticas: { Icon: ChartColumn, tile: 'bg-sys-purple' },
   ajustes: { Icon: Settings, tile: 'bg-sys-gray' },
 };
@@ -74,16 +132,22 @@ function Row({
   quiet = false,
   children,
   label,
+  className = '',
+  plain = false,
 }: {
+  /** Enlace normal, sin precarga: para enlaces que cambian algo (p. ej. elegir empresa). */
+  plain?: boolean;
   href: string;
   active: boolean;
   /** Selección gris (la sociedad abierta) en lugar de la de acento (el módulo abierto). */
   quiet?: boolean;
   children: ReactNode;
   label?: string;
+  className?: string;
 }) {
+  const Anchor = plain ? 'a' : Link;
   return (
-    <Link
+    <Anchor
       href={href}
       aria-current={active ? (quiet ? 'true' : 'page') : undefined}
       aria-label={label}
@@ -91,10 +155,11 @@ function Row({
       className={[
         'pressable flex h-9 items-center gap-2.5 rounded-[9px] px-2 text-[14px] font-medium',
         active && !quiet ? 'bg-tint text-on-tint' : active ? 'bg-fill-strong text-ink' : 'text-ink hover:bg-fill active:bg-fill-strong',
+        className,
       ].join(' ')}
     >
       {children}
-    </Link>
+    </Anchor>
   );
 }
 
@@ -107,17 +172,160 @@ function SectionTitle({ children, action }: { children: ReactNode; action?: Reac
   );
 }
 
+/** Fila de una sociedad u holding. */
+function OrgRow({
+  o,
+  slug,
+  current,
+  toggleable,
+  badge,
+  containsOpen = false,
+}: {
+  o: SidebarOrg;
+  slug: string | undefined;
+  current: string;
+  toggleable: boolean;
+  badge: number | null;
+  /** Recogida y con lo abierto dentro: se marca para no perder dónde estás. */
+  containsOpen?: boolean;
+}) {
+  const holding = o.kind === 'holding';
+  // Con una empresa elegida (y visible), la sociedad abierta queda en gris claro: la marca la lleva la empresa.
+  const on = (o.slug === slug && !o.activeEstablishmentId) || containsOpen;
+  return (
+    <Row
+      href={`/o/${o.slug}${current ? `/${current}` : ''}`}
+      active={on}
+      quiet
+      label={holding ? `${o.legalName} (holding)` : o.legalName}
+      className={`${toggleable ? 'pr-9' : ''} ${o.slug === slug && !on ? 'bg-fill' : ''}`}
+    >
+      <span
+        aria-hidden
+        className={`flex size-[26px] shrink-0 items-center justify-center text-[12px] font-semibold text-white shadow-[inset_0_0_0_0.5px_rgb(0_0_0/0.1)] ${holding ? 'rounded-[7px]' : 'rounded-full'}`}
+        style={{ backgroundColor: spineCss(o.spine) }}
+      >
+        {holding ? <Landmark className="size-[14px]" strokeWidth={2.2} /> : firstLetter(o.label)}
+      </span>
+      <span className="min-w-0 flex-1 truncate">{o.label}</span>
+      {badge !== null ? (
+        <span className="shrink-0 rounded-full bg-fill-strong px-1.5 text-[11px] leading-[18px] font-semibold text-ink-2">{badge}</span>
+      ) : (
+        holding && <span className="shrink-0 text-[11px] font-medium text-ink-3">Holding</span>
+      )}
+    </Row>
+  );
+}
+
+function Disclosure({ id, label, isCollapsed, count, toggle }: { id: string; label: string; isCollapsed: boolean; count: number; toggle: (id: string) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => toggle(id)}
+      aria-expanded={!isCollapsed}
+      aria-controls={`tree-${id}`}
+      aria-label={`${isCollapsed ? 'Desplegar' : 'Recoger'} ${label}`}
+      title={isCollapsed ? `Desplegar (${count})` : 'Recoger'}
+      className="pressable absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-[7px] text-ink-3 hover:bg-fill-strong hover:text-ink"
+    >
+      <ChevronRight aria-hidden className={`size-4 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`} strokeWidth={2.4} />
+    </button>
+  );
+}
+
+/** Rama con sangría y filete a la izquierda (la de un holding o la de una sociedad). */
+function Branch({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <ul id={`tree-${id}`} className="mt-px ml-[21px] flex flex-col gap-px border-l border-line-soft pl-1.5">
+      {children}
+    </ul>
+  );
+}
+
+/** Empresas (locales) de una sociedad: pulsar una abre la sociedad filtrada por ella. */
+function EstablishmentRows({ o, slug, current }: { o: SidebarOrg; slug: string | undefined; current: string }) {
+  return o.establishments.map((e) => {
+    const on = o.slug === slug && o.activeEstablishmentId === e.id;
+    return (
+      <li key={e.id}>
+        <Row plain href={`/o/${o.slug}/empresa/${on ? 'todas' : e.id}${current ? `?ir=${current}` : ''}`} active={on} quiet label={on ? `${e.name}: quitar el filtro de empresa` : `${e.name} (${o.label})`}>
+          <span aria-hidden className="flex size-[22px] shrink-0 items-center justify-center rounded-[6px] bg-fill text-ink-2">
+            <Store className="size-[13px]" strokeWidth={2.2} />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-[13px]">{e.name}</span>
+        </Row>
+      </li>
+    );
+  });
+}
+
+/**
+ * Nodo del árbol: holding → sociedades → empresas. Cada nivel con hijos se
+ * puede recoger; recogido, se esconde todo lo de dentro.
+ */
+function OrgNode({
+  org: o,
+  childOrgs,
+  slug,
+  current,
+  collapsed,
+  toggle,
+}: {
+  org: SidebarOrg;
+  childOrgs: SidebarOrg[];
+  slug: string | undefined;
+  current: string;
+  collapsed: ReadonlySet<string>;
+  toggle: (id: string) => void;
+}) {
+  const holding = o.kind === 'holding';
+  const count = holding ? childOrgs.length : o.establishments.length;
+  if (count === 0) {
+    return (
+      <li>
+        <OrgRow o={o} slug={slug} current={current} toggleable={false} badge={null} />
+      </li>
+    );
+  }
+  const isCollapsed = collapsed.has(o.id);
+  const label = holding ? `las sociedades de ${o.label}` : `las empresas de ${o.label}`;
+
+  // Recogido: se esconde todo lo de dentro. Si lo abierto está dentro, la fila se marca.
+  const containsOpen = isCollapsed && (holding ? childOrgs.some((c) => c.slug === slug) : o.slug === slug && !!o.activeEstablishmentId);
+  return (
+    <li>
+      <div className="relative">
+        <OrgRow o={o} slug={slug} current={current} toggleable badge={isCollapsed ? count : null} containsOpen={containsOpen} />
+        <Disclosure id={o.id} label={label} isCollapsed={isCollapsed} count={count} toggle={toggle} />
+      </div>
+      {!isCollapsed && (
+        <Branch id={o.id}>
+          {holding ? (
+            childOrgs.map((c) => <OrgNode key={c.id} org={c} childOrgs={[]} slug={slug} current={current} collapsed={collapsed} toggle={toggle} />)
+          ) : (
+            <EstablishmentRows o={o} slug={slug} current={current} />
+          )}
+        </Branch>
+      )}
+    </li>
+  );
+}
+
 /** Contenido de la barra lateral (compartido por escritorio y la hoja de móvil). */
 function SidebarContent({
   organizations,
   user,
   devMode,
   signOut,
+  collapsed,
+  toggleHolding,
 }: {
   organizations: SidebarOrg[];
   user: SidebarUser;
   devMode: boolean;
   signOut: () => Promise<void>;
+  collapsed: ReadonlySet<string>;
+  toggleHolding: (id: string) => void;
 }) {
   const { org: slug } = useParams<{ org?: string }>();
   const pathname = usePathname();
@@ -162,15 +370,28 @@ function SidebarContent({
               {MODULES.filter((m) => active.modules.includes(m.slug)).map((m) => {
                 const { Icon, tile } = MODULE_ICON[m.slug]!;
                 const on = m.slug === current;
-                return (
-                  <li key={m.slug || 'inicio'}>
-                    <Row href={`/o/${active.slug}${m.slug ? `/${m.slug}` : ''}`} active={on}>
-                      <Tile className={tile}>
-                        <Icon className="size-[15px]" strokeWidth={2.2} />
-                      </Tile>
-                      {m.label}
-                    </Row>
-                  </li>
+                const row = (
+                  <Row href={`/o/${active.slug}${m.slug ? `/${m.slug}` : ''}`} active={on}>
+                    <Tile className={tile}>
+                      <Icon className="size-[15px]" strokeWidth={2.2} />
+                    </Tile>
+                    <span className="min-w-0 flex-1 truncate">{m.label}</span>
+                    {m.slug === 'mensajes' && active.unreadMessages > 0 && (
+                      <span
+                        aria-label={`${active.unreadMessages} sin leer`}
+                        className={`min-w-5 shrink-0 rounded-full px-1.5 text-center text-[11px] leading-[18px] font-semibold ${on ? 'bg-on-tint text-tint' : 'bg-sys-red text-white'}`}
+                      >
+                        {active.unreadMessages}
+                      </span>
+                    )}
+                  </Row>
+                );
+                return m.feature ? (
+                  <FeatureGate key={m.slug} as="li" feature={m.feature} mode={active.canManage ? 'upsell' : 'hide'}>
+                    {row}
+                  </FeatureGate>
+                ) : (
+                  <li key={m.slug || 'inicio'}>{row}</li>
                 );
               })}
             </ul>
@@ -202,23 +423,9 @@ function SidebarContent({
               </Row>
             </li>
           )}
-          {organizations.map((o) => {
-            const on = o.slug === slug;
-            return (
-              <li key={o.id}>
-                <Row href={`/o/${o.slug}${current ? `/${current}` : ''}`} active={on} quiet label={o.legalName}>
-                  <span
-                    aria-hidden
-                    className="flex size-[26px] shrink-0 items-center justify-center rounded-full text-[12px] font-semibold text-white shadow-[inset_0_0_0_0.5px_rgb(0_0_0/0.1)]"
-                    style={{ backgroundColor: spineCss(o.spine) }}
-                  >
-                    {firstLetter(o.label)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{o.label}</span>
-                </Row>
-              </li>
-            );
-          })}
+          {orgGroups(organizations).map(({ org: h, children }) => (
+            <OrgNode key={h.id} org={h} childOrgs={children} slug={slug} current={current} collapsed={collapsed} toggle={toggleHolding} />
+          ))}
         </ul>
       </nav>
 
@@ -259,6 +466,8 @@ export function Sidebar(props: { organizations: SidebarOrg[]; user: SidebarUser;
   const { org: slug } = useParams<{ org?: string }>();
   const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
+  // Un solo estado para la barra de escritorio y la hoja del móvil.
+  const [collapsed, toggleHolding] = useCollapsedHoldings();
   const active = props.organizations.find((o) => o.slug === slug);
   const title = pathname === '/o/grupo' ? 'Vista de grupo' : pathname === '/o/nueva' ? 'Nueva sociedad' : (moduleLabel(pathname.split('/')[3] ?? '') ?? 'Omnia');
 
@@ -270,7 +479,7 @@ export function Sidebar(props: { organizations: SidebarOrg[]; user: SidebarUser;
   return (
     <>
       <aside className="material sticky top-0 hidden h-dvh w-[264px] shrink-0 border-r border-line-soft md:block">
-        <SidebarContent {...props} />
+        <SidebarContent {...props} collapsed={collapsed} toggleHolding={toggleHolding} />
       </aside>
 
       {/* Móvil: barra de navegación translúcida. */}
@@ -296,7 +505,7 @@ export function Sidebar(props: { organizations: SidebarOrg[]; user: SidebarUser;
         className="m-0 h-dvh max-h-none w-[min(320px,86vw)] max-w-none bg-transparent p-0 text-ink backdrop:bg-black/30 open:animate-[sheet-in-left_320ms_var(--ease-spring)] open:backdrop:animate-[scrim-in_250ms_ease] md:hidden"
       >
         <div className="h-full bg-sheet pt-[env(safe-area-inset-top)] shadow-[var(--shadow-float)]">
-          <SidebarContent {...props} />
+          <SidebarContent {...props} collapsed={collapsed} toggleHolding={toggleHolding} />
         </div>
       </dialog>
     </>

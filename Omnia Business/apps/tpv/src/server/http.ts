@@ -11,6 +11,7 @@ const STATUS: Record<DomainErrorCode, number> = {
   CONFLICT: 409,
   INVALID_STATE: 409,
   INSUFFICIENT_STOCK: 409,
+  FEATURE_DISABLED: 403,
 };
 
 const problem = (status: number, code: string, detail: string, extra: Record<string, unknown> | undefined, requestId: string) =>

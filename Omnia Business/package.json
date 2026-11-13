@@ -11,10 +11,11 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "db:test": "node supabase/tests/schema.test.mjs",
+    "db:test": "node supabase/tests/schema.test.mjs && node supabase/tests/entitlements.test.mjs && node supabase/tests/structure.test.mjs",
     "db:dev": "node scripts/dev-db.mjs",
     "db:reset": "node scripts/dev-db.mjs --reset",
-    "test:integration": "vitest run tests/integration"
+    "test:integration": "vitest run tests/integration",
+    "admin:password": "node scripts/admin-password.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.11",

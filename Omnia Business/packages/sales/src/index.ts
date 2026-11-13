@@ -78,7 +78,7 @@ export const PosCheckoutInput = z.object({
 
 export function createSalesService(sql: Sql) {
   return {
-    async list(ctx: TenantContext, { status }: { status?: string } = {}): Promise<SalesOrderSummary[]> {
+    async list(ctx: TenantContext, { status, establishmentId }: { status?: string; establishmentId?: string | null } = {}): Promise<SalesOrderSummary[]> {
       return withTenant(sql, ctx, async (tx) =>
         asRows<SalesOrderSummary>(await tx`
           select so.id, so.number::int, so.status, p.legal_name as customer_name, w.name as warehouse_name, so.order_date::text,
@@ -91,6 +91,7 @@ export function createSalesService(sql: Sql) {
           left join sales_order_lines l on l.sales_order_id = so.id
           left join invoices i on i.id = so.invoice_id
           where (${status ?? null}::text is null or so.status = ${status ?? null})
+            and (${establishmentId ?? null}::uuid is null or w.establishment_id = ${establishmentId ?? null})
           group by so.id, p.legal_name, w.name, i.full_number
           order by (so.status in ('draft', 'confirmed', 'delivered')) desc, so.order_date desc, so.number desc`),
       );

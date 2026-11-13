@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DomainError, isoDate, optionalText, requiredText, singleOrganization, type TenantContext } from '@omnia/core';
+import { DomainError, isoDate, optionalText, optionalUuid, requiredText, singleOrganization, type TenantContext } from '@omnia/core';
 import { asRows, withTenant, type Sql } from '@omnia/db';
 
 export type EntryType = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
@@ -17,6 +17,13 @@ export interface TimeEntry {
   correctsEntryId: string | null;
   correctionReason: string | null;
   createdByName: string | null;
+  /** Local donde se fichó (null si no se pudo saber). */
+  establishmentName: string | null;
+}
+
+/** Filtro por empresa (negocio o local) de la sociedad. */
+export interface EstablishmentFilter {
+  establishmentId?: string | null;
 }
 
 export interface Shift {
@@ -27,6 +34,8 @@ export interface Shift {
   endsAt: Date;
   area: string | null;
   notes: string | null;
+  establishmentId: string | null;
+  establishmentName: string | null;
 }
 
 export interface DayRow {
@@ -87,6 +96,8 @@ export const ClockInput = z.object({
   accuracy: z.number().min(0).optional(),
   geoConsent: z.boolean().default(false),
   source: z.enum(['web', 'mobile', 'kiosk']).default('web'),
+  /** Local donde se ficha. Obligatorio solo si la persona trabaja en varios. */
+  establishmentId: optionalUuid(),
 });
 
 export const ManualEntryInput = z.object({
@@ -107,6 +118,7 @@ export const ShiftInput = z
     from: z.string().regex(/^\d{2}:\d{2}$/, 'Hora no válida'),
     to: z.string().regex(/^\d{2}:\d{2}$/, 'Hora no válida'),
     area: optionalText(80),
+    establishmentId: optionalUuid(),
   })
   // Si la salida es igual o anterior a la entrada, el turno acaba al día siguiente (22:00–04:00).
   .refine((v) => v.to !== v.from, { message: 'La entrada y la salida no pueden ser iguales', path: ['to'] })
@@ -130,13 +142,16 @@ export function createHrService(sql: Sql) {
       return withTenant(sql, ctx, async (tx) => {
         const entries = asRows<TimeEntry>(await tx`
           select e.id, e.user_id, e.entry_type, e.occurred_at, e.recorded_at, e.source, e.latitude::text, e.longitude::text,
-                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name
+                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name, est.name as establishment_name
           from time_entries e left join users u on u.id = e.created_by
+          left join establishments est on est.organization_id = e.organization_id and est.id = e.establishment_id
           where e.user_id = ${ctx.userId} and e.occurred_at >= date_trunc('day', now()) and e.occurred_at < date_trunc('day', now()) + interval '1 day'
           order by e.occurred_at`);
         const shifts = asRows<Shift>(await tx`
-          select s.id, s.user_id, u.full_name as user_name, s.starts_at, s.ends_at, s.area, s.notes
+          select s.id, s.user_id, u.full_name as user_name, s.starts_at, s.ends_at, s.area, s.notes,
+                 s.establishment_id, est.name as establishment_name
           from shifts s join users u on u.id = s.user_id
+          left join establishments est on est.organization_id = s.organization_id and est.id = s.establishment_id
           where s.user_id = ${ctx.userId} and s.starts_at >= date_trunc('day', now()) and s.starts_at < date_trunc('day', now()) + interval '7 days'
           order by s.starts_at`);
         const week = asRows<{ day: string; minutes: number }>(await tx`
@@ -169,32 +184,50 @@ export function createHrService(sql: Sql) {
         const { state } = summarizeDay(today);
         const rule = NEXT_STATE[input.entryType];
         if (!rule.from.includes(state)) throw new DomainError('INVALID_STATE', rule.error);
+        // Con un solo local lo pone la base; con varios hay que elegir (la base comprueba que trabajes en él).
+        if (!input.establishmentId) {
+          const [{ n } = { n: 0 }] = await tx<{ n: number }[]>`
+            select count(*)::int as n from establishment_members where organization_id = ${orgId} and user_id = ${ctx.userId}`;
+          if (n > 1) throw new DomainError('VALIDATION', 'Elige en qué local fichas');
+        }
         await tx`
-          insert into time_entries (organization_id, user_id, entry_type, source, latitude, longitude, accuracy_m, geo_consent)
+          insert into time_entries (organization_id, user_id, entry_type, source, latitude, longitude, accuracy_m, geo_consent, establishment_id)
           values (${orgId}, ${ctx.userId}, ${input.entryType}, ${input.source},
                   ${hasGeo ? input.latitude! : null}, ${hasGeo ? input.longitude! : null},
-                  ${hasGeo ? (input.accuracy ?? null) : null}, ${hasGeo && input.geoConsent})`;
+                  ${hasGeo ? (input.accuracy ?? null) : null}, ${hasGeo && input.geoConsent}, ${input.establishmentId ?? null})`;
       });
     },
 
     /** Registro del día. `scope: 'all'` exige hr.time.read (la RLS lo garantiza igualmente). */
-    async day(ctx: TenantContext, date: string, scope: 'all' | 'self' = 'self'): Promise<DayRow[]> {
+    async day(ctx: TenantContext, date: string, scope: 'all' | 'self' = 'self', { establishmentId }: EstablishmentFilter = {}): Promise<DayRow[]> {
       const day = isoDate().parse(date);
       const orgId = singleOrganization(ctx);
+      const est = establishmentId ? z.uuid().parse(establishmentId) : null;
       return withTenant(sql, ctx, async (tx) => {
+        // Con una empresa elegida: su personal (y quien tenga turno o haya fichado allí ese día).
         const people = asRows<{ userId: string; name: string; employeeCode: string | null }>(await tx`
           select uo.user_id, u.full_name as name, uo.employee_code
           from user_organizations uo join users u on u.id = uo.user_id
-          where uo.organization_id = ${orgId} and uo.status = 'active' order by u.full_name`);
+          where uo.organization_id = ${orgId} and uo.status = 'active'
+            and (${est}::uuid is null
+                 or exists (select 1 from establishment_members m where m.establishment_id = ${est} and m.user_id = uo.user_id)
+                 or exists (select 1 from shifts s where s.organization_id = ${orgId} and s.user_id = uo.user_id and s.establishment_id = ${est}
+                              and s.starts_at >= ${day}::date and s.starts_at < ${day}::date + 1)
+                 or exists (select 1 from time_entries t where t.organization_id = ${orgId} and t.user_id = uo.user_id and t.establishment_id = ${est}
+                              and t.occurred_at >= ${day}::date and t.occurred_at < ${day}::date + 1))
+          order by u.full_name`);
         const entries = asRows<TimeEntry>(await tx`
           select e.id, e.user_id, e.entry_type, e.occurred_at, e.recorded_at, e.source, e.latitude::text, e.longitude::text,
-                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name
+                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name, est.name as establishment_name
           from time_entries e left join users u on u.id = e.created_by
+          left join establishments est on est.organization_id = e.organization_id and est.id = e.establishment_id
           where e.occurred_at >= ${day}::date and e.occurred_at < ${day}::date + 1
           order by e.occurred_at`);
         const shifts = asRows<Shift>(await tx`
-          select s.id, s.user_id, u.full_name as user_name, s.starts_at, s.ends_at, s.area, s.notes
+          select s.id, s.user_id, u.full_name as user_name, s.starts_at, s.ends_at, s.area, s.notes,
+                 s.establishment_id, est.name as establishment_name
           from shifts s join users u on u.id = s.user_id
+          left join establishments est on est.organization_id = s.organization_id and est.id = s.establishment_id
           where s.starts_at >= ${day}::date and s.starts_at < ${day}::date + 1`);
         const leaves = await tx<{ user_id: string }[]>`
           select user_id from leave_requests where status = 'approved' and ${day}::date between starts_on and ends_on`;
@@ -229,12 +262,16 @@ export function createHrService(sql: Sql) {
         values (${orgId}, ${input.userId}, ${input.entryType}, ${input.occurredAt}, 'manual', ${input.correctionReason})`);
     },
 
-    async shifts(ctx: TenantContext, from: string, days = 7): Promise<Shift[]> {
+    async shifts(ctx: TenantContext, from: string, days = 7, { establishmentId }: EstablishmentFilter = {}): Promise<Shift[]> {
+      const est = establishmentId ? z.uuid().parse(establishmentId) : null;
       return withTenant(sql, ctx, async (tx) =>
         asRows<Shift>(await tx`
-          select s.id, s.user_id, u.full_name as user_name, s.starts_at, s.ends_at, s.area, s.notes
+          select s.id, s.user_id, u.full_name as user_name, s.starts_at, s.ends_at, s.area, s.notes,
+                 s.establishment_id, est.name as establishment_name
           from shifts s join users u on u.id = s.user_id
+          left join establishments est on est.organization_id = s.organization_id and est.id = s.establishment_id
           where s.starts_at >= ${isoDate().parse(from)}::date and s.starts_at < ${from}::date + ${days}::int
+            and (${est}::uuid is null or s.establishment_id = ${est})
           order by s.starts_at, u.full_name`),
       );
     },
@@ -250,11 +287,15 @@ export function createHrService(sql: Sql) {
             and tstzrange(starts_at, ends_at) && tstzrange((${input.date}::date + ${input.from}::time) at time zone 'Europe/Madrid',
                                                           (${input.date}::date + ${endDayOffset}::int + ${input.to}::time) at time zone 'Europe/Madrid')`;
         if (overlap) throw new DomainError('CONFLICT', 'Esa persona ya tiene un turno que se solapa');
+        // Sin local indicado: el único de la persona, si solo trabaja en uno.
         await tx`
-          insert into shifts (organization_id, user_id, starts_at, ends_at, area)
+          insert into shifts (organization_id, user_id, starts_at, ends_at, area, establishment_id)
           values (${orgId}, ${input.userId},
                   (${input.date}::date + ${input.from}::time) at time zone 'Europe/Madrid',
-                  (${input.date}::date + ${endDayOffset}::int + ${input.to}::time) at time zone 'Europe/Madrid', ${input.area ?? null})`;
+                  (${input.date}::date + ${endDayOffset}::int + ${input.to}::time) at time zone 'Europe/Madrid', ${input.area ?? null},
+                  coalesce(${input.establishmentId ?? null}::uuid,
+                           (select min(m.establishment_id::text)::uuid from establishment_members m
+                            where m.organization_id = ${orgId} and m.user_id = ${input.userId} having count(*) = 1)))`;
       });
     },
 

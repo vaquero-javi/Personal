@@ -2,7 +2,9 @@ import { z } from 'zod';
 import {
   CustomFieldEntity,
   DomainError,
+  checkbox,
   optionalText,
+  optionalUuid,
   requiredText,
   singleOrganization,
   type TenantContext,
@@ -28,6 +30,23 @@ export interface Membership {
   roleName: string;
   permissions: string[];
   isDefault: boolean;
+  /** Módulos contratados y efectivos de la sociedad (app.org_entitled_features). */
+  features: string[];
+  /** 'holding': de él cuelgan sociedades (parentId). 'company': sociedad. */
+  kind: OrganizationKind;
+}
+
+export type OrganizationKind = 'holding' | 'company';
+
+/** Empresa: negocio o local dentro de una sociedad (comparte NIF y facturación). */
+export interface Establishment {
+  id: string;
+  name: string;
+  isActive: boolean;
+  warehouseCount: number;
+  warehouseNames: string[];
+  memberIds: string[];
+  memberNames: string[];
 }
 
 export interface Organization {
@@ -41,6 +60,8 @@ export interface Organization {
   spineColor: SpineColor;
   fiscalAddress: { line?: string; postalCode?: string; city?: string; province?: string };
   iban: string | null;
+  kind: OrganizationKind;
+  parentId: string | null;
 }
 
 export interface Member {
@@ -110,6 +131,9 @@ export const UpdateOrganizationInput = z.object({
 });
 
 export const CreateOrganizationInput = z.object({
+  kind: z.enum(['holding', 'company']).default('company'),
+  /** Holding del que cuelga (solo sociedades). */
+  parentId: optionalUuid(),
   legalName: requiredText(200),
   taxId: requiredText(20),
   slug: z
@@ -117,6 +141,20 @@ export const CreateOrganizationInput = z.object({
     .trim()
     .toLowerCase()
     .regex(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/, 'Solo minúsculas, números y guiones (3–63 caracteres)'),
+});
+
+export const SetParentInput = z.object({ parentId: optionalUuid() });
+
+export const EstablishmentMemberInput = z.object({
+  establishmentId: z.uuid(),
+  userId: z.uuid('Elige a la persona'),
+  assigned: checkbox(),
+});
+
+export const EstablishmentInput = z.object({
+  id: optionalUuid(),
+  name: requiredText(80),
+  isActive: checkbox().default(true),
 });
 
 export const AddMemberInput = z.object({
@@ -162,16 +200,105 @@ export function createOrganizationsService(sql: Sql) {
       });
     },
 
+    /** Empresas activas de todas mis sociedades (para el árbol de la barra lateral). */
+    async myEstablishmentsAll(userId: string): Promise<{ organizationId: string; id: string; name: string }[]> {
+      return withUser(sql, userId, async (tx) =>
+        asRows<{ organizationId: string; id: string; name: string }>(await tx`select * from app.my_establishments()`),
+      );
+    },
+
     async memberships(userId: string): Promise<Membership[]> {
       return withUser(sql, userId, async (tx) => asRows<Membership>(await tx`select * from app.my_memberships()`));
     },
 
     async create(userId: string, raw: unknown): Promise<string> {
       const input = CreateOrganizationInput.parse(raw);
+      if (input.kind === 'holding' && input.parentId) throw new DomainError('VALIDATION', 'Un holding no puede depender de otra sociedad');
       return withUser(sql, userId, async (tx) => {
-        const [row] = await tx<{ id: string }[]>`
-          select app.create_organization(${input.slug}, ${input.legalName}, ${input.taxId}) as id`;
+        const [row] =
+          input.kind === 'holding'
+            ? await tx<{ id: string }[]>`select app.create_holding(${input.slug}, ${input.legalName}, ${input.taxId}) as id`
+            : await tx<{ id: string }[]>`
+                select app.create_organization(${input.slug}, ${input.legalName}, ${input.taxId}, ${input.parentId ?? null}::uuid) as id`;
         return row!.id;
+      });
+    },
+
+    /** Mete o saca la sociedad activa de un holding (hay que gestionar las dos). */
+    async setParent(ctx: TenantContext, raw: unknown) {
+      const { parentId } = SetParentInput.parse(raw);
+      const orgId = singleOrganization(ctx);
+      await withUser(sql, ctx.userId, (tx) => tx`select app.set_organization_parent(${orgId}, ${parentId ?? null}::uuid)`);
+    },
+
+    // ------------------------------------------------------------- empresas (locales)
+
+    async establishments(ctx: TenantContext): Promise<Establishment[]> {
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) =>
+        asRows<Establishment>(await tx`
+          select e.id, e.name, e.is_active,
+                 (select count(*)::int from warehouses w where w.organization_id = e.organization_id and w.establishment_id = e.id) as warehouse_count,
+                 array(select w.name from warehouses w where w.organization_id = e.organization_id and w.establishment_id = e.id order by w.name) as warehouse_names,
+                 array(select m.user_id from establishment_members m join users u on u.id = m.user_id
+                       where m.establishment_id = e.id order by u.full_name) as member_ids,
+                 array(select coalesce(u.full_name, u.email) from establishment_members m join users u on u.id = m.user_id
+                       where m.establishment_id = e.id order by u.full_name) as member_names
+          from establishments e
+          where e.organization_id = ${orgId}
+          order by e.is_active desc, e.name`),
+      );
+    },
+
+    async saveEstablishment(ctx: TenantContext, raw: unknown): Promise<string> {
+      const input = EstablishmentInput.parse(raw);
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) => {
+        if (input.id) {
+          const rows = await tx<{ id: string }[]>`
+            update establishments set name = ${input.name}, is_active = ${input.isActive}
+            where id = ${input.id} and organization_id = ${orgId} returning id`;
+          if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Empresa no encontrada');
+          return rows[0]!.id;
+        }
+        const [row] = await tx<{ id: string }[]>`
+          insert into establishments (organization_id, name) values (${orgId}, ${input.name}) returning id`;
+        return row!.id;
+      });
+    },
+
+    /** Asigna o quita a una persona de una empresa (members.manage). */
+    async setEstablishmentMember(ctx: TenantContext, raw: unknown) {
+      const input = EstablishmentMemberInput.parse(raw);
+      const orgId = singleOrganization(ctx);
+      await withTenant(sql, ctx, (tx) =>
+        input.assigned
+          ? tx`insert into establishment_members (organization_id, establishment_id, user_id)
+               values (${orgId}, ${input.establishmentId}, ${input.userId}) on conflict do nothing`
+          : tx`delete from establishment_members
+               where organization_id = ${orgId} and establishment_id = ${input.establishmentId} and user_id = ${input.userId}`,
+      );
+    },
+
+    /** Empresas activas en las que trabaja la persona de la sesión. */
+    async myEstablishments(ctx: TenantContext): Promise<{ id: string; name: string }[]> {
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) =>
+        asRows<{ id: string; name: string }>(await tx`
+          select e.id, e.name from establishment_members m join establishments e on e.id = m.establishment_id
+          where m.organization_id = ${orgId} and m.user_id = ${ctx.userId} and e.is_active order by e.name`),
+      );
+    },
+
+    /** Borra la empresa; sus almacenes se quedan en la sociedad, sin empresa. */
+    async deleteEstablishment(ctx: TenantContext, id: string) {
+      const orgId = singleOrganization(ctx);
+      await withTenant(sql, ctx, async (tx) => {
+        const [used] = await tx`select 1 from time_entries where organization_id = ${orgId} and establishment_id = ${z.uuid().parse(id)} limit 1`;
+        // Los fichajes son registros legales y llevan su local: la empresa se desactiva, no se borra.
+        if (used) throw new DomainError('INVALID_STATE', 'Esta empresa tiene fichajes registrados: desactívala en lugar de borrarla');
+        const rows = await tx`delete from establishments where id = ${id} and organization_id = ${orgId} returning id`;
+        if (rows.length === 0) throw new DomainError('NOT_FOUND', 'Empresa no encontrada');
       });
     },
 
@@ -179,7 +306,7 @@ export function createOrganizationsService(sql: Sql) {
       const orgId = singleOrganization(ctx);
       return withTenant(sql, ctx, async (tx) => {
         const org = asRow<Organization>(await tx`
-          select id, slug, legal_name, trade_name, tax_id, country_code, fiscal_regime, spine_color, fiscal_address, iban
+          select id, slug, legal_name, trade_name, tax_id, country_code, fiscal_regime, spine_color, fiscal_address, iban, kind, parent_id
           from organizations where id = ${orgId}`);
         if (!org) throw new DomainError('NOT_FOUND', 'Organización no encontrada');
         return org;

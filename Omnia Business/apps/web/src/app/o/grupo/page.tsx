@@ -11,9 +11,14 @@ export const metadata = { title: 'Vista de grupo · Omnia' };
 
 const sum = (rows: { [k: string]: unknown }[], key: string) => rows.reduce((s, r) => s + Number(r[key]), 0);
 
-export default async function GroupPage() {
+export default async function GroupPage({ searchParams }: { searchParams: Promise<{ holding?: string }> }) {
   const userId = await requireUserId();
-  const memberships = await myMemberships();
+  const { holding } = await searchParams;
+  const all = await myMemberships();
+  const holdings = all.filter((m) => m.kind === 'holding');
+  const selected = holdings.find((h) => h.organizationId === holding) ?? null;
+  // Con un holding elegido: él y sus sociedades (solo las que tú ves: cada una con tus permisos en ella).
+  const memberships = selected ? all.filter((m) => m.organizationId === selected.organizationId || m.parentId === selected.organizationId) : all;
   const [first, ...rest] = memberships.map((m) => m.organizationId);
   const figures = first ? await groupFigures({ userId, organizationIds: [first, ...rest] }) : [];
   const byId = new Map(memberships.map((m) => [m.organizationId, m]));
@@ -33,6 +38,20 @@ export default async function GroupPage() {
       <header className="pt-4 md:pt-10">
         <p className="text-[13px] font-semibold tracking-[0.01em] text-ink-3 uppercase">{formatLongDate(new Date())} · {memberships.length} sociedades</p>
         <h1 className="mt-0.5 text-[28px] leading-[1.15] font-bold tracking-[-0.022em] md:text-[34px]">Vista de grupo</h1>
+        {holdings.length > 0 && (
+          <nav aria-label="Grupo" className="mt-3 flex flex-wrap gap-2 text-sm">
+            {[{ id: '', label: 'Todas mis sociedades' }, ...holdings.map((h) => ({ id: h.organizationId, label: h.tradeName ?? h.legalName }))].map((h) => (
+              <Link
+                key={h.id || 'all'}
+                href={h.id ? `/o/grupo?holding=${h.id}` : '/o/grupo'}
+                aria-current={(selected?.organizationId ?? '') === h.id ? 'true' : undefined}
+                className="pressable rounded-full bg-fill px-3.5 py-1.5 font-medium text-ink-2 hover:bg-fill-strong hover:text-ink aria-[current]:bg-tint aria-[current]:text-on-tint"
+              >
+                {h.label}
+              </Link>
+            ))}
+          </nav>
+        )}
         <p className="mt-1 max-w-2xl text-[15px] text-ink-3">
           Cifras consolidadas en una sola consulta. Cada sociedad se filtra con tus permisos en ella: los datos nunca se mezclan, solo se suman.
         </p>

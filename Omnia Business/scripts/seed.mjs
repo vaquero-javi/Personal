@@ -28,6 +28,14 @@ export const DEMO_USERS = {
   ruben: { id: '0a000000-0000-4000-8000-000000000005', email: 'ruben@albar.es', name: 'Rubén Lago' },
 };
 
+/**
+ * Tú, como propietario de Omnia: sin ninguna sociedad. Es quien decide en /admin
+ * qué módulos tiene cada empresa (incluidas las de Lucía). No ve sus datos.
+ */
+export const DEMO_PLATFORM_ADMIN = { id: '0a000000-0000-4000-8000-0000000000aa', email: 'equipo@omnia.local', name: 'Equipo Omnia' };
+/** Contraseña del panel (apps/admin) en local. En producción: npm run admin:password. */
+export const DEMO_ADMIN_PASSWORD = 'equipo-omnia-local';
+
 const pad = (n) => String(n).padStart(2, '0');
 const isoDay = (offset) => {
   const d = new Date();
@@ -86,6 +94,23 @@ export async function seed(db) {
   const logi = await createOrg('albar-logistica', 'Albar Logística S.L.', 'B28461948');
   const tall = await createOrg('talleres-albar', 'Talleres Albar S.A.', 'A28461955');
   await q(`update organizations set trade_name = split_part(legal_name, ' S.', 1)`);
+
+  // Módulos contratados (lo decide Omnia en /admin). Al crearse, cada sociedad
+  // recibe el plan de entrada (features.default_enabled); aquí se amplía:
+  // Distribuciones y el bar lo tienen todo, Logística y Talleres se quedan con
+  // el de entrada (en ellas se ve la pantalla de «módulo no contratado»).
+  const enableAllFeatures = async (org) => {
+    await q(
+      `insert into organization_features (organization_id, feature_code, is_active, activated_at, updated_by)
+       select $1, code, true, now(), $2 from features where not is_core
+       on conflict (organization_id, feature_code) do update set is_active = true, activated_at = coalesce(organization_features.activated_at, now())`,
+      [org, lucia.id],
+    );
+  };
+  await enableAllFeatures(dist);
+  // El propietario de la aplicación (no de ninguna sociedad): panel de módulos en /admin.
+  await q('insert into users (id, email, full_name) values ($1, $2, $3)', [DEMO_PLATFORM_ADMIN.id, DEMO_PLATFORM_ADMIN.email, DEMO_PLATFORM_ADMIN.name]);
+  await q('insert into platform_admins (user_id, password_hash) values ($1, $2)', [DEMO_PLATFORM_ADMIN.id, pinHash(DEMO_ADMIN_PASSWORD)]);
   for (const [id, line, iban] of [
     [dist, 'Polígono San Cristóbal, C/ Plata 14', 'ES9121000418450200051332'],
     [logi, 'Polígono San Cristóbal, C/ Plata 16', 'ES7620770024003102575766'],
@@ -493,6 +518,7 @@ export async function seed(db) {
   // ================================================================== Bar La Plaza (hostelería)
   await as(lucia.id);
   const bar = await createOrg('bar-la-plaza', 'Hostelería La Plaza S.L.', 'B47998811');
+  await enableAllFeatures(bar);
   await q(`update organizations set trade_name = 'Bar La Plaza', fiscal_address = $2, settings = settings || '{"allow_negative_stock": true}'::jsonb where id = $1`, [
     bar, { line: 'Plaza Mayor 3', postalCode: '47001', city: 'Valladolid', province: 'Valladolid' },
   ]);
@@ -503,6 +529,28 @@ export async function seed(db) {
     await c.member(ivan, 'waiter', 'P-021');
 
     const wh = await c.warehouse('BAR', 'Barra y cocina');
+    // Empresas (negocios o locales) de la sociedad: el bar, con su almacén y su TPV, y una cafetería recién abierta.
+    const local = (await one(`insert into establishments (organization_id, name) values ($1, 'Bar La Plaza') returning id`, [bar])).id;
+    await q('update warehouses set establishment_id = $2 where id = $1', [wh, local]);
+    const cafe = (await one(`insert into establishments (organization_id, name) values ($1, 'Cafetería Centro') returning id`, [bar])).id;
+    // Personal por local: Carmen y Marta en el bar; Iván cubre los dos (al fichar en la web elige dónde).
+    for (const [user, est] of [[carmen, local], [marta, local], [ivan, local], [ivan, cafe]]) {
+      await q('insert into establishment_members (organization_id, establishment_id, user_id) values ($1,$2,$3)', [bar, est, user.id]);
+    }
+    // Turnos por local (hoy y mañana) y fichajes de los dos últimos días: se guardan con su local.
+    for (const d of [0, 1]) {
+      await c.shift(carmen, d, '16:00', '23:30', 'Sala');
+      await c.shift(marta, d, '17:00', '23:59', 'Barra');
+      await c.shift(ivan, d, '07:30', '13:30', 'Barra');
+    }
+    await q(`update shifts set establishment_id = $2 where organization_id = $1 and user_id <> $3`, [bar, local, ivan.id]);
+    await q(`update shifts set establishment_id = $2 where organization_id = $1 and user_id = $3`, [bar, cafe, ivan.id]);
+    for (const d of [-2, -1]) {
+      await c.clock(marta, d, 'clock_in', '16:57');
+      await c.clock(marta, d, 'clock_out', '23:58');
+      await c.clock(carmen, d, 'clock_in', '15:55');
+      await c.clock(carmen, d, 'clock_out', '23:40');
+    }
     const carta = (await one(`insert into price_lists (organization_id, code, name, is_default, prices_include_tax) values ($1,'CARTA','Carta',true,true) returning id`, [bar])).id;
     const seriesT = await c.series('T', 'simplified', 'Tickets de TPV');
     await c.series('A', 'standard', 'Facturas');
@@ -660,6 +708,30 @@ export async function seed(db) {
     await tab(marta, { table: '7', guests: 2, items: [['conleche', 1], ['cola', 1]], sent: false });
     await tab(ivan, { label: 'Barra', guests: 1, items: [['cubata', 1]] });
   }
+
+  // ================================================================== Mensajes (bar)
+  // Pasan por las mismas funciones que la app (app.message_send / reply).
+  await as(carmen.id, [bar]);
+  const turnos = (await one(`select app.message_send($1, $2, $3::uuid[]) as id`, [
+    'Turnos del fin de semana',
+    'Hola a los dos:\n\nEl sábado hay boda en el salón y necesito a alguien de refuerzo de 19:00 a 01:00. ¿Quién puede?\n\nCarmen',
+    [marta.id, ivan.id],
+  ])).id;
+  await as(marta.id, [bar]);
+  await q(`select app.message_reply($1, $2)`, [turnos, 'Yo puedo el sábado. ¿Cambio el turno del domingo por la mañana?']);
+  await as(lucia.id, [bar]);
+  await q(`select app.message_send($1, $2, $3::uuid[])`, [
+    'Inventario de fin de mes',
+    'Carmen, el día 30 cerramos media hora antes para contar la bodega. Avísame si falta algo en el pedido de bebidas.',
+    [carmen.id],
+  ]);
+
+  // ================================================================== Holding
+  // Lucía agrupa sus cuatro sociedades bajo Grupo Albar (que también tiene su NIF).
+  await as(lucia.id);
+  const grupo = (await one(`select app.create_holding('grupo-albar', 'Grupo Albar S.L.', 'B28461900') as id`)).id;
+  await q(`update organizations set trade_name = 'Grupo Albar' where id = $1`, [grupo]);
+  await q('update organizations set parent_id = $1 where id = any($2::uuid[])', [grupo, [dist, logi, tall, bar]]);
 
   await q(`select set_config('app.user_id', '', false), set_config('app.org_ids', '', false)`);
 }

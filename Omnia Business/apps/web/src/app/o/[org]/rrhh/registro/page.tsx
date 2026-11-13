@@ -9,7 +9,7 @@ import { buttonClass } from '@/components/ui/button-styles';
 import { addDays, capitalizeFirst, formatMinutes, formatTime, todayIso } from '@/lib/format';
 import { entryType } from '@/lib/labels';
 import { container } from '@/server/container';
-import { requireOrg } from '@/server/session';
+import { activeEstablishment, requireOrg } from '@/server/session';
 import { manualEntry } from '../actions';
 
 export const metadata = { title: 'Registro de jornada · Omnia' };
@@ -22,7 +22,8 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
   const { ctx, can } = await requireOrg(org);
   if (!can('hr.time.read')) redirect(`/o/${org}/rrhh`);
   const date = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : todayIso();
-  const [rows, people] = await Promise.all([container().hr.day(ctx, date, 'all'), container().hr.people(ctx)]);
+  const est = await activeEstablishment(org);
+  const [rows, people] = await Promise.all([container().hr.day(ctx, date, 'all', { establishmentId: est?.id ?? null }), container().hr.people(ctx)]);
   const base = `/o/${org}/rrhh/registro`;
   const label = longDay.format(new Date(`${date}T00:00:00Z`));
 
@@ -30,7 +31,7 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
     <>
       <PageHeader
         title="Registro de jornada"
-        description={capitalizeFirst(label)}
+        description={`${est ? `${est.name} · ` : ""}${capitalizeFirst(label)}`}
         actions={
           <div className="flex items-center gap-1">
             <Link href={`${base}?fecha=${addDays(date, -1)}`} className={buttonClass('secondary', 'px-2')} aria-label="Día anterior"><ChevronLeft aria-hidden className="size-4" /></Link>
@@ -69,6 +70,7 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
                             <span className="text-ink-3">{entryType[e.entryType]}</span> <b>{formatTime(e.occurredAt)}</b>
                             {e.source === 'manual' && <span className="text-warning"> (manual)</span>}
                             {e.source === 'kiosk' && <span className="text-ink-3" title="Fichado con la tarjeta de empleado y su PIN en la tablet del TPV"> (tarjeta)</span>}
+                            {e.establishmentName && <span className="text-ink-3"> · {e.establishmentName}</span>}
                           </li>
                         ))}
                       </ul>

@@ -24,12 +24,17 @@ export function mapPgError(error: unknown): unknown {
       if (constraint?.startsWith('stock_levels_on_hand')) {
         return new DomainError('INSUFFICIENT_STOCK', 'No hay existencias suficientes', { constraint });
       }
+      // Sin constraint: lo lanzó una función nuestra (RAISE … 23514) y su mensaje ya es para el usuario.
+      if (!constraint) return new DomainError('VALIDATION', error.message);
       return new DomainError('VALIDATION', 'Los datos no cumplen las reglas de la entidad', { constraint });
     case '23505':
       return new DomainError('CONFLICT', 'Ya existe un registro con esos datos', { constraint });
     case '23503':
       // Incluye las FKs compuestas (organization_id, id): referencia a otra empresa.
       return new DomainError('VALIDATION', 'Referencia a un registro inexistente en esta organización', { constraint });
+    case '23001':
+      // ON DELETE RESTRICT: hay registros que dependen de este (p. ej. fichajes de una empresa).
+      return new DomainError('INVALID_STATE', 'No se puede borrar: tiene registros asociados', { constraint });
     case '42501':
       return new DomainError('FORBIDDEN', 'No tienes permiso para esta operación');
     case 'P0002':

@@ -1,10 +1,12 @@
+import Link from 'next/link';
+import { hasPermission } from '@omnia/organizations';
 import { Cell, PageHeader } from '@/components/ui/layout';
 import { ActionForm, SelectField, TextField } from '@/components/ui/form';
-import { SubmitButton } from '@/components/ui/button';
+import { LinkButton, SubmitButton } from '@/components/ui/button';
 import { SpineColorPicker } from '@/features/organizations/spine-color-picker';
 import { container } from '@/server/container';
-import { requireOrg } from '@/server/session';
-import { updateOrganization } from './actions';
+import { myMemberships, requireOrg } from '@/server/session';
+import { setOrganizationParent, updateOrganization } from './actions';
 
 export const metadata = { title: 'Ajustes · Omnia' };
 
@@ -20,11 +22,61 @@ const REGIMES = [
 export default async function SettingsPage({ params }: { params: Promise<{ org: string }> }) {
   const { org: slug } = await params;
   const { ctx, can } = await requireOrg(slug);
-  const org = await container().organizations.get(ctx);
+  const [org, memberships] = await Promise.all([container().organizations.get(ctx), myMemberships()]);
   const editable = can('org.manage');
+  const label = (m: { tradeName: string | null; legalName: string }) => m.tradeName ?? m.legalName;
+  // Holdings a los que se puede mover: los que gestionas (y el actual, aunque no lo gestiones, para mostrarlo).
+  const holdings = memberships.filter((m) => m.kind === 'holding' && (hasPermission(m.permissions, 'org.manage') || m.organizationId === org.parentId));
+  const children = memberships.filter((m) => m.parentId === org.id);
   return (
     <>
-      <PageHeader title="Datos de la sociedad" description="Datos fiscales que aparecen en facturas y en los registros VeriFactu." />
+      <PageHeader
+        title={org.kind === 'holding' ? 'Datos del holding' : 'Datos de la sociedad'}
+        description="Datos fiscales que aparecen en facturas y en los registros VeriFactu."
+      />
+      {org.kind === 'holding' ? (
+        <Cell title="Sociedades del grupo" actions={editable && <LinkButton href={`/o/nueva?holding=${org.id}`}>Nueva sociedad</LinkButton>}>
+          {children.length === 0 ? (
+            <p className="text-[14px] text-ink-3">
+              Aún no hay sociedades en este holding. Crea una nueva o, desde los ajustes de una sociedad que ya tengas, elige este holding.
+            </p>
+          ) : (
+            <ul className="-my-1 divide-y divide-line-soft text-[15px]">
+              {children.map((c) => (
+                <li key={c.organizationId} className="flex items-center justify-between gap-3 py-2.5">
+                  <Link href={`/o/${c.slug}/ajustes`} className="font-medium hover:underline">{label(c)}</Link>
+                  <span className="text-[13px] text-ink-3">{c.taxId}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Cell>
+      ) : (
+        <Cell title="Grupo">
+          {editable && holdings.length > 0 ? (
+            <ActionForm action={setOrganizationParent.bind(null, slug)} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <SelectField
+                label="Pertenece al holding"
+                name="parentId"
+                defaultValue={org.parentId ?? ''}
+                placeholder="Ninguno (sociedad independiente)"
+                options={holdings.map((h) => ({ value: h.organizationId, label: label(h) }))}
+                className="sm:max-w-sm sm:flex-1"
+              />
+              <div>
+                <SubmitButton>Guardar</SubmitButton>
+              </div>
+            </ActionForm>
+          ) : (
+            <p className="text-[14px] text-ink-3">
+              {org.parentId
+                ? `Pertenece al holding ${label(holdings.find((h) => h.organizationId === org.parentId) ?? { tradeName: null, legalName: 'del grupo' })}.`
+                : 'Sociedad independiente.'}{' '}
+              {editable && 'Para agruparla, crea un holding desde «+» en la barra lateral y elígelo aquí.'}
+            </p>
+          )}
+        </Cell>
+      )}
       <Cell>
         <ActionForm action={updateOrganization.bind(null, slug)} className="flex max-w-3xl flex-col gap-4">
           <fieldset disabled={!editable} className="flex flex-col gap-4">
