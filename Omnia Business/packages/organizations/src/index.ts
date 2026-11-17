@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   CustomFieldEntity,
   DomainError,
+  isDomainError,
   checkbox,
   optionalText,
   optionalUuid,
@@ -9,7 +10,7 @@ import {
   singleOrganization,
   type TenantContext,
 } from '@omnia/core';
-import { asRow, asRows, withTenant, withUser, type Sql } from '@omnia/db';
+import { asRow, asRows, withTenant, withUser, type Sql, type Tx } from '@omnia/db';
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -73,6 +74,19 @@ export interface Member {
   roleKey: string;
   status: 'invited' | 'active' | 'suspended';
   employeeCode: string | null;
+}
+
+/** Alta de miembro ya validada, a falta de resolver la cuenta de la persona. */
+export interface NewMember {
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  roleId: string;
+  roleName: string;
+  employeeCode?: string | undefined;
+  /** Cuenta que ya existe con ese email (null: hay que crearla e invitarla). */
+  existingUserId: string | null;
 }
 
 export interface Role {
@@ -158,6 +172,8 @@ export const EstablishmentInput = z.object({
 });
 
 export const AddMemberInput = z.object({
+  firstName: requiredText(80),
+  lastName: requiredText(80),
   email: z.email('Email no válido').trim(),
   roleId: z.uuid('Elige un rol'),
   employeeCode: optionalText(30),
@@ -166,7 +182,9 @@ export const AddMemberInput = z.object({
 export const UpdateMemberInput = z.object({
   userId: z.uuid(),
   roleId: z.uuid(),
-  status: z.enum(['active', 'suspended']),
+  /** Sin estado: se conserva (p. ej. una invitación pendiente). */
+  status: z.preprocess((v) => (v === '' ? undefined : v), z.enum(['active', 'suspended']).optional()),
+  employeeCode: optionalText(30),
 });
 
 export const SaveRoleInput = z.object({
@@ -183,6 +201,33 @@ export const CreateCustomFieldInput = z.object({
   isRequired: z.boolean().default(false),
   options: z.array(z.string().trim().min(1)).default([]),
 });
+
+/** El código de empleado no se repite en una sociedad (lo garantiza también un índice único). */
+async function assertEmployeeCodeFree(tx: Tx, orgId: string, code: string | undefined, userId: string | null) {
+  if (!code) return;
+  const [taken] = await tx<{ name: string }[]>`
+    select coalesce(u.full_name, u.email) as name
+    from user_organizations uo join users u on u.id = uo.user_id
+    where uo.organization_id = ${orgId} and lower(uo.employee_code) = lower(${code})
+      ${userId ? tx`and uo.user_id <> ${userId}` : tx``}`;
+  if (taken) throw new DomainError('CONFLICT', `El código ${code} ya lo tiene ${taken.name}`);
+}
+
+/** Historial que impide borrar a un miembro (tabla que lo referencia → qué se le dice al usuario). */
+const MEMBER_HISTORY: [string, string][] = [
+  ['time_entries', 'fichajes'],
+  ['leave_requests', 'ausencias o vacaciones'],
+  ['incidents', 'incidencias'],
+  ['payslips', 'nóminas'],
+  ['shifts', 'turnos'],
+  ['pos_tabs', 'tickets del TPV'],
+  ['tasks', 'tareas'],
+  ['employee_cards', 'tarjeta de empleado'],
+  ['discount_redemptions', 'descuentos de empleado usados'],
+  ['message_threads', 'mensajes'],
+  ['message_participants', 'mensajes'],
+  ['messages', 'mensajes'],
+];
 
 // ---------------------------------------------------------------------------
 // Servicio
@@ -344,17 +389,102 @@ export function createOrganizationsService(sql: Sql) {
       );
     },
 
-    async addMember(ctx: TenantContext, raw: unknown) {
+    /**
+     * Valida un alta antes de crear o invitar la cuenta: rol de la sociedad,
+     * que no sea ya miembro y que el código de empleado esté libre.
+     */
+    async prepareMember(ctx: TenantContext, raw: unknown): Promise<NewMember> {
       const input = AddMemberInput.parse(raw);
       const orgId = singleOrganization(ctx);
-      await withTenant(sql, ctx, async (tx) => {
-        const [user] = await tx<{ id: string }[]>`select id from app.find_user_by_email(${input.email})`;
-        if (!user) {
-          throw new DomainError('VALIDATION', 'No hay ninguna cuenta con ese email. La persona debe registrarse primero.');
+      return withTenant(sql, ctx, async (tx) => {
+        const role = asRow<{ name: string; grantsAll: boolean; canGrant: boolean }>(await tx`
+          select r.name,
+                 exists (select 1 from role_permissions rp where rp.role_id = r.id and rp.permission_code = '*') as grants_all,
+                 app.has_permission(${orgId}, '*') as can_grant
+          from roles r where r.id = ${input.roleId} and r.organization_id = ${orgId}`);
+        if (!role) throw new DomainError('VALIDATION', 'Elige un rol de esta sociedad');
+        if (role.grantsAll && !role.canGrant) {
+          throw new DomainError('FORBIDDEN', 'Solo un propietario puede conceder el rol de propietario');
         }
+        const [user] = await tx<{ id: string }[]>`select id from app.find_user_by_email(${input.email})`;
+        if (user) {
+          const [already] = await tx`
+            select 1 from user_organizations where organization_id = ${orgId} and user_id = ${user.id}`;
+          if (already) throw new DomainError('CONFLICT', 'Esa persona ya es miembro de esta sociedad');
+        }
+        await assertEmployeeCodeFree(tx, orgId, input.employeeCode, user?.id ?? null);
+        return {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          fullName: `${input.firstName} ${input.lastName}`,
+          email: input.email.toLowerCase(),
+          roleId: input.roleId,
+          roleName: role.name,
+          employeeCode: input.employeeCode,
+          existingUserId: user?.id ?? null,
+        };
+      });
+    },
+
+    /** Da de alta en la sociedad a una cuenta ya resuelta. `invited`: aún no ha entrado nunca en Omnia. */
+    async addMember(ctx: TenantContext, member: NewMember, userId: string, status: 'invited' | 'active') {
+      const orgId = singleOrganization(ctx);
+      await withTenant(sql, ctx, async (tx) => {
+        await assertEmployeeCodeFree(tx, orgId, member.employeeCode, userId);
         await tx`
-          insert into user_organizations (user_id, organization_id, role_id, employee_code)
-          values (${user.id}, ${orgId}, ${input.roleId}, ${input.employeeCode ?? null})`;
+          insert into user_organizations (user_id, organization_id, role_id, employee_code, status)
+          values (${userId}, ${orgId}, ${member.roleId}, ${member.employeeCode ?? null}, ${status})`;
+        await tx`select app.set_member_name(${orgId}, ${userId}, ${member.fullName})`;
+      });
+    },
+
+    /** Miembro de la sociedad con su email (para reenviar la invitación). */
+    async member(ctx: TenantContext, userId: string): Promise<Member> {
+      const orgId = singleOrganization(ctx);
+      return withTenant(sql, ctx, async (tx) => {
+        const [row] = asRows<Member>(await tx`
+          select uo.user_id, u.email, u.full_name, uo.role_id, r.name as role_name, r.key as role_key, uo.status, uo.employee_code
+          from user_organizations uo
+          join users u on u.id = uo.user_id
+          join roles r on r.id = uo.role_id
+          where uo.organization_id = ${orgId} and uo.user_id = ${userId}`);
+        if (!row) throw new DomainError('NOT_FOUND', 'Esa persona no es miembro de esta sociedad');
+        return row;
+      });
+    },
+
+    /**
+     * Saca de la sociedad a una persona suspendida (solo propietarios; lo
+     * impone también el trigger app.guard_membership_delete). Si tiene
+     * historial, no se borra: se explica qué lo impide.
+     */
+    async removeMember(ctx: TenantContext, userId: string) {
+      const orgId = singleOrganization(ctx);
+      if (userId === ctx.userId) throw new DomainError('VALIDATION', 'No puedes borrarte a ti mismo');
+      try {
+        await withTenant(sql, ctx, async (tx) => {
+          const [row] = await tx<{ status: string }[]>`
+            select status from user_organizations where organization_id = ${orgId} and user_id = ${userId}`;
+          if (!row) throw new DomainError('NOT_FOUND', 'Esa persona no es miembro de esta sociedad');
+          if (row.status !== 'suspended') throw new DomainError('VALIDATION', 'Suspende a la persona antes de borrarla');
+          await tx`delete from user_organizations where organization_id = ${orgId} and user_id = ${userId}`;
+        });
+      } catch (error) {
+        const constraint = isDomainError(error) ? error.details?.constraint : undefined;
+        if (typeof constraint !== 'string') throw error;
+        const history = MEMBER_HISTORY.find(([table]) => constraint.startsWith(`${table}_`))?.[1] ?? 'registros a su nombre';
+        throw new DomainError(
+          'INVALID_STATE',
+          `No se puede borrar: tiene ${history} en esta sociedad, y ese historial debe conservarse. Se queda suspendida y sin acceso.`,
+        );
+      }
+    },
+
+    /** Activa las invitaciones pendientes de quien acaba de entrar. Devuelve cuántas. */
+    async acceptInvitations(userId: string): Promise<number> {
+      return withUser(sql, userId, async (tx) => {
+        const [row] = await tx<{ n: number }[]>`select app.accept_invitations() as n`;
+        return row?.n ?? 0;
       });
     },
 
@@ -365,8 +495,10 @@ export function createOrganizationsService(sql: Sql) {
         throw new DomainError('VALIDATION', 'No puedes suspenderte a ti mismo');
       }
       await withTenant(sql, ctx, async (tx) => {
+        await assertEmployeeCodeFree(tx, orgId, input.employeeCode, input.userId);
         const rows = await tx`
-          update user_organizations set role_id = ${input.roleId}, status = ${input.status}
+          update user_organizations
+          set role_id = ${input.roleId}, status = coalesce(${input.status ?? null}, status), employee_code = ${input.employeeCode ?? null}
           where organization_id = ${orgId} and user_id = ${input.userId}
           returning user_id`;
         if (rows.length === 0) throw new DomainError('FORBIDDEN', 'No puedes gestionar miembros en esta sociedad');

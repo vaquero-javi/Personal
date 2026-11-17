@@ -4,6 +4,8 @@ import { container } from '@/server/container';
 import { devSignIn } from '@/server/session-actions';
 import { initials } from '@/lib/format';
 import { SignIn } from '@/features/auth/sign-in';
+import { currentUserId } from '@/server/session';
+import { safeNextPath } from '@/lib/next-path';
 
 export const metadata = { title: 'Entrar · Omnia' };
 
@@ -11,9 +13,13 @@ export const metadata = { title: 'Entrar · Omnia' };
  * Acceso de desarrollo (AUTH_MODE=dev): elige un usuario de ejemplo. En
  * producción esta pantalla es el inicio de sesión del proveedor de identidad.
  */
-export default async function SignInPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ error?: string; siguiente?: string }> }) {
+  const { error, siguiente } = await searchParams;
+  const next = safeNextPath(siguiente);
+  // Ya con sesión (p. ej. desde el correo «te han dado acceso»): directo a la sociedad.
+  // En desarrollo, sin destino, se deja ver la lista para cambiar de persona.
+  if ((next || process.env.AUTH_MODE !== 'dev') && (await currentUserId())) redirect(next ?? '/app');
   if (process.env.AUTH_MODE !== 'dev') {
-    const { error } = await searchParams;
     return (
       <main className="flex min-h-dvh items-start justify-center bg-carton px-4 py-16 md:items-center">
         <div className="w-full max-w-sm">
@@ -23,7 +29,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
             <p className="mt-1 text-[15px] text-ink-3">Gestión de todas tus sociedades en un solo sitio.</p>
           </div>
           <div className="rounded-[20px] bg-sheet shadow-[var(--shadow-card)]">
-          <SignIn oauthError={error === 'oauth'} />
+          <SignIn oauthError={error === 'oauth'} next={next} />
           </div>
         </div>
       </main>
@@ -56,6 +62,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
             <li key={u.id} className="border-b border-line-soft last:border-b-0">
               <form action={devSignIn}>
                 <input type="hidden" name="userId" value={u.id} />
+                {next && <input type="hidden" name="next" value={next} />}
                 <button type="submit" className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-fill/60 active:bg-fill">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#a1a1a6] to-[#6e6e73] text-sm font-semibold text-white">
                     {initials(u.full_name)}

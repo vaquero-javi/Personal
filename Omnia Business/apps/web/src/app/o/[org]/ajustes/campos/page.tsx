@@ -11,6 +11,16 @@ export const metadata = { title: 'Campos personalizados · Omnia' };
 const ENTITY: Record<string, string> = {
   inventory_item: 'Artículo', party: 'Cliente/proveedor', invoice: 'Factura', goods_receipt: 'Albarán', incident: 'Incidencia', time_entry: 'Fichaje',
 };
+
+/** Dónde sale cada campo, para que quien lo crea sepa dónde buscarlo. */
+const WHERE: Record<string, string> = {
+  inventory_item: 'Almacén › Artículos, al crear y editar',
+  party: 'Ficha de cada cliente y proveedor',
+  invoice: 'Al crear una factura y al registrar la de un proveedor; se ve en la factura',
+  goods_receipt: 'Almacén › Albaranes, al registrar uno',
+  incident: 'Al abrir una incidencia; se ve en la incidencia',
+  time_entry: 'RRHH › Registro de jornada, en los fichajes manuales',
+};
 const TYPE: Record<string, string> = { text: 'Texto', number: 'Número', boolean: 'Sí/No', date: 'Fecha', select: 'Lista', multiselect: 'Lista múltiple' };
 
 export default async function CustomFieldsPage({ params }: { params: Promise<{ org: string }> }) {
@@ -20,7 +30,7 @@ export default async function CustomFieldsPage({ params }: { params: Promise<{ o
   const manage = can('org.manage');
   return (
     <>
-      <PageHeader title="Campos personalizados" description="Datos propios de tu negocio, sin tocar la base de datos: se guardan en JSONB y se validan contra estas definiciones." />
+      <PageHeader title="Campos personalizados" description="Añade casillas propias de tu negocio a las fichas de Omnia (por ejemplo, «Ubicación en estantería» en los artículos). Aparecen en el formulario que elijas y se guardan con cada ficha." />
       <Ruled cols={manage ? 'xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''}>
         <Cell>
           {fields.length === 0 ? (
@@ -39,7 +49,10 @@ export default async function CustomFieldsPage({ params }: { params: Promise<{ o
               <tbody>
                 {fields.map((f) => (
                   <Tr key={f.id}>
-                    <Td className="text-ink-2">{ENTITY[f.entity]}</Td>
+                    <Td>
+                      <span className="text-ink-2">{ENTITY[f.entity]}</span>
+                      <span className="block text-xs text-ink-3">{WHERE[f.entity]}</span>
+                    </Td>
                     <Td>
                       <span className="font-medium">{f.label}</span>
                       {f.isRequired && <span className="text-danger"> *</span>}

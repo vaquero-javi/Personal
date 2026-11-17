@@ -3,17 +3,20 @@
 import { ActionForm, CheckboxField, SelectField, TextField, type FormAction } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import type { Party } from '@omnia/parties/types';
+import { CustomFieldInputs, type CustomFieldDef } from '@/components/ui/custom-fields';
 
 export function PartyForm({
   action,
   party,
   role,
   priceLists,
+  customFields,
 }: {
   action: FormAction;
   party?: Party;
   role: 'customer' | 'supplier';
   priceLists: { value: string; label: string }[];
+  customFields: CustomFieldDef[];
 }) {
   return (
     <ActionForm action={action} className="flex flex-col gap-4">
@@ -37,6 +40,7 @@ export function PartyForm({
         <CheckboxField label="Es cliente" name="isCustomer" defaultChecked={party ? party.isCustomer : role === 'customer'} />
         <CheckboxField label="Es proveedor" name="isSupplier" defaultChecked={party ? party.isSupplier : role === 'supplier'} />
       </div>
+      <CustomFieldInputs definitions={customFields} initial={party?.customFields ?? {}} />
       <div>
         <SubmitButton pendingLabel="Guardando…">{party ? 'Guardar cambios' : role === 'customer' ? 'Crear cliente' : 'Crear proveedor'}</SubmitButton>
       </div>

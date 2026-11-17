@@ -15,7 +15,16 @@ export interface CustomFieldDef {
  * Campos que cada empresa define en Ajustes › Campos personalizados. Se envían
  * tipados en `customFieldsJson` y el servidor los valida contra las definiciones.
  */
-export function CustomFieldInputs({ definitions, initial = {} }: { definitions: CustomFieldDef[]; initial?: Record<string, unknown> }) {
+export function CustomFieldInputs({
+  definitions,
+  initial = {},
+  columns = 2,
+}: {
+  definitions: CustomFieldDef[];
+  initial?: Record<string, unknown>;
+  /** 1 en columnas estrechas (p. ej. un panel lateral). */
+  columns?: 1 | 2;
+}) {
   const [values, setValues] = useState<Record<string, unknown>>(initial);
   if (definitions.length === 0) return null;
   const set = (key: string, value: unknown) =>
@@ -27,7 +36,7 @@ export function CustomFieldInputs({ definitions, initial = {} }: { definitions: 
     });
 
   return (
-    <fieldset className="grid gap-4 md:grid-cols-2">
+    <fieldset className={`grid gap-4 ${columns === 2 ? 'md:grid-cols-2' : ''}`}>
       <legend className="mb-2 text-sm font-bold">Campos personalizados</legend>
       <input type="hidden" name="customFieldsJson" value={JSON.stringify(values)} />
       {definitions.map((def) => (
@@ -80,5 +89,29 @@ export function CustomFieldInputs({ definitions, initial = {} }: { definitions: 
         </Field>
       ))}
     </fieldset>
+  );
+}
+
+const formatValue = (def: CustomFieldDef, value: unknown): string => {
+  if (def.dataType === 'boolean') return value === true ? 'Sí' : 'No';
+  if (def.dataType === 'date' && typeof value === 'string') return new Date(`${value}T00:00:00`).toLocaleDateString('es-ES');
+  if (def.dataType === 'number' && typeof value === 'number') return value.toLocaleString('es-ES');
+  if (Array.isArray(value)) return value.join(', ');
+  return String(value);
+};
+
+/** Valores guardados, en solo lectura (fichas que ya no se editan: facturas, incidencias, fichajes). */
+export function CustomFieldValues({ definitions, values, className = '' }: { definitions: CustomFieldDef[]; values: Record<string, unknown>; className?: string }) {
+  const filled = definitions.filter((d) => values[d.key] !== undefined && values[d.key] !== null && !(Array.isArray(values[d.key]) && (values[d.key] as unknown[]).length === 0));
+  if (filled.length === 0) return null;
+  return (
+    <dl className={`grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 ${className}`}>
+      {filled.map((d) => (
+        <div key={d.key}>
+          <dt className="text-ink-3">{d.label}</dt>
+          <dd className="font-medium">{formatValue(d, values[d.key])}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

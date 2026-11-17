@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { DomainError } from '@omnia/core';
 import { container } from '@/server/container';
 import { flag, formObject, runAction, type ActionState } from '@/server/actions';
 import { requireOrg, requirePermission } from '@/server/session';
 import { FEATURES } from '@/server/features';
+import { resolveAccount, sendAccessMail } from '@/server/invitations';
 
 const revalidate = (org: string) => revalidatePath('/', 'layout');
 
@@ -17,12 +19,68 @@ export async function updateOrganization(org: string, _: ActionState, formData: 
   });
 }
 
+/**
+ * Alta por email: si la persona no tiene cuenta se crea y recibe una invitación
+ * para poner su contraseña; si ya la usa, recibe un aviso. Ver server/invitations.ts.
+ */
 export async function addMember(org: string, _: ActionState, formData: FormData) {
   return runAction(async () => {
-    const { ctx } = await requirePermission(org, 'members.manage', FEATURES.members);
-    await container().organizations.addMember(ctx, formObject(formData));
+    const { ctx, org: scope } = await requirePermission(org, 'members.manage', FEATURES.members);
+    const organizations = container().organizations;
+    const member = await organizations.prepareMember(ctx, formObject(formData));
+    const account = await resolveAccount(member, scope.slug);
+    await organizations.addMember(ctx, member, account.userId, account.status);
     revalidate(org);
-    return 'Miembro añadido';
+    const me = await organizations.me(ctx.userId);
+    const sent = await sendAccessMail({
+      email: member.email,
+      firstName: member.firstName,
+      orgName: scope.tradeName ?? scope.legalName,
+      roleName: member.roleName,
+      invitedBy: me.fullName ?? me.email,
+      account,
+    }).catch((error: unknown) => {
+      console.error('No se ha podido enviar el correo de acceso', error);
+      return null;
+    });
+    if (sent === null) return `${member.fullName} añadido, pero no se ha podido enviar el correo. Usa «Reenviar invitación».`;
+    if (!sent) return `${member.fullName} añadido. Correo sin enviar (falta configurar Gmail): el enlace está en la consola del servidor.`;
+    return account.status === 'invited'
+      ? `${member.fullName} añadido. Le hemos enviado un correo para activar su acceso.`
+      : `${member.fullName} añadido. Ya tenía cuenta: le hemos avisado por correo.`;
+  });
+}
+
+/** Borra de la sociedad a una persona suspendida (solo propietarios). */
+export async function removeMember(org: string, userId: string, _: ActionState, __: FormData) {
+  return runAction(async () => {
+    const { ctx, can } = await requirePermission(org, 'members.manage', FEATURES.members);
+    if (!can('*')) throw new DomainError('FORBIDDEN', 'Solo un propietario puede borrar miembros');
+    await container().organizations.removeMember(ctx, userId);
+    revalidate(org);
+    return 'Miembro borrado';
+  });
+}
+
+/** Vuelve a mandar la invitación a quien aún no ha activado su acceso (el enlace anterior deja de valer). */
+export async function resendInvitation(org: string, userId: string, _: ActionState, __: FormData) {
+  return runAction(async () => {
+    const { ctx, org: scope } = await requirePermission(org, 'members.manage', FEATURES.members);
+    const organizations = container().organizations;
+    const member = await organizations.member(ctx, userId);
+    if (member.status !== 'invited') return 'Esta persona ya ha activado su acceso';
+    const fullName = member.fullName ?? member.email;
+    const account = await resolveAccount({ email: member.email, fullName, existingUserId: member.userId }, scope.slug);
+    const me = await organizations.me(ctx.userId);
+    const sent = await sendAccessMail({
+      email: member.email,
+      firstName: fullName.split(' ')[0]!,
+      orgName: scope.tradeName ?? scope.legalName,
+      roleName: member.roleName,
+      invitedBy: me.fullName ?? me.email,
+      account,
+    });
+    return sent ? `Invitación reenviada a ${member.email}` : 'Correo sin enviar (falta configurar Gmail): el enlace está en la consola del servidor.';
   });
 }
 

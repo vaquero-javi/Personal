@@ -733,5 +733,7 @@ export async function seed(db) {
   await q(`update organizations set trade_name = 'Grupo Albar' where id = $1`, [grupo]);
   await q('update organizations set parent_id = $1 where id = any($2::uuid[])', [grupo, [dist, logi, tall, bar]]);
 
+  // Los datos de ejemplo no avisan a nadie: fuera los avisos push que han encolado.
+  await q('delete from push_outbox');
   await q(`select set_config('app.user_id', '', false), set_config('app.org_ids', '', false)`);
 }

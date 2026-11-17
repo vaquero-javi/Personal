@@ -20,11 +20,14 @@ import {
   type AuthTokens,
 } from './supabase-auth';
 import { headers } from 'next/headers';
+import { acceptPendingInvitations } from './invitations';
+import { NEXT_PATH_COOKIE, safeNextPath } from '@/lib/next-path';
 
 async function storeSession(tokens: AuthTokens) {
   const store = await cookies();
   store.set(ACCESS_TOKEN_COOKIE, tokens.access_token, cookieOptions(tokens.expires_in));
   store.set(REFRESH_TOKEN_COOKIE, tokens.refresh_token, cookieOptions(REFRESH_MAX_AGE));
+  await acceptPendingInvitations(tokens.access_token);
 }
 
 const credentials = z.object({
@@ -40,7 +43,7 @@ export async function passwordSignIn(_: ActionState, formData: FormData): Promis
   } catch (error) {
     return { error: authErrorMessage(error) };
   }
-  redirect('/app');
+  redirect(safeNextPath(formData.get('next')) ?? '/app');
 }
 
 export async function passwordSignUp(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -61,7 +64,9 @@ export async function passwordSignUp(_: ActionState, formData: FormData): Promis
   redirect('/o/nueva');
 }
 
-export async function googleSignIn() {
+export async function googleSignIn(formData: FormData) {
+  const next = safeNextPath(formData.get('next'));
+  if (next) (await cookies()).set(NEXT_PATH_COOKIE, next, cookieOptions(600));
   const origin = (await headers()).get('origin') ?? process.env.APP_URL ?? 'http://localhost:3100';
   const { url, verifier } = await oauthUrl('google', `${origin}/auth/callback`);
   (await cookies()).set(PKCE_VERIFIER_COOKIE, verifier, cookieOptions(600));
@@ -73,7 +78,7 @@ export async function devSignIn(formData: FormData) {
   if (process.env.AUTH_MODE !== 'dev') throw new Error('Acceso de desarrollo desactivado');
   const userId = z.uuid().parse(formData.get('userId'));
   (await cookies()).set(DEV_USER_COOKIE, userId, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 });
-  redirect('/app');
+  redirect(safeNextPath(formData.get('next')) ?? '/app');
 }
 
 export async function signOut() {

@@ -7,6 +7,8 @@ import {
   cookieOptions,
   exchangeCode,
 } from '@/server/supabase-auth';
+import { acceptPendingInvitations } from '@/server/invitations';
+import { NEXT_PATH_COOKIE, safeNextPath } from '@/lib/next-path';
 
 /** Vuelta de Google (Supabase, PKCE): canjea el código por la sesión. */
 export async function GET(request: NextRequest) {
@@ -16,7 +18,10 @@ export async function GET(request: NextRequest) {
   if (!code || !verifier) return fail;
   try {
     const tokens = await exchangeCode(code, verifier);
-    const response = NextResponse.redirect(new URL('/app', request.url));
+    await acceptPendingInvitations(tokens.access_token);
+    const next = safeNextPath(request.cookies.get(NEXT_PATH_COOKIE)?.value);
+    const response = NextResponse.redirect(new URL(next ?? '/app', request.url));
+    response.cookies.delete(NEXT_PATH_COOKIE);
     response.cookies.set(ACCESS_TOKEN_COOKIE, tokens.access_token, cookieOptions(tokens.expires_in));
     response.cookies.set(REFRESH_TOKEN_COOKIE, tokens.refresh_token, cookieOptions(REFRESH_MAX_AGE));
     response.cookies.delete(PKCE_VERIFIER_COOKIE);

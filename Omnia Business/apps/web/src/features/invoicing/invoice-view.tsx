@@ -11,6 +11,8 @@ import { ComparisonSummary, ComparisonTable, MissingItems, PreviousInvoiceLine, 
 import { fiscalStatus, invoiceStatus, invoiceType, paymentMethod, receivedInvoiceStatus } from '@/lib/labels';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
+import { customFieldsFor } from '@/server/custom-fields';
+import { CustomFieldValues } from '@/components/ui/custom-fields';
 import {
   createRectifying,
   deleteInvoiceDraft,
@@ -22,7 +24,7 @@ import {
 /** Ficha de factura emitida o recibida, con sus acciones según estado y permisos. */
 export async function InvoiceView({ org, id, back }: { org: string; id: string; back: { href: string; label: string } }) {
   const { ctx, can } = await requireOrg(org);
-  const inv = await container().invoicing.get(ctx, id);
+  const [inv, customFields] = await Promise.all([container().invoicing.get(ctx, id), customFieldsFor(ctx, 'invoice')]);
   const issued = inv.direction === 'issued';
   const series = issued && inv.status === 'draft' ? (await container().invoicing.series(ctx)).filter((s) => s.isActive) : [];
   const pending = Number(inv.total) - Number(inv.paidTotal);
@@ -148,6 +150,7 @@ export async function InvoiceView({ org, id, back }: { org: string; id: string; 
               ],
             ]}
           />
+          <CustomFieldValues definitions={customFields} values={inv.customFields} className="mt-4 border-t border-line-soft pt-3" />
 
           {issued && inv.status === 'draft' && (
             <div className="mt-5 border-t border-line pt-4">

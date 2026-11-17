@@ -6,11 +6,13 @@ import { incidentPriority, incidentStatus } from '@/lib/labels';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
 import { commentIncident, updateIncident } from '../actions';
+import { customFieldsFor } from '@/server/custom-fields';
+import { CustomFieldValues } from '@/components/ui/custom-fields';
 
 export default async function IncidentPage({ params }: { params: Promise<{ org: string; id: string }> }) {
   const { org, id } = await params;
   const { ctx, can } = await requireOrg(org);
-  const [inc, people] = await Promise.all([container().incidents.get(ctx, id), container().hr.people(ctx)]);
+  const [inc, people, customFields] = await Promise.all([container().incidents.get(ctx, id), container().hr.people(ctx), customFieldsFor(ctx, 'incident')]);
   const canEdit = can('incidents.manage') || (can('incidents.write') && inc.assigneeUserId === ctx.userId);
 
   return (
@@ -23,6 +25,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ org: 
       <Ruled cols="xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Cell title="Conversación">
           {inc.description && <p className="mb-5 max-w-prose text-sm whitespace-pre-line">{inc.description}</p>}
+          <CustomFieldValues definitions={customFields} values={inc.customFields} className="mb-5" />
           <ol className="flex flex-col gap-4">
             {inc.comments.map((c) => (
               <li key={c.id} className="flex gap-3">

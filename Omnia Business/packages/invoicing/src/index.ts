@@ -10,7 +10,7 @@ import {
   singleOrganization,
   type TenantContext,
 } from '@omnia/core';
-import { asRow, asRows, withTenant, type Sql, type Tx } from '@omnia/db';
+import { asRow, asRows, validateCustomFields, withTenant, type Sql, type Tx } from '@omnia/db';
 import { InvoiceListQuery, decodeCursor, encodeCursor, type InvoicePage } from './domain/invoice-list';
 import { findInvoicePage, sumOutstanding } from './infrastructure/invoice-list.repository';
 
@@ -57,6 +57,8 @@ export interface PartySnapshot {
 
 export interface InvoiceDetail extends InvoiceSummary {
   partyId: string | null;
+  /** Ajustes › Campos personalizados («Factura»). */
+  customFields: Record<string, unknown>;
   /** Recibidas: almacén donde entró la mercancía (null si no llevaba artículos de almacén o no se ve el almacén). */
   warehouseName: string | null;
   partyTaxId: string | null;
@@ -121,6 +123,8 @@ export const InvoiceDraftInput = z
       decimalString({ scale: 2, sign: 'non-negative' }).refine((v) => Number(v) <= 50, 'La retención no supera el 50 %'),
     ),
     notes: optionalText(2000),
+    /** Sin ellos (formularios que no los muestran) no se validan ni se tocan. */
+    customFields: z.record(z.string(), z.unknown()).optional(),
     lines: z.array(LineInput).min(1, 'Añade al menos una línea'),
   })
   .refine((v) => v.partyId || v.invoiceType === 'F2', { path: ['partyId'], message: 'Elige el cliente o proveedor' });
@@ -192,7 +196,7 @@ export function createInvoicingService(sql: Sql) {
                  i.subtotal::text, i.tax_total::text, i.operation_date::text, i.rectifies_invoice_id, r.full_number as rectifies_number,
                  i.fiscal_record_hash, i.fiscal_previous_hash, i.fiscal_record_at, i.fiscal_response,
                  i.notes, i.payment_method, i.withholding_rate::text, i.withholding_total::text,
-                 i.issuer_snapshot, i.party_snapshot, w.name as warehouse_name
+                 i.issuer_snapshot, i.party_snapshot, w.name as warehouse_name, i.custom_fields
           from invoices i
           left join parties p on p.id = i.party_id
           left join warehouses w on w.id = i.warehouse_id
@@ -238,8 +242,10 @@ export function createInvoicingService(sql: Sql) {
           if (!party) throw new DomainError('VALIDATION', input.direction === 'issued' ? 'El tercero no es cliente' : 'El tercero no es proveedor');
           termsDays = party.payment_terms_days;
         }
+        const customFields = await validateCustomFields(tx, orgId, 'invoice', input.customFields);
         const baseDate = input.issueDate ?? issue?.issueDate ?? null;
         const values = {
+          ...(customFields ? { custom_fields: tx.json(customFields as never) } : {}),
           party_id: input.partyId ?? null,
           invoice_type: input.invoiceType,
           full_number: input.direction === 'received' ? input.supplierNumber! : null,

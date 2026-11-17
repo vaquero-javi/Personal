@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DomainError, decimalString, intField, optionalText, optionalUuid, requiredText, singleOrganization, type TenantContext } from '@omnia/core';
-import { asRow, asRows, withTenant, type Sql } from '@omnia/db';
+import { asRow, asRows, validateCustomFields, withTenant, type Sql } from '@omnia/db';
 
 export interface Party {
   id: string;
@@ -14,6 +14,8 @@ export interface Party {
   priceListId: string | null;
   priceListName: string | null;
   billingAddress: { line?: string; city?: string; postalCode?: string; province?: string };
+  /** Ajustes › Campos personalizados («Cliente/proveedor»). */
+  customFields: Record<string, unknown>;
 }
 
 export interface PartySummary extends Party {
@@ -51,6 +53,8 @@ export const PartyInput = z
     postalCode: optionalText(10),
     city: optionalText(80),
     province: optionalText(80),
+    /** Sin ellos (alta rápida desde una factura escaneada) no se validan ni se tocan. */
+    customFields: z.record(z.string(), z.unknown()).optional(),
   })
   .refine((p) => p.isCustomer || p.isSupplier, { message: 'Marca cliente, proveedor o ambos', path: ['isCustomer'] });
 
@@ -69,7 +73,7 @@ export function createPartiesService(sql: Sql) {
       return withTenant(sql, ctx, async (tx) =>
         asRows<PartySummary>(await tx`
           select p.id, p.is_customer, p.is_supplier, p.legal_name, p.tax_id, p.email, p.phone, p.payment_terms_days,
-                 p.price_list_id, pl.name as price_list_name, p.billing_address,
+                 p.price_list_id, pl.name as price_list_name, p.billing_address, p.custom_fields,
                  coalesce((
                    select sum(i.total - i.paid_total) from invoices i
                    where i.party_id = p.id and i.status in ('issued', 'partially_paid')
@@ -95,7 +99,7 @@ export function createPartiesService(sql: Sql) {
       return withTenant(sql, ctx, async (tx) => {
         const party = asRow<Party>(await tx`
           select p.id, p.is_customer, p.is_supplier, p.legal_name, p.tax_id, p.email, p.phone, p.payment_terms_days,
-                 p.price_list_id, pl.name as price_list_name, p.billing_address
+                 p.price_list_id, pl.name as price_list_name, p.billing_address, p.custom_fields
           from parties p left join price_lists pl on pl.id = p.price_list_id
           where p.id = ${z.uuid().parse(id)}`);
         if (!party) throw new DomainError('NOT_FOUND', 'Tercero no encontrado');
@@ -108,9 +112,10 @@ export function createPartiesService(sql: Sql) {
       const orgId = singleOrganization(ctx);
       const address = { line: input.address, postalCode: input.postalCode, city: input.city, province: input.province };
       return withTenant(sql, ctx, async (tx) => {
+        const customFields = await validateCustomFields(tx, orgId, 'party', input.customFields);
         if (id) {
           const rows = await tx`
-            update parties set legal_name = ${input.legalName}, tax_id = ${input.taxId ?? null}, email = ${input.email ?? null},
+            update parties set ${customFields ? tx`custom_fields = ${tx.json(customFields as never)},` : tx``} legal_name = ${input.legalName}, tax_id = ${input.taxId ?? null}, email = ${input.email ?? null},
               phone = ${input.phone ?? null}, payment_terms_days = ${input.paymentTermsDays}, price_list_id = ${input.priceListId ?? null},
               is_customer = ${input.isCustomer}, is_supplier = ${input.isSupplier}, billing_address = ${tx.json(address)}
             where id = ${z.uuid().parse(id)} returning id`;
@@ -118,9 +123,10 @@ export function createPartiesService(sql: Sql) {
           return id;
         }
         const [row] = await tx<{ id: string }[]>`
-          insert into parties (organization_id, legal_name, tax_id, email, phone, payment_terms_days, price_list_id, is_customer, is_supplier, billing_address)
+          insert into parties (organization_id, legal_name, tax_id, email, phone, payment_terms_days, price_list_id, is_customer, is_supplier, billing_address, custom_fields)
           values (${orgId}, ${input.legalName}, ${input.taxId ?? null}, ${input.email ?? null}, ${input.phone ?? null},
-                  ${input.paymentTermsDays}, ${input.priceListId ?? null}, ${input.isCustomer}, ${input.isSupplier}, ${tx.json(address)})
+                  ${input.paymentTermsDays}, ${input.priceListId ?? null}, ${input.isCustomer}, ${input.isSupplier}, ${tx.json(address)},
+                  ${tx.json((customFields ?? {}) as never)})
           returning id`;
         return row!.id;
       });

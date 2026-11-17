@@ -19,12 +19,16 @@ function config() {
   return { url: url.replace(/\/$/, ''), anonKey };
 }
 
-async function gotrue<T>(path: string, body: unknown): Promise<T> {
+async function gotrue<T>(
+  path: string,
+  body: unknown,
+  { method = 'POST', headers = {} }: { method?: string; headers?: Record<string, string> } = {},
+): Promise<T> {
   const { url, anonKey } = config();
   const res = await fetch(`${url}/auth/v1${path}`, {
-    method: 'POST',
-    headers: { apikey: anonKey, 'content-type': 'application/json' },
-    body: JSON.stringify(body),
+    method,
+    headers: { apikey: anonKey, 'content-type': 'application/json', ...headers },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     cache: 'no-store',
   });
   const data = (await res.json().catch(() => ({}))) as T & { error_description?: string; msg?: string; error_code?: string };
@@ -56,6 +60,12 @@ export function authErrorMessage(error: unknown): string {
       return 'La contraseña es demasiado débil: usa al menos 8 caracteres.';
     case 'over_request_rate_limit':
       return 'Demasiados intentos. Espera un minuto.';
+    case 'otp_expired':
+    case 'flow_state_expired':
+    case '403':
+      return 'El enlace ha caducado o ya se ha usado. Pide a quien te invitó que te reenvíe la invitación.';
+    case 'same_password':
+      return 'Esa ya es tu contraseña: elige otra.';
     default:
       return error.message;
   }
@@ -84,6 +94,78 @@ export async function oauthUrl(provider: 'google', redirectTo: string) {
   const params = new URLSearchParams({ provider, redirect_to: redirectTo, code_challenge: challenge, code_challenge_method: 's256' });
   return { url: `${url}/auth/v1/authorize?${params}`, verifier };
 }
+
+// --- Invitaciones ----------------------------------------------------------
+
+/** Cabeceras de la API de administración (clave secreta: solo en el servidor). */
+function adminHeaders(): Record<string, string> {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) throw new Error('Falta SUPABASE_SERVICE_ROLE_KEY');
+  // Las claves nuevas (sb_secret_…) van solo en `apikey`; las antiguas (JWT) también como Bearer.
+  return key.startsWith('eyJ') ? { apikey: key, authorization: `Bearer ${key}` } : { apikey: key };
+}
+
+export interface GeneratedLink {
+  /** Cuenta de Supabase (y de public.users, por el trigger app.sync_auth_user). */
+  userId: string;
+  /** Token de un solo uso para /auth/v1/verify. */
+  tokenHash: string;
+  type: 'invite' | 'magiclink';
+  /** Ya había entrado alguna vez (tiene contraseña o Google). */
+  hasSignedIn: boolean;
+}
+
+interface GenerateLinkResponse {
+  id?: string;
+  last_sign_in_at?: string | null;
+  hashed_token?: string;
+  verification_type?: string;
+  properties?: { hashed_token: string; verification_type: string };
+  user?: { id: string; last_sign_in_at?: string | null };
+}
+
+/**
+ * Crea la cuenta (si no existe) y genera su enlace de acceso SIN enviar correo:
+ * el correo lo manda Omnia. `invite` para cuentas nuevas; si el email ya tiene
+ * cuenta, `magiclink` (sirve igual para entrar y poner contraseña).
+ */
+export async function generateAccessLink(email: string, fullName: string): Promise<GeneratedLink> {
+  const generate = (type: 'invite' | 'magiclink') =>
+    gotrue<GenerateLinkResponse>('/admin/generate_link', { type, email, data: { full_name: fullName } }, { headers: adminHeaders() });
+  let type: 'invite' | 'magiclink' = 'invite';
+  let res: GenerateLinkResponse;
+  try {
+    res = await generate('invite');
+  } catch (error) {
+    if (!(error instanceof AuthError) || !['email_exists', 'user_already_exists', '422'].includes(error.code)) throw error;
+    type = 'magiclink';
+    res = await generate('magiclink');
+  }
+  const user = res.user ?? { id: res.id!, last_sign_in_at: res.last_sign_in_at ?? null };
+  const tokenHash = res.properties?.hashed_token ?? res.hashed_token;
+  if (!user.id || !tokenHash) throw new Error('Supabase no ha devuelto el enlace de acceso');
+  return { userId: user.id, tokenHash, type, hasSignedIn: Boolean(user.last_sign_in_at) };
+}
+
+/**
+ * ¿Esta cuenta ya se usa? (ha entrado alguna vez, con contraseña o con Google).
+ * Si es así, no se le pide contraseña: solo se le avisa de la nueva sociedad.
+ */
+export async function hasSignedInBefore(userId: string): Promise<boolean> {
+  const user = await gotrue<{ last_sign_in_at?: string | null }>(`/admin/users/${encodeURIComponent(userId)}`, undefined, {
+    method: 'GET',
+    headers: adminHeaders(),
+  });
+  return Boolean(user.last_sign_in_at);
+}
+
+/** Canjea el token del enlace del correo por una sesión. */
+export const verifyTokenHash = (type: 'invite' | 'magiclink', tokenHash: string) =>
+  gotrue<AuthTokens>('/verify', { type, token_hash: tokenHash });
+
+/** Pone (o cambia) la contraseña del usuario de la sesión. */
+export const updatePassword = (accessToken: string, password: string) =>
+  gotrue<unknown>('/user', { password }, { method: 'PUT', headers: { authorization: `Bearer ${accessToken}` } });
 
 /** Caducidad (segundos UNIX) del JWT, sin verificarlo: solo para decidir si renovar. */
 export function tokenExpiry(token: string): number | null {

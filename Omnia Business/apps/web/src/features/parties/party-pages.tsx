@@ -1,22 +1,24 @@
 import { Cell, EmptyState, PageHeader, Ruled, StatusBadge } from '@/components/ui/layout';
 import { RowLink, Table, Td, Th, Tr } from '@/components/ui/table';
 import { PartyForm } from './party-form';
+import { CustomFieldValues } from '@/components/ui/custom-fields';
 import { formatDate, formatEuro } from '@/lib/format';
 import { invoiceStatus, receivedInvoiceStatus } from '@/lib/labels';
 import { container } from '@/server/container';
 import { saveParty } from '@/server/party-actions';
 import { requireOrg, requirePermission } from '@/server/session';
 import { FEATURES } from '@/server/features';
+import { customFieldsFor } from '@/server/custom-fields';
 
 export async function NewPartyPage({ org, role, base }: { org: string; role: 'customer' | 'supplier'; base: string }) {
   const { ctx } = await requirePermission(org, 'parties.write', FEATURES.parties);
-  const priceLists = await container().parties.priceLists(ctx);
+  const [priceLists, customFields] = await Promise.all([container().parties.priceLists(ctx), customFieldsFor(ctx, 'party')]);
   return (
     <>
       <PageHeader title={role === 'customer' ? 'Nuevo cliente' : 'Nuevo proveedor'} back={{ href: base, label: role === 'customer' ? 'Clientes' : 'Proveedores' }} />
       <Cell>
         <div className="max-w-4xl">
-          <PartyForm action={saveParty.bind(null, org, null, base)} role={role} priceLists={priceLists.map((p) => ({ value: p.id, label: p.name }))} />
+          <PartyForm action={saveParty.bind(null, org, null, base)} role={role} priceLists={priceLists.map((p) => ({ value: p.id, label: p.name }))} customFields={customFields} />
         </div>
       </Cell>
     </>
@@ -26,9 +28,10 @@ export async function NewPartyPage({ org, role, base }: { org: string; role: 'cu
 export async function PartyDetailPage({ org, id, role, base }: { org: string; id: string; role: 'customer' | 'supplier'; base: string }) {
   const { ctx, can } = await requireOrg(org);
   const direction = role === 'customer' ? 'issued' : 'received';
-  const [party, priceLists, invoices] = await Promise.all([
+  const [party, priceLists, customFields, invoices] = await Promise.all([
     container().parties.get(ctx, id),
     container().parties.priceLists(ctx),
+    customFieldsFor(ctx, 'party'),
     can('invoicing.read') ? container().invoicing.listPage(ctx, { direction, partyId: id, limit: 20 }).then((p) => p.items) : Promise.resolve([]),
   ]);
   const own = invoices;
@@ -39,9 +42,12 @@ export async function PartyDetailPage({ org, id, role, base }: { org: string; id
       <Ruled cols="xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Cell title="Ficha">
           {can('parties.write') ? (
-            <PartyForm action={saveParty.bind(null, org, party.id, base)} party={party} role={role} priceLists={priceLists.map((p) => ({ value: p.id, label: p.name }))} />
+            <PartyForm action={saveParty.bind(null, org, party.id, base)} party={party} role={role} priceLists={priceLists.map((p) => ({ value: p.id, label: p.name }))} customFields={customFields} />
           ) : (
-            <p className="text-sm text-ink-2">Solo lectura.</p>
+            <>
+              <p className="text-sm text-ink-2">Solo lectura.</p>
+              <CustomFieldValues definitions={customFields} values={party.customFields} className="mt-3" />
+            </>
           )}
         </Cell>
         <Cell title={role === 'customer' ? 'Facturas emitidas' : 'Facturas recibidas'}>

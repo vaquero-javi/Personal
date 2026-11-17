@@ -29,6 +29,7 @@ import {
 import { FeatureGate } from '@/components/entitlements/feature-gate';
 import { MODULES, moduleLabel } from './modules';
 import { ThemePicker } from './theme-picker';
+import { PushToggle } from './push-toggle';
 import { spineCss, type SpineColor } from './spines';
 
 export interface SidebarOrg {
@@ -458,6 +459,7 @@ function SidebarContent({
 
       <div className="border-t border-line-soft px-3 pt-3">
         <ThemePicker />
+        <PushToggle />
       </div>
       <div className="flex items-center gap-2.5 px-4 py-3">
         <span

@@ -6,6 +6,7 @@ import { requirePermission } from '@/server/session';
 import { todayIso } from '@/lib/format';
 import { saveInvoice } from '@/app/o/[org]/facturacion/actions';
 import { InvoiceEditor, type EditorInitial } from './invoice-editor';
+import { customFieldsFor } from '@/server/custom-fields';
 
 const asInput = (n: string) => Number(n).toString().replace('.', ',');
 
@@ -19,6 +20,7 @@ function toInitial(inv: InvoiceDetail, copy: boolean): EditorInitial {
     paymentMethod: inv.paymentMethod ?? 'transfer',
     withholdingRate: Number(inv.withholdingRate).toString(),
     notes: inv.notes ?? '',
+    customFields: inv.customFields ?? {},
     lines: inv.lines.map((l) => ({
       itemId: l.itemId ?? '',
       description: l.description,
@@ -37,13 +39,14 @@ function toInitial(inv: InvoiceDetail, copy: boolean): EditorInitial {
 export async function InvoiceEditorPage({ org, draftId, copyFrom }: { org: string; draftId?: string; copyFrom?: string }) {
   const { ctx, can } = await requirePermission(org, 'invoicing.write');
   const svc = container();
-  const [customers, items, lists, series, organization, source] = await Promise.all([
+  const [customers, items, lists, series, organization, source, customFields] = await Promise.all([
     svc.parties.list(ctx, { role: 'customer' }),
     svc.warehouse.items(ctx),
     svc.parties.priceLists(ctx),
     svc.invoicing.series(ctx),
     svc.organizations.get(ctx),
     draftId || copyFrom ? svc.invoicing.get(ctx, (draftId ?? copyFrom)!).catch(() => null) : Promise.resolve(null),
+    customFieldsFor(ctx, 'invoice'),
   ]);
   if ((draftId || copyFrom) && (!source || source.direction !== 'issued')) notFound();
   if (draftId && source!.status !== 'draft') notFound();
@@ -63,6 +66,7 @@ export async function InvoiceEditorPage({ org, draftId, copyFrom }: { org: strin
       <InvoiceEditor
         action={saveInvoice.bind(null, org, draftId ?? null)}
         editing={!!draftId}
+        customFields={customFields}
         issuer={{ legalName: organization.legalName, tradeName: organization.tradeName, taxId: organization.taxId, verifactu: organization.fiscalRegime === 'verifactu' }}
         customers={customers.map((c) => ({
           id: c.id,

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import type { ItemOption } from '@/components/ui/line-items';
 import { InvoiceForm, type InvoiceInitial } from '@/features/invoicing/invoice-form';
 import { shrink } from '@/lib/shrink-image';
+import type { CustomFieldDef } from '@/components/ui/custom-fields';
 import { createItemFor, missingSupplier, type CreateItem, type CreateSupplier } from './create-from-scan';
 
 type Scan = (formData: FormData) => Promise<{ ok: true; scan: SupplierInvoiceScan } | { ok: false; error: string }>;
@@ -31,6 +32,7 @@ export function ReceivedInvoiceEntry({
   accept,
   createSupplier,
   createItem,
+  customFields = [],
 }: {
   action: FormAction;
   scan: Scan;
@@ -44,6 +46,8 @@ export function ReceivedInvoiceEntry({
   /** Dar de alta lo que la factura trae y no existe (null si el rol no puede). */
   createSupplier: CreateSupplier | null;
   createItem: CreateItem | null;
+  /** Ajustes › Campos personalizados («Factura»). */
+  customFields?: CustomFieldDef[];
 }) {
   const [mode, setMode] = useState<Mode>('manual');
   const [file, setFile] = useState<File | null>(null);
@@ -231,6 +235,7 @@ export function ReceivedInvoiceEntry({
               {...(initial ? { initial } : {})}
               renderPartyMissing={missingSupplier(result, createSupplier)}
               renderCreateItem={createItemFor(result !== null, createItem)}
+              customFields={customFields}
             />
           </div>
           {result && preview && (

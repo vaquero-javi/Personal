@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DomainError, isoDate, optionalText, optionalUuid, requiredText, singleOrganization, type TenantContext } from '@omnia/core';
-import { asRows, withTenant, type Sql } from '@omnia/db';
+import { asRows, validateCustomFields, withTenant, type Sql } from '@omnia/db';
 
 export type EntryType = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
 export type ClockState = 'out' | 'working' | 'on_break';
@@ -19,6 +19,8 @@ export interface TimeEntry {
   createdByName: string | null;
   /** Local donde se fichó (null si no se pudo saber). */
   establishmentName: string | null;
+  /** Ajustes › Campos personalizados («Fichaje»); solo se rellenan en los manuales. */
+  customFields: Record<string, unknown>;
 }
 
 /** Filtro por empresa (negocio o local) de la sociedad. */
@@ -105,6 +107,7 @@ export const ManualEntryInput = z.object({
   entryType: z.enum(['clock_in', 'clock_out', 'break_start', 'break_end']),
   occurredAt: z.coerce.date({ error: 'Fecha y hora no válidas' }),
   correctionReason: requiredText(300, 'Explica el motivo de la corrección'),
+  customFields: z.record(z.string(), z.unknown()).optional(),
 });
 
 const toMinutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
@@ -142,7 +145,7 @@ export function createHrService(sql: Sql) {
       return withTenant(sql, ctx, async (tx) => {
         const entries = asRows<TimeEntry>(await tx`
           select e.id, e.user_id, e.entry_type, e.occurred_at, e.recorded_at, e.source, e.latitude::text, e.longitude::text,
-                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name, est.name as establishment_name
+                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name, est.name as establishment_name, e.custom_fields
           from time_entries e left join users u on u.id = e.created_by
           left join establishments est on est.organization_id = e.organization_id and est.id = e.establishment_id
           where e.user_id = ${ctx.userId} and e.occurred_at >= date_trunc('day', now()) and e.occurred_at < date_trunc('day', now()) + interval '1 day'
@@ -218,7 +221,7 @@ export function createHrService(sql: Sql) {
           order by u.full_name`);
         const entries = asRows<TimeEntry>(await tx`
           select e.id, e.user_id, e.entry_type, e.occurred_at, e.recorded_at, e.source, e.latitude::text, e.longitude::text,
-                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name, est.name as establishment_name
+                 e.corrects_entry_id, e.correction_reason, u.full_name as created_by_name, est.name as establishment_name, e.custom_fields
           from time_entries e left join users u on u.id = e.created_by
           left join establishments est on est.organization_id = e.organization_id and est.id = e.establishment_id
           where e.occurred_at >= ${day}::date and e.occurred_at < ${day}::date + 1
@@ -257,9 +260,12 @@ export function createHrService(sql: Sql) {
       const input = ManualEntryInput.parse(raw);
       const orgId = singleOrganization(ctx);
       if (input.occurredAt > new Date()) throw new DomainError('VALIDATION', 'No se registran fichajes en el futuro');
-      await withTenant(sql, ctx, (tx) => tx`
-        insert into time_entries (organization_id, user_id, entry_type, occurred_at, source, correction_reason)
-        values (${orgId}, ${input.userId}, ${input.entryType}, ${input.occurredAt}, 'manual', ${input.correctionReason})`);
+      await withTenant(sql, ctx, async (tx) => {
+        const customFields = (await validateCustomFields(tx, orgId, 'time_entry', input.customFields)) ?? {};
+        await tx`
+          insert into time_entries (organization_id, user_id, entry_type, occurred_at, source, correction_reason, custom_fields)
+          values (${orgId}, ${input.userId}, ${input.entryType}, ${input.occurredAt}, 'manual', ${input.correctionReason}, ${tx.json(customFields as never)})`;
+      });
     },
 
     async shifts(ctx: TenantContext, from: string, days = 7, { establishmentId }: EstablishmentFilter = {}): Promise<Shift[]> {

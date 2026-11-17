@@ -5,15 +5,18 @@ import { incidentPriority } from '@/lib/labels';
 import { container } from '@/server/container';
 import { requirePermission } from '@/server/session';
 import { createIncident } from '../actions';
+import { customFieldsFor } from '@/server/custom-fields';
+import { CustomFieldInputs } from '@/components/ui/custom-fields';
 
 export const metadata = { title: 'Nueva incidencia · Omnia' };
 
 export default async function NewIncidentPage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
   const { ctx, can } = await requirePermission(org, 'incidents.write');
-  const [people, parties] = await Promise.all([
+  const [people, parties, customFields] = await Promise.all([
     container().hr.people(ctx),
     can('parties.read') ? container().parties.list(ctx) : Promise.resolve([]),
+    customFieldsFor(ctx, 'incident'),
   ]);
   return (
     <>
@@ -31,6 +34,7 @@ export default async function NewIncidentPage({ params }: { params: Promise<{ or
             {parties.length > 0 && <SelectField label="Cliente o proveedor afectado" name="partyId" options={parties.map((p) => ({ value: p.id, label: p.legalName }))} placeholder="Ninguno" />}
             <SelectField label="Empleado afectado" name="employeeUserId" options={people.map((p) => ({ value: p.userId, label: p.name }))} placeholder="Ninguno" />
           </div>
+          <CustomFieldInputs definitions={customFields} />
           <div>
             <SubmitButton pendingLabel="Abriendo…">Abrir incidencia</SubmitButton>
           </div>

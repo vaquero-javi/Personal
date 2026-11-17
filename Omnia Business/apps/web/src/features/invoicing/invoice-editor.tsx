@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { CustomFieldInputs, type CustomFieldDef } from '@/components/ui/custom-fields';
 import Link from 'next/link';
 import { ExternalLink, QrCode } from 'lucide-react';
 import { ActionForm, FormError, Notice, SelectField, TextAreaField, TextField, inputClass, type FormAction } from '@/components/ui/form';
@@ -33,6 +34,7 @@ export interface EditorInitial {
   paymentMethod: string;
   withholdingRate: string;
   notes: string;
+  customFields: Record<string, unknown>;
   lines: LineDraft[];
 }
 
@@ -66,6 +68,7 @@ export function InvoiceEditor({
   seriesHref,
   newCustomerHref,
   editing = false,
+  customFields = [],
 }: {
   action: FormAction;
   issuer: { legalName: string; tradeName: string | null; taxId: string; verifactu: boolean };
@@ -78,6 +81,8 @@ export function InvoiceEditor({
   seriesHref: string;
   newCustomerHref: string;
   editing?: boolean;
+  /** Ajustes › Campos personalizados («Factura»). */
+  customFields?: CustomFieldDef[];
 }) {
   const [type, setType] = useState(initial?.invoiceType ?? 'F1');
   const [partyId, setPartyId] = useState(initial?.partyId ?? '');
@@ -221,6 +226,9 @@ export function InvoiceEditor({
               placeholder="Número de pedido del cliente, cuenta para la transferencia…"
               className="md:col-span-2"
             />
+          </div>
+          <div className="mt-4">
+            <CustomFieldInputs definitions={customFields} initial={initial?.customFields ?? {}} />
           </div>
         </Section>
 

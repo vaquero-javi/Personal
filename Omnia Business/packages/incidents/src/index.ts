@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DomainError, optionalText, optionalUuid, requiredText, singleOrganization, type TenantContext } from '@omnia/core';
-import { asRow, asRows, withTenant, type Sql } from '@omnia/db';
+import { asRow, asRows, validateCustomFields, withTenant, type Sql } from '@omnia/db';
 
 export type IncidentStatus = 'open' | 'in_progress' | 'waiting' | 'resolved' | 'closed';
 export type IncidentPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -23,6 +23,8 @@ export interface IncidentSummary {
 
 export interface IncidentDetail extends IncidentSummary {
   description: string | null;
+  /** Ajustes › Campos personalizados («Incidencia»). */
+  customFields: Record<string, unknown>;
   partyId: string | null;
   employeeUserId: string | null;
   assigneeUserId: string | null;
@@ -40,6 +42,7 @@ export const IncidentInput = z
     partyId: optionalUuid(),
     employeeUserId: optionalUuid(),
     assigneeUserId: optionalUuid(),
+    customFields: z.record(z.string(), z.unknown()).optional(),
   })
   .refine((v) => !(v.partyId && v.employeeUserId), { message: 'Elige un cliente/proveedor o un empleado, no ambos', path: ['employeeUserId'] });
 
@@ -79,7 +82,7 @@ export function createIncidentsService(sql: Sql) {
       const incidentId = z.uuid().parse(id);
       return withTenant(sql, ctx, async (tx) => {
         const inc = asRow<IncidentDetail>(await tx`
-          select i.id, i.number::int, i.title, i.description, i.status, i.priority, i.category, i.party_id, i.employee_user_id,
+          select i.id, i.number::int, i.title, i.description, i.custom_fields, i.status, i.priority, i.category, i.party_id, i.employee_user_id,
                  i.assignee_user_id, i.reported_by, i.created_at, i.due_at, i.resolved_at,
                  coalesce(p.legal_name, eu.full_name) as subject_name,
                  case when i.party_id is not null then 'party' when i.employee_user_id is not null then 'employee' end as subject_kind,
@@ -104,10 +107,11 @@ export function createIncidentsService(sql: Sql) {
       const input = IncidentInput.parse(raw);
       const orgId = singleOrganization(ctx);
       return withTenant(sql, ctx, async (tx) => {
+        const customFields = (await validateCustomFields(tx, orgId, 'incident', input.customFields)) ?? {};
         const [row] = await tx<{ id: string }[]>`
-          insert into incidents (organization_id, title, description, category, priority, party_id, employee_user_id, assignee_user_id)
+          insert into incidents (organization_id, title, description, category, priority, party_id, employee_user_id, assignee_user_id, custom_fields)
           values (${orgId}, ${input.title}, ${input.description ?? null}, ${input.category ?? null}, ${input.priority},
-                  ${input.partyId ?? null}, ${input.employeeUserId ?? null}, ${input.assigneeUserId ?? null})
+                  ${input.partyId ?? null}, ${input.employeeUserId ?? null}, ${input.assigneeUserId ?? null}, ${tx.json(customFields as never)})
           returning id`;
         return row!.id;
       });

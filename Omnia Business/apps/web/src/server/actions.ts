@@ -1,8 +1,11 @@
 import 'server-only';
+import { after } from 'next/server';
 import { unstable_rethrow } from 'next/navigation';
 import { ZodError } from 'zod';
 import { isDomainError, logger } from '@omnia/core';
 import { mapPgError } from '@omnia/db';
+import { flushPush } from './push';
+import { currentUserId } from './session';
 
 export interface ActionState {
   ok?: boolean;
@@ -14,11 +17,24 @@ export interface ActionState {
 }
 
 /**
+ * Tras una acción con éxito, envía (después de responder) las notificaciones
+ * push que haya encolado la base. Ver server/push.ts.
+ */
+function schedulePush() {
+  after(async () => {
+    const userId = await currentUserId().catch(() => null);
+    if (userId) await flushPush(userId);
+  });
+}
+
+/**
  * Envoltorio de todas las Server Actions: traduce los errores de dominio, de
  * Zod y de Postgres a un estado que el formulario sabe mostrar. `redirect()` y
  * `notFound()` se relanzan tal cual.
  */
 export async function runAction(work: () => Promise<string | void>): Promise<ActionState> {
+  // También si la acción termina en redirect(): se programa antes y solo envía lo que haya quedado encolado.
+  schedulePush();
   try {
     const message = await work();
     return { ok: true, nonce: Date.now(), ...(message ? { message } : {}) };

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { ActionForm, SelectField, TextField, type FormAction } from '@/components/ui/form';
 import { PartySelect } from '@/components/ui/party-select';
 import { SubmitButton } from '@/components/ui/button';
+import { CustomFieldInputs, type CustomFieldDef } from '@/components/ui/custom-fields';
 import { LineItems, type ItemOption, type LineDraft } from '@/components/ui/line-items';
 
 export interface InvoiceInitial {
@@ -23,6 +24,7 @@ export function InvoiceForm({
   initial,
   renderPartyMissing,
   renderCreateItem,
+  customFields = [],
 }: {
   action: FormAction;
   direction: 'issued' | 'received';
@@ -39,6 +41,8 @@ export function InvoiceForm({
   renderPartyMissing?: (select: (option: { value: string; label: string }) => void) => ReactNode;
   /** Ver LineItems: dar de alta en el almacén un artículo leído que no existe. */
   renderCreateItem?: Parameters<typeof LineItems>[0]['renderCreateItem'];
+  /** Ajustes › Campos personalizados («Factura»). */
+  customFields?: CustomFieldDef[];
 }) {
   return (
     <ActionForm action={action} className="flex flex-col gap-5">
@@ -83,6 +87,7 @@ export function InvoiceForm({
           <TextField label="Vencimiento" name="dueDate" type="date" hint="Vacío = según el plazo del proveedor" />
         </div>
       )}
+      <CustomFieldInputs definitions={customFields} />
       <div>
         <SubmitButton pendingLabel="Guardando…">{direction === 'issued' ? 'Guardar borrador' : 'Registrar factura'}</SubmitButton>
       </div>

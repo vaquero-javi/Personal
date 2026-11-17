@@ -11,6 +11,8 @@ import { entryType } from '@/lib/labels';
 import { container } from '@/server/container';
 import { activeEstablishment, requireOrg } from '@/server/session';
 import { manualEntry } from '../actions';
+import { customFieldsFor } from '@/server/custom-fields';
+import { CustomFieldInputs, CustomFieldValues } from '@/components/ui/custom-fields';
 
 export const metadata = { title: 'Registro de jornada · Omnia' };
 
@@ -23,7 +25,11 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
   if (!can('hr.time.read')) redirect(`/o/${org}/rrhh`);
   const date = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : todayIso();
   const est = await activeEstablishment(org);
-  const [rows, people] = await Promise.all([container().hr.day(ctx, date, 'all', { establishmentId: est?.id ?? null }), container().hr.people(ctx)]);
+  const [rows, people, customFields] = await Promise.all([
+    container().hr.day(ctx, date, 'all', { establishmentId: est?.id ?? null }),
+    container().hr.people(ctx),
+    customFieldsFor(ctx, 'time_entry'),
+  ]);
   const base = `/o/${org}/rrhh/registro`;
   const label = longDay.format(new Date(`${date}T00:00:00Z`));
 
@@ -71,6 +77,7 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
                             {e.source === 'manual' && <span className="text-warning"> (manual)</span>}
                             {e.source === 'kiosk' && <span className="text-ink-3" title="Fichado con la tarjeta de empleado y su PIN en la tablet del TPV"> (tarjeta)</span>}
                             {e.establishmentName && <span className="text-ink-3"> · {e.establishmentName}</span>}
+                            <CustomFieldValues definitions={customFields} values={e.customFields} className="mt-1 text-xs" />
                           </li>
                         ))}
                       </ul>
@@ -93,6 +100,7 @@ export default async function TimesheetPage({ params, searchParams }: { params: 
               <SelectField label="Tipo" name="entryType" options={Object.entries(entryType).map(([value, label]) => ({ value, label }))} />
               <TextField label="Fecha y hora" name="occurredAt" type="datetime-local" defaultValue={`${date}T08:00`} required />
               <TextField label="Motivo" name="correctionReason" required placeholder="Olvidó fichar la entrada; confirmado con su responsable" />
+              <CustomFieldInputs definitions={customFields} columns={1} />
               <div>
                 <SubmitButton>Registrar</SubmitButton>
               </div>

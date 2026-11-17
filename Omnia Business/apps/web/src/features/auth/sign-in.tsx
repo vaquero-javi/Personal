@@ -6,12 +6,13 @@ import { SubmitButton, buttonClass } from '@/components/ui/button';
 import { googleSignIn, passwordSignIn, passwordSignUp } from '@/server/session-actions';
 
 /** Acceso con Supabase Auth: email y contraseña, alta de cuenta o Google. */
-export function SignIn({ oauthError }: { oauthError: boolean }) {
+export function SignIn({ oauthError, next = null }: { oauthError: boolean; next?: string | null }) {
   const [mode, setMode] = useState<'in' | 'up'>('in');
   return (
     <div className="flex flex-col gap-4 p-5">
       {oauthError && <Notice tone="danger">No se pudo completar el acceso con Google. Inténtalo de nuevo.</Notice>}
       <form action={googleSignIn}>
+        {next && <input type="hidden" name="next" value={next} />}
         <button type="submit" className={buttonClass('secondary', 'h-10 w-full')}>
           <svg aria-hidden viewBox="0 0 24 24" className="size-4">
             <path fill="#4285F4" d="M22.6 12.2c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8Z" />
@@ -27,6 +28,7 @@ export function SignIn({ oauthError }: { oauthError: boolean }) {
       </p>
       {mode === 'in' ? (
         <ActionForm action={passwordSignIn} className="flex flex-col gap-3">
+          {next && <input type="hidden" name="next" value={next} />}
           <TextField label="Email" name="email" type="email" autoComplete="email" required />
           <TextField label="Contraseña" name="password" type="password" autoComplete="current-password" required />
           <SubmitButton className="h-10" pendingLabel="Entrando…">Entrar</SubmitButton>
