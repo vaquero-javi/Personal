@@ -24,6 +24,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Somni lee tu frecuencia cardíaca para detectar cuándo te duermes.</string>
 	<key>NSHealthUpdateUsageDescription</key>
@@ -35,7 +37,7 @@
 	<key>WKBackgroundModes</key>
 	<array>
 		<string>workout-processing</string>
-		<string>smart-alarm</string>
+		<string>alarm</string>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>com.javiervaquero.SomniPhone</string>

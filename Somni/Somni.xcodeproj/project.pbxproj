@@ -58,7 +58,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0E56114D04DA5002BEA3EB22 /* SomniPhone.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SomniPhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E56114D04DA5002BEA3EB22 /* SomniPhone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SomniPhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1570609669947591EBA7B3F2 /* ClockStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockStyle.swift; sourceTree = "<group>"; };
 		2CE5DBF04BFA3C6D50EEE020 /* PhoneRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneRootView.swift; sourceTree = "<group>"; };
 		2E2FEA8BD5D34868B7877278 /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchContentView.swift; sourceTree = "<group>"; };
@@ -68,11 +68,11 @@
 		4AF10555C871BDB4505D9541 /* BackupAlarmScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupAlarmScheduler.swift; sourceTree = "<group>"; };
 		5EC4F994644AA8404C38FEBE /* WatchSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionViewModel.swift; sourceTree = "<group>"; };
 		752E415FC3A3BFA538A35F16 /* StatsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsTabView.swift; sourceTree = "<group>"; };
-		75927EB95C86AC421E8A7F56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		75927EB95C86AC421E8A7F56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		93FA629ACEC0272848F86111 /* SomniWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SomniWatchApp.swift; sourceTree = "<group>"; };
 		AA9E79A6A47115E833859217 /* SomniKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SomniKit; path = Packages/SomniKit; sourceTree = SOURCE_ROOT; };
 		BBD500EC3D9EE624A7D56150 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		C330C871C9F0E339EDDCE038 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C330C871C9F0E339EDDCE038 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CD5241D2252B845FF3A71FD6 /* SimulatedSensorFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatedSensorFeed.swift; sourceTree = "<group>"; };
 		CFEB77CC42B0CAB284831023 /* SleepDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDetectionService.swift; sourceTree = "<group>"; };
 		CFFCFA42A0A28D41F537C720 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -259,8 +259,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = 705DC1469EAB5BE4759B70FC /* Build configuration list for PBXProject "Somni" */;
 			developmentRegion = en;
@@ -417,6 +415,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Apps/SomniWatch/SomniWatch.entitlements;
+				DEVELOPMENT_TEAM = 5529L2K96W;
 				INFOPLIST_FILE = Apps/SomniWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone.watchkitapp;
 				SDKROOT = watchos;
@@ -430,6 +429,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Apps/SomniWatch/SomniWatch.entitlements;
+				DEVELOPMENT_TEAM = 5529L2K96W;
 				INFOPLIST_FILE = Apps/SomniWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone.watchkitapp;
 				SDKROOT = watchos;
@@ -443,6 +443,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 5529L2K96W;
 				INFOPLIST_FILE = Apps/SomniPhone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -450,7 +451,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -517,6 +518,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 5529L2K96W;
 				INFOPLIST_FILE = Apps/SomniPhone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -524,7 +526,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.javiervaquero.SomniPhone;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

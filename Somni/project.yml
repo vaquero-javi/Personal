@@ -20,6 +20,10 @@ targets:
     type: application
     platform: iOS
     sources: [Apps/SomniPhone]
+    settings:
+      base:
+        # Solo iPhone: el iPad no puede emparejarse con un Apple Watch.
+        TARGETED_DEVICE_FAMILY: "1"
     scheme: {}
     dependencies:
       - package: SomniKit
@@ -34,6 +38,8 @@ targets:
         CFBundleDevelopmentRegion: es
         CFBundleLocalizations: [es]
         UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         NSAlarmKitUsageDescription: Somni programa una alarma de respaldo por si el Apple Watch no consigue despertarte.
 
   SomniWatch:
@@ -57,8 +63,9 @@ targets:
         CFBundleDevelopmentRegion: es
         CFBundleLocalizations: [es]
         WKApplication: true
+        ITSAppUsesNonExemptEncryption: false
         WKCompanionAppBundleIdentifier: com.javiervaquero.SomniPhone
-        WKBackgroundModes: [workout-processing, smart-alarm]
+        WKBackgroundModes: [workout-processing, alarm]
         NSHealthShareUsageDescription: Somni lee tu frecuencia cardíaca para detectar cuándo te duermes.
         NSHealthUpdateUsageDescription: Somni guarda tus periodos de sueño en Salud.
         NSMotionUsageDescription: Somni analiza los micro-movimientos de tu muñeca para detectar el inicio del sueño.
