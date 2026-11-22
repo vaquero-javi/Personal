@@ -19,6 +19,8 @@ interface Row {
   pages: number | null
   /** Horas puestas a mano; si no, se estiman por páginas. */
   manualMinutes: number | null
+  /** Horas cambiadas en ese tema: ya no siguen a la media. */
+  hoursEdited?: boolean
   uploading?: boolean
   error?: string
 }
@@ -48,26 +50,37 @@ export function PlanWizard() {
   const [source, setSource] = useState<'list' | 'pdf'>('list')
   const [listText, setListText] = useState('')
   const [listHours, setListHours] = useState(3)
-  const [numbered, setNumbered] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
 
   const plainRow = (title: string): Row => ({ key: crypto.randomUUID(), title, noteId: null, pages: null, manualMinutes: round5(listHours * 60) })
 
-  function addFromList() {
-    // Acepta listas pegadas con viñetas o numeración («- », «• », «1) »).
+  /** Sin PDFs: un tema por número, para poder seguir cada uno por separado. */
+  function setCount(value: number) {
+    const n = Math.min(200, Math.max(0, Math.round(value) || 0))
+    setRows((rs) => (n <= rs.length ? rs.slice(0, n) : [...rs, ...Array.from({ length: n - rs.length }, (_, i) => plainRow(`Tema ${rs.length + i + 1}`))]))
+  }
+
+  /** Cambia las horas de los temas a los que no se les han puesto a mano. */
+  function setAverageHours(value: number) {
+    const hours = Math.max(0.25, value || 0.25)
+    setListHours(hours)
+    setRows((rs) => rs.map((r) => (r.noteId || r.pages || r.hoursEdited ? r : { ...r, manualMinutes: round5(hours * 60) })))
+  }
+
+  /** Pone nombre a los temas en orden; si hay más líneas que temas, añade los que faltan. */
+  function applyNames() {
+    // Acepta listas pegadas con viñetas o numeración («- », «• », «1) », «Tema 3.»).
     const titles = listText
       .split('\n')
-      .map((l) => l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, '').trim())
+      .map((l) => l.replace(/^\s*(?:[-•*]|\d+[.):-])\s*/, '').trim())
       .filter(Boolean)
-    setRows((rs) => [...rs, ...titles.map(plainRow)])
+    setRows((rs) => {
+      const named = rs.map((r, i) => (titles[i] ? { ...r, title: titles[i] } : r))
+      return [...named, ...titles.slice(rs.length).map(plainRow)]
+    })
     setListText('')
   }
 
-  function addNumbered() {
-    const n = Math.min(200, Math.max(1, Math.round(Number(numbered))))
-    setRows((rs) => [...rs, ...Array.from({ length: n }, (_, i) => plainRow(`Tema ${rs.length + i + 1}`))])
-    setNumbered('')
-  }
   const createSection = useCreateSection()
   const importPdf = useImportPdf()
   const createPlan = useCreatePlan()
@@ -219,7 +232,7 @@ export function PlanWizard() {
               hint={
                 source === 'pdf'
                   ? 'Un PDF por tema. Se guardan en Documentos, en su propia carpeta, para que puedas subrayar y estudiar con IA. Si ya los tienes subidos, elígelos.'
-                  : 'Escribe un tema por línea y cuántas horas te cuesta cada uno. No hace falta subir nada; si luego quieres, añades el PDF que te falte.'
+                  : 'Dinos cuántos temas tienes y cuánto te cuesta cada uno. Se crea un tema por número para seguir tu avance en cada uno; no hace falta subir nada.'
               }
             />
             <Segmented
@@ -232,48 +245,53 @@ export function PlanWizard() {
               ]}
             />
             {source === 'list' ? (
-              <div className="space-y-3">
-                <Field label="Un tema por línea">
-                  <textarea
-                    rows={6}
-                    className={inputClass}
-                    placeholder={'Tema 1. La Constitución Española\nTema 2. El Gobierno y la Administración\nTema 3. …'}
-                    value={listText}
-                    onChange={(e) => setListText(e.target.value)}
-                  />
-                </Field>
-                <div className="flex flex-wrap items-end gap-3">
-                  <Field label="Horas por tema" className="w-32">
+              <div className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="¿Cuántos temas vas a estudiar?">
                     <input
+                      autoFocus
                       type="number"
-                      min={0.25}
-                      step={0.5}
-                      className={inputClass}
-                      value={listHours}
-                      onChange={(e) => setListHours(Math.max(0.25, Number(e.target.value) || 0.25))}
+                      inputMode="numeric"
+                      min={1}
+                      max={200}
+                      className={`${inputClass} font-mono text-base tabular-nums`}
+                      placeholder="Por ejemplo, 25"
+                      value={rows.length || ''}
+                      onChange={(e) => setCount(Number(e.target.value))}
                     />
                   </Field>
-                  <Button type="button" onClick={addFromList} disabled={!listText.trim()}>
-                    <Icon name="plus" size={16} /> Añadir temas
-                  </Button>
-                  <span className="pb-2.5 text-xs text-ink-500">o</span>
-                  <div className="flex items-end gap-2">
-                    <Field label="Crear temas numerados" className="w-40">
-                      <input
-                        type="number"
-                        min={1}
-                        max={200}
-                        className={inputClass}
-                        placeholder="Nº de temas"
-                        value={numbered}
-                        onChange={(e) => setNumbered(e.target.value)}
-                      />
-                    </Field>
-                    <Button type="button" variant="secondary" onClick={addNumbered} disabled={!(Number(numbered) >= 1)}>
-                      Crear
-                    </Button>
-                  </div>
+                  <Field label="¿Cuántas horas te lleva cada tema, de media?">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0.25}
+                      step={0.5}
+                      className={`${inputClass} font-mono text-base tabular-nums`}
+                      value={listHours}
+                      onChange={(e) => setAverageHours(Number(e.target.value))}
+                    />
+                  </Field>
                 </div>
+                {rows.length > 0 && (
+                  <details className="group rounded-xl ring-1 ring-ink-200">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm text-ink-700">
+                      ¿Tienes el índice del temario? Pega los nombres
+                      <Icon name="chevronDown" size={16} className="transition-transform duration-200 group-open:rotate-180" />
+                    </summary>
+                    <div className="space-y-2 px-3 pb-3">
+                      <textarea
+                        rows={6}
+                        className={inputClass}
+                        placeholder={'Un tema por línea, en orden:\nLa Constitución Española\nEl Gobierno y la Administración\n…'}
+                        value={listText}
+                        onChange={(e) => setListText(e.target.value)}
+                      />
+                      <Button type="button" size="sm" onClick={applyNames} disabled={!listText.trim()}>
+                        Usar estos nombres
+                      </Button>
+                    </div>
+                  </details>
+                )}
               </div>
             ) : (
             <div className="flex flex-wrap gap-2">
@@ -322,7 +340,7 @@ export function PlanWizard() {
                   </label>
                   ) : (
                     <span className="text-ink-600">
-                      {rows.length} tema{rows.length === 1 ? '' : 's'} · cambia las horas de los que sean más largos o más cortos
+                      {rows.length} tema{rows.length === 1 ? '' : 's'} · ponles nombre y cambia las horas de los que sean más largos o más cortos
                     </span>
                   )}
                   <span className="font-mono text-xs tabular-nums text-ink-500">Total {formatHours(totalMinutes)}</span>
@@ -349,7 +367,7 @@ export function PlanWizard() {
                             min={0.25}
                             step={0.25}
                             value={Math.round((minutesOf(r) / 60) * 100) / 100}
-                            onChange={(e) => patch(r.key, { manualMinutes: round5(Number(e.target.value) * 60) })}
+                            onChange={(e) => patch(r.key, { manualMinutes: round5(Number(e.target.value) * 60), hoursEdited: true })}
                             className="h-8 w-16 rounded-lg border border-ink-200 bg-surface text-center font-mono text-sm tabular-nums outline-none focus:border-accent-400"
                             aria-label={`Horas para ${r.title}`}
                           />
