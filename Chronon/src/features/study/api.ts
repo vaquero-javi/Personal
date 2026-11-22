@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { addMinutes, differenceInMinutes, format, isSameDay, parseISO } from 'date-fns'
+import { useEffect } from 'react'
+import { addDays, addMinutes, differenceInMinutes, format, isSameDay, parseISO, startOfDay } from 'date-fns'
 import { supabase, unwrap } from '../../lib/supabase'
 import { fromInputs } from '../../lib/dates'
 import type { CalendarEvent, StudyKind } from '../../lib/types'
@@ -62,22 +63,24 @@ export function usePlans() {
   })
 }
 
+async function fetchPlanBundle(id: string): Promise<PlanBundle> {
+  const [plan, topics, events] = await Promise.all([
+    supabase.from('study_plans').select('*').eq('id', id).single(),
+    supabase.from('study_topics').select('*, notes(section_id)').eq('plan_id', id).order('position'),
+    supabase.from('events').select('*').eq('study_plan_id', id).order('start_at'),
+  ])
+  return {
+    plan: unwrap(plan) as StudyPlan,
+    topics: unwrap(topics) as StudyTopic[],
+    events: unwrap(events) as CalendarEvent[],
+  }
+}
+
 export function usePlan(id: string | undefined) {
   return useQuery({
     queryKey: ['plans', 'one', id],
     enabled: !!id,
-    queryFn: async (): Promise<PlanBundle> => {
-      const [plan, topics, events] = await Promise.all([
-        supabase.from('study_plans').select('*').eq('id', id!).single(),
-        supabase.from('study_topics').select('*, notes(section_id)').eq('plan_id', id!).order('position'),
-        supabase.from('events').select('*').eq('study_plan_id', id!).order('start_at'),
-      ])
-      return {
-        plan: unwrap(plan) as StudyPlan,
-        topics: unwrap(topics) as StudyTopic[],
-        events: unwrap(events) as CalendarEvent[],
-      }
-    },
+    queryFn: () => fetchPlanBundle(id!),
   })
 }
 
@@ -203,39 +206,145 @@ export function useCreatePlan() {
   })
 }
 
+const ROUND = 15
+
 /**
- * Rehace el calendario desde hoy con lo que de verdad se ha hecho: las sesiones marcadas como
- * hechas se quedan y todo lo pendiente (también lo atrasado) se vuelve a repartir.
+ * Rehace el calendario desde ahora con lo que de verdad se ha hecho.
+ * - Lo que ya pasó (o ya ha empezado) no se borra nunca: así se puede marcar más tarde si se hizo.
+ * - Las sesiones pendientes de días anteriores cuentan como no hechas y se vuelven a repartir.
+ * - Las de hoy que ya han empezado se respetan y cuentan como hechas, por si se están haciendo.
+ * - Todo lo pendiente desde ahora se borra y se reparte de nuevo.
  */
+async function replanBundle(bundle: PlanBundle, settings?: PlanSettings) {
+  const { plan, topics } = bundle
+  const s = settings ?? plan.settings
+  if (settings) unwrap(await supabase.from('study_plans').update({ settings }).eq('id', plan.id))
+
+  const now = new Date()
+  const today = format(now, 'yyyy-MM-dd')
+  const sessionsToday = bundle.events.filter((e) => e.study_kind !== 'exam' && isSameDay(parseISO(e.start_at), now))
+  const keptToday = sessionsToday.filter((e) => e.completed || parseISO(e.start_at) < now)
+  const keptIds = new Set(keptToday.map((e) => e.id))
+  const events = bundle.events.map((e) => (keptIds.has(e.id) && !e.completed ? { ...e, completed: true } : e))
+
+  // Hoy se sigue después de lo que ya se ha hecho o empezado, con las horas que queden.
+  const lastEnd = keptToday.map((e) => parseISO(e.end_at ?? e.start_at)).sort((x, y) => y.getTime() - x.getTime())[0]
+  const rounded = addMinutes(now, ROUND - (now.getMinutes() % ROUND))
+  let firstDayStart = fromInputs(today, s.startTime)
+  if (rounded > firstDayStart) firstDayStart = rounded
+  if (lastEnd && addMinutes(lastEnd, 10) > firstDayStart) firstDayStart = addMinutes(lastEnd, 10)
+  const usedToday = keptToday.reduce((m, e) => m + durationOf(e), 0)
+  const untilNight = differenceInMinutes(fromInputs(today, '23:00'), firstDayStart)
+  const firstDayMinutes = Math.max(0, Math.min(s.hoursByWeekday[weekdayIndex(now)] * 60 - usedToday, untilNight))
+
+  const from = today > s.startDate ? today : s.startDate
+  const result = buildPlan(topicProgress(topics, events), s, plan.exam_date, {
+    from,
+    firstDayMinutes: from === today ? firstDayMinutes : undefined,
+  })
+  unwrap(
+    await supabase
+      .from('events')
+      .delete()
+      .eq('study_plan_id', plan.id)
+      .eq('completed', false)
+      .neq('study_kind', 'exam')
+      .gte('start_at', now.toISOString()),
+  )
+  await insertInChunks(eventRows(plan, scheduleTimes(result.sessions, s.startTime, from === today ? firstDayStart : undefined)))
+  return result
+}
+
 export function useReplan() {
   const invalidate = useInvalidatePlans()
   return useMutation({
-    mutationFn: async ({ bundle, settings }: { bundle: PlanBundle; settings?: PlanSettings }) => {
-      const { plan, topics, events } = bundle
-      const s = settings ?? plan.settings
-      if (settings) unwrap(await supabase.from('study_plans').update({ settings }).eq('id', plan.id))
-
-      const now = new Date()
-      const today = format(now, 'yyyy-MM-dd')
-      const doneToday = events.filter((e) => e.completed && e.study_kind !== 'exam' && isSameDay(parseISO(e.start_at), now)).reduce((m, e) => m + durationOf(e), 0)
-      const dayStart = fromInputs(today, s.startTime)
-      const firstDayStart = now > dayStart ? addMinutes(now, 15 - (now.getMinutes() % 15)) : dayStart
-      const untilNight = differenceInMinutes(fromInputs(today, '23:00'), firstDayStart)
-      const firstDayMinutes = Math.max(0, Math.min(s.hoursByWeekday[weekdayIndex(now)] * 60 - doneToday, untilNight))
-
-      const from = today > s.startDate ? today : s.startDate
-      const result = buildPlan(topicProgress(topics, events), s, plan.exam_date, {
-        from,
-        firstDayMinutes: from === today ? firstDayMinutes : undefined,
-      })
-      unwrap(
-        await supabase.from('events').delete().eq('study_plan_id', plan.id).eq('completed', false).neq('study_kind', 'exam'),
-      )
-      await insertInChunks(eventRows(plan, scheduleTimes(result.sessions, s.startTime, from === today ? firstDayStart : undefined)))
-      return result
-    },
+    mutationFn: ({ bundle, settings }: { bundle: PlanBundle; settings?: PlanSettings }) => replanBundle(bundle, settings),
     onSuccess: invalidate,
   })
+}
+
+/**
+ * Marca o desmarca una sesión. Si es de un día anterior, ya se había pasado a otro día:
+ * el plan se reajusta solo para quitar (o volver a poner) lo que toque.
+ */
+export function useToggleSession(planId: string) {
+  const qc = useQueryClient()
+  const invalidate = useInvalidatePlans()
+  return useMutation({
+    mutationFn: async (e: CalendarEvent) => {
+      unwrap(await supabase.from('events').update({ completed: !e.completed }).eq('id', e.id))
+      if (parseISO(e.start_at) < startOfDay(new Date())) await replanBundle(await fetchPlanBundle(planId))
+    },
+    onMutate: (e) => {
+      // Se marca al momento en la pantalla y se guarda por detrás.
+      qc.setQueryData<PlanBundle>(['plans', 'one', planId], (prev) =>
+        prev ? { ...prev, events: prev.events.map((x) => (x.id === e.id ? { ...x, completed: !e.completed } : x)) } : prev,
+      )
+    },
+    onSettled: invalidate,
+  })
+}
+
+/**
+ * Lo que no se marcó como hecho en días anteriores pasa solo al siguiente hueco de estudio
+ * (hoy si todavía no se ha empezado; si no, después de lo de hoy o mañana). Las sesiones
+ * originales se quedan en su día para poder marcarlas si se hicieron.
+ * Cada plan guarda hasta qué día se ha hecho esto (settings.rolledUntil) para no repetirlo.
+ * Se comprueba al abrir la app, al volver a ella y cada media hora.
+ */
+export function useStudyRollover() {
+  const invalidate = useInvalidatePlans()
+  useEffect(() => {
+    let lastRun = ''
+    let running = false
+
+    async function run() {
+      const now = new Date()
+      const today = format(now, 'yyyy-MM-dd')
+      if (running || lastRun === today || document.visibilityState === 'hidden') return
+      running = true
+      try {
+        const todayStart = startOfDay(now)
+        const [pending, plans] = await Promise.all([
+          supabase
+            .from('events')
+            .select('study_plan_id, start_at')
+            .not('study_plan_id', 'is', null)
+            .eq('completed', false)
+            .neq('study_kind', 'exam')
+            .gte('start_at', addDays(todayStart, -60).toISOString())
+            .lt('start_at', todayStart.toISOString()),
+          supabase.from('study_plans').select('id, exam_date, settings').gt('exam_date', today),
+        ])
+        const rows = unwrap(pending) as { study_plan_id: string; start_at: string }[]
+        let changed = false
+        for (const p of unwrap(plans) as Pick<StudyPlan, 'id' | 'exam_date' | 'settings'>[]) {
+          const since = p.settings.rolledUntil ?? '0000-00-00'
+          const overdue = rows.some((r) => r.study_plan_id === p.id && format(parseISO(r.start_at), 'yyyy-MM-dd') >= since)
+          if (!overdue) continue
+          const bundle = await fetchPlanBundle(p.id)
+          await replanBundle(bundle)
+          unwrap(await supabase.from('study_plans').update({ settings: { ...bundle.plan.settings, rolledUntil: today } }).eq('id', p.id))
+          changed = true
+        }
+        lastRun = today
+        if (changed) invalidate()
+      } catch (err) {
+        console.warn('No se han podido pasar las sesiones atrasadas', err)
+      } finally {
+        running = false
+      }
+    }
+
+    run()
+    document.addEventListener('visibilitychange', run)
+    const timer = setInterval(run, 30 * 60_000)
+    return () => {
+      document.removeEventListener('visibilitychange', run)
+      clearInterval(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 }
 
 export function useDeletePlan() {

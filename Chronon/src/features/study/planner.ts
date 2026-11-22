@@ -27,6 +27,8 @@ export interface PlanSettings {
   finalReviewDays: number
   /** Para estimar lo que cuesta cada tema a partir de sus páginas. */
   minutesPerPage: number
+  /** yyyy-MM-dd del último día en que se pasó lo atrasado al siguiente día. */
+  rolledUntil?: string
 }
 
 export interface PlannerTopic {

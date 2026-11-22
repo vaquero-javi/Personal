@@ -34,6 +34,7 @@ alter table public.events
   add column if not exists study_topic_id uuid references public.study_topics on delete cascade,
   add column if not exists study_kind     text check (study_kind in ('study', 'review', 'final', 'mock', 'exam'));
 create index if not exists events_study_plan_idx on public.events (study_plan_id, start_at) where study_plan_id is not null;
+create index if not exists events_study_topic_idx on public.events (study_topic_id) where study_topic_id is not null;
 
 alter table public.study_plans  enable row level security;
 alter table public.study_topics enable row level security;

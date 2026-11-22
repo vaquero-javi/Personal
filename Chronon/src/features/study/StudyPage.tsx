@@ -2,14 +2,12 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { addDays, differenceInCalendarDays, format, isBefore, isSameDay, parseISO, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Empty, PageHeader, Skeleton } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import { Modal } from '../../components/Modal'
 import { fromInputs } from '../../lib/dates'
 import type { CalendarEvent } from '../../lib/types'
-import { useUpdateEvent } from '../calendar/api'
-import { KIND_LABEL, topicProgress, useDeletePlan, usePlan, usePlans, useReplan, type PlanBundle } from './api'
+import { KIND_LABEL, topicProgress, useDeletePlan, usePlan, usePlans, useReplan, useToggleSession, type PlanBundle } from './api'
 import { REVIEW_INTERVALS, formatHours, type PlanSettings } from './planner'
 import { PlanWizard, Stat } from './PlanWizard'
 import { ScheduleFields } from './ScheduleFields'
@@ -94,6 +92,7 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
   const del = useDeletePlan()
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [showPast, setShowPast] = useState(false)
   const now = new Date()
   const today = startOfDay(now)
 
@@ -104,7 +103,8 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
   const done = progress.reduce((s, t) => s + t.totalMinutes - t.remainingMinutes, 0)
   const pct = total ? Math.round((done / total) * 100) : 0
   const todays = sessions.filter((e) => isSameDay(parseISO(e.start_at), now))
-  const overdue = sessions.filter((e) => !e.completed && isBefore(parseISO(e.start_at), today))
+  // Las más recientes primero: lo normal es acordarse de marcar lo de ayer.
+  const overdue = sessions.filter((e) => !e.completed && isBefore(parseISO(e.start_at), today)).reverse()
   const upcoming = sessions.filter((e) => {
     const d = parseISO(e.start_at)
     return d >= addDays(today, 1) && d < addDays(today, 8)
@@ -175,14 +175,29 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
       </section>
 
       {overdue.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-          <span className="flex-1">
-            Tienes <strong>{overdue.length}</strong> sesión{overdue.length === 1 ? '' : 'es'} atrasada{overdue.length === 1 ? '' : 's'}. Recalcula para repartirlas en los próximos días.
-          </span>
-          <Button size="sm" onClick={() => doReplan()} disabled={replan.isPending}>
-            Recalcular
-          </Button>
-        </div>
+        <Card
+          title={
+            <span className="flex items-baseline gap-2">
+              Días anteriores sin marcar
+              <span className="font-mono text-xs tabular-nums text-amber-600">{String(overdue.length).padStart(2, '0')}</span>
+            </span>
+          }
+          action={
+            <Button size="sm" variant="ghost" onClick={() => setShowPast((v) => !v)} aria-expanded={showPast}>
+              {showPast ? 'Ocultar' : 'Ver'}
+              <Icon name="chevronDown" size={14} className={`transition-transform duration-200 ${showPast ? 'rotate-180' : ''}`} />
+            </Button>
+          }
+        >
+          <p className="text-sm text-ink-500">
+            Lo que no marcaste ya se ha pasado a los próximos días. Si lo hiciste y se te olvidó marcarlo, márcalo aquí y el plan se ajusta solo.
+          </p>
+          {showPast && (
+            <div className="mt-3">
+              <SessionList events={overdue} bundle={bundle} empty="" showDay />
+            </div>
+          )}
+        </Card>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -244,17 +259,8 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
 }
 
 function SessionList({ events, bundle, empty, showDay = false }: { events: CalendarEvent[]; bundle: PlanBundle; empty: string; showDay?: boolean }) {
-  const update = useUpdateEvent()
-  const qc = useQueryClient()
+  const toggle = useToggleSession(bundle.plan.id)
   if (events.length === 0) return <Empty icon="study">{empty}</Empty>
-
-  function toggle(e: CalendarEvent) {
-    // Se marca al momento en la pantalla y se guarda por detrás.
-    qc.setQueryData<PlanBundle>(['plans', 'one', bundle.plan.id], (prev) =>
-      prev ? { ...prev, events: prev.events.map((x) => (x.id === e.id ? { ...x, completed: !e.completed } : x)) } : prev,
-    )
-    update.mutate({ id: e.id, completed: !e.completed }, { onSettled: () => qc.invalidateQueries({ queryKey: ['plans', 'one', bundle.plan.id] }) })
-  }
 
   return (
     <ul className="-mx-2">
@@ -270,7 +276,7 @@ function SessionList({ events, bundle, empty, showDay = false }: { events: Calen
               type="checkbox"
               className="size-4 shrink-0 accent-accent-500"
               checked={e.completed}
-              onChange={() => toggle(e)}
+              onChange={() => toggle.mutate(e)}
               aria-label="Marcar como hecha"
             />
             <span className="h-8 w-[3px] shrink-0 rounded-full" style={{ background: e.color }} />
