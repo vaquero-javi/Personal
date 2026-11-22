@@ -104,7 +104,7 @@ npx supabase functions deploy study-ai
 
 ## Planes de estudio
 
-La sección **Estudio** prepara un examen con muchos temas (oposiciones, finales), al estilo Opozulo. Un asistente pide, por orden: el examen y su fecha; los PDF de los temas (se suben a una carpeta nueva de Documentos o se eligen de los que ya hay) con las horas que cuesta cada uno, estimadas por páginas; por qué tema empezar; y el horario (horas por día de la semana, hora de inicio y días de repaso final).
+La sección **Estudio** prepara un examen con muchos temas (oposiciones, finales), al estilo Opozulo. Un asistente pide, por orden: el examen y su fecha; los temas, que se pueden escribir sin más (uno por línea, o «crear N temas numerados») o subir como PDF a una carpeta nueva de Documentos (o elegir de los que ya hay), con las horas que cuesta cada uno, a mano o estimadas por páginas; por qué tema empezar; y el horario (horas por día de la semana, hora de inicio y días de repaso final).
 
 Con eso `src/features/study/planner.ts` reparte el temario y pone cada sesión en el calendario a su hora:
 

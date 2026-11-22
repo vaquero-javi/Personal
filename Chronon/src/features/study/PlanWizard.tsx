@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { addDays, differenceInCalendarDays, format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Button, ColorPicker, Field, inputClass } from '../../components/ui'
+import { Button, ColorPicker, Field, Segmented, inputClass } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import { Modal } from '../../components/Modal'
 import { fromInputs, toDateInput } from '../../lib/dates'
@@ -45,7 +45,29 @@ export function PlanWizard() {
     minutesPerPage: 10,
   })
   const [error, setError] = useState<string | null>(null)
+  const [source, setSource] = useState<'list' | 'pdf'>('list')
+  const [listText, setListText] = useState('')
+  const [listHours, setListHours] = useState(3)
+  const [numbered, setNumbered] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
+
+  const plainRow = (title: string): Row => ({ key: crypto.randomUUID(), title, noteId: null, pages: null, manualMinutes: round5(listHours * 60) })
+
+  function addFromList() {
+    // Acepta listas pegadas con viñetas o numeración («- », «• », «1) »).
+    const titles = listText
+      .split('\n')
+      .map((l) => l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, '').trim())
+      .filter(Boolean)
+    setRows((rs) => [...rs, ...titles.map(plainRow)])
+    setListText('')
+  }
+
+  function addNumbered() {
+    const n = Math.min(200, Math.max(1, Math.round(Number(numbered))))
+    setRows((rs) => [...rs, ...Array.from({ length: n }, (_, i) => plainRow(`Tema ${rs.length + i + 1}`))])
+    setNumbered('')
+  }
   const createSection = useCreateSection()
   const importPdf = useImportPdf()
   const createPlan = useCreatePlan()
@@ -110,7 +132,7 @@ export function PlanWizard() {
   const blockers: (string | null)[] = [
     !title.trim() ? 'Ponle nombre al examen' : !examDate ? 'Elige la fecha del examen' : examDate <= today ? 'La fecha del examen tiene que ser futura' : null,
     rows.length === 0
-      ? 'Sube al menos un tema'
+      ? 'Añade al menos un tema'
       : rows.some((r) => r.uploading)
         ? 'Espera a que terminen de subirse los PDFs'
         : rows.some((r) => r.error)
@@ -193,9 +215,67 @@ export function PlanWizard() {
         {step === 1 && (
           <>
             <Heading
-              title="Sube los PDF de tus temas"
-              hint="Un PDF por tema. Se guardan en Documentos, en su propia carpeta, para que puedas subrayar y estudiar con IA. Si ya los tienes subidos, elígelos."
+              title="¿Qué temas tienes que estudiar?"
+              hint={
+                source === 'pdf'
+                  ? 'Un PDF por tema. Se guardan en Documentos, en su propia carpeta, para que puedas subrayar y estudiar con IA. Si ya los tienes subidos, elígelos.'
+                  : 'Escribe un tema por línea y cuántas horas te cuesta cada uno. No hace falta subir nada; si luego quieres, añades el PDF que te falte.'
+              }
             />
+            <Segmented
+              value={source}
+              onChange={setSource}
+              className="w-full"
+              options={[
+                { value: 'list', label: 'Solo los nombres' },
+                { value: 'pdf', label: 'Con PDFs' },
+              ]}
+            />
+            {source === 'list' ? (
+              <div className="space-y-3">
+                <Field label="Un tema por línea">
+                  <textarea
+                    rows={6}
+                    className={inputClass}
+                    placeholder={'Tema 1. La Constitución Española\nTema 2. El Gobierno y la Administración\nTema 3. …'}
+                    value={listText}
+                    onChange={(e) => setListText(e.target.value)}
+                  />
+                </Field>
+                <div className="flex flex-wrap items-end gap-3">
+                  <Field label="Horas por tema" className="w-32">
+                    <input
+                      type="number"
+                      min={0.25}
+                      step={0.5}
+                      className={inputClass}
+                      value={listHours}
+                      onChange={(e) => setListHours(Math.max(0.25, Number(e.target.value) || 0.25))}
+                    />
+                  </Field>
+                  <Button type="button" onClick={addFromList} disabled={!listText.trim()}>
+                    <Icon name="plus" size={16} /> Añadir temas
+                  </Button>
+                  <span className="pb-2.5 text-xs text-ink-500">o</span>
+                  <div className="flex items-end gap-2">
+                    <Field label="Crear temas numerados" className="w-40">
+                      <input
+                        type="number"
+                        min={1}
+                        max={200}
+                        className={inputClass}
+                        placeholder="Nº de temas"
+                        value={numbered}
+                        onChange={(e) => setNumbered(e.target.value)}
+                      />
+                    </Field>
+                    <Button type="button" variant="secondary" onClick={addNumbered} disabled={!(Number(numbered) >= 1)}>
+                      Crear
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
             <div className="flex flex-wrap gap-2">
               <Button type="button" onClick={() => fileInput.current?.click()}>
                 <Icon name="upload" size={16} /> Subir PDFs
@@ -222,10 +302,12 @@ export function PlanWizard() {
                 }}
               />
             </div>
+            )}
 
             {rows.length > 0 && (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ink-50 px-3 py-2 text-sm">
+                  {rows.some((r) => r.pages) ? (
                   <label className="flex items-center gap-2 text-ink-600">
                     Tardo unos
                     <input
@@ -238,6 +320,11 @@ export function PlanWizard() {
                     />
                     min en estudiar una página
                   </label>
+                  ) : (
+                    <span className="text-ink-600">
+                      {rows.length} tema{rows.length === 1 ? '' : 's'} · cambia las horas de los que sean más largos o más cortos
+                    </span>
+                  )}
                   <span className="font-mono text-xs tabular-nums text-ink-500">Total {formatHours(totalMinutes)}</span>
                 </div>
                 <ol className="divide-y divide-ink-100 rounded-xl ring-1 ring-ink-200">

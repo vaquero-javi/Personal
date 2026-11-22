@@ -41,7 +41,7 @@ function PlanList() {
         <section className="animate-rise rounded-2xl bg-surface p-6 shadow-soft ring-1 ring-ink-200/70 sm:p-8">
           <h2 className="font-display text-3xl leading-none tracking-tight">Planifica tu examen</h2>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-ink-500">
-            Sube los PDF de tus temas, dinos por cuál empiezas y cuántas horas tienes al día. Te decimos qué estudiar cada día y cuándo repasar cada tema para que no se te olvide: a 1, 3, 7, 15 y 30 días de aprenderlo. Todo queda en tu calendario.
+            Escribe tus temas (o sube sus PDF), dinos por cuál empiezas y cuántas horas tienes al día. Te decimos qué estudiar cada día y cuándo repasar cada tema para que no se te olvide: a 1, 3, 7, 15 y 30 días de aprenderlo. Todo queda en tu calendario.
           </p>
           <Link to="/study/new" className="mt-5 inline-block">
             <Button variant="accent">
