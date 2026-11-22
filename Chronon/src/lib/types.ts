@@ -1,5 +1,8 @@
 export type EventType = 'event' | 'reminder'
 
+/** Tipo de sesión de un plan de estudio (ver features/study). */
+export type StudyKind = 'study' | 'review' | 'final' | 'mock' | 'exam'
+
 export interface CalendarEvent {
   id: string
   title: string
@@ -11,6 +14,10 @@ export interface CalendarEvent {
   color: string
   completed: boolean
   created_at: string
+  /** Si el evento es una sesión de un plan de estudio. */
+  study_plan_id?: string | null
+  study_topic_id?: string | null
+  study_kind?: StudyKind | null
 }
 
 export interface EventAlert {

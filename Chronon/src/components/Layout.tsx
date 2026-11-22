@@ -8,6 +8,7 @@ const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/calendar', label: 'Calendario', icon: 'calendar' },
   { to: '/timeline', label: 'Timeline', icon: 'timeline' },
   { to: '/notes', label: 'Documentos', icon: 'notes' },
+  { to: '/study', label: 'Estudio', icon: 'study' },
   { to: '/settings', label: 'Ajustes', icon: 'settings' },
 ]
 
@@ -77,7 +78,7 @@ export function Layout() {
 
       <nav
         aria-label="Principal"
-        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid grid-cols-5 rounded-2xl bg-surface/90 p-1 shadow-float ring-1 ring-ink-200/70 backdrop-blur-xl md:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid grid-cols-6 rounded-2xl bg-surface/90 p-1 shadow-float ring-1 ring-ink-200/70 backdrop-blur-xl md:hidden"
       >
         {NAV.map((item) => (
           <NavLink

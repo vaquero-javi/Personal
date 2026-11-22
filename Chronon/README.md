@@ -17,7 +17,7 @@ Necesitas [Node.js](https://nodejs.org) 20 o superior.
 ### 1. Supabase
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql`, `supabase/migrations/0004_note_folders.sql` y `supabase/migrations/0005_note_pdfs.sql` y `supabase/migrations/0006_study_items.sql`.
+2. En **SQL Editor**, ejecuta por orden `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_cron.sql` `supabase/migrations/0003_notes_drawing.sql`, `supabase/migrations/0004_note_folders.sql` y `supabase/migrations/0005_note_pdfs.sql` `supabase/migrations/0006_study_items.sql` y `supabase/migrations/0007_study_plans.sql`.
 3. Genera las claves VAPID para push:
    ```bash
    npx web-push generate-vapid-keys
@@ -102,6 +102,18 @@ npx supabase secrets set GEMINI_API_KEY=...   # clave de https://aistudio.google
 npx supabase functions deploy study-ai
 ```
 
+## Planes de estudio
+
+La sección **Estudio** prepara un examen con muchos temas (oposiciones, finales), al estilo Opozulo. Un asistente pide, por orden: el examen y su fecha; los PDF de los temas (se suben a una carpeta nueva de Documentos o se eligen de los que ya hay) con las horas que cuesta cada uno, estimadas por páginas; por qué tema empezar; y el horario (horas por día de la semana, hora de inicio y días de repaso final).
+
+Con eso `src/features/study/planner.ts` reparte el temario y pone cada sesión en el calendario a su hora:
+
+- Cada día van primero los repasos que tocan (como mucho la mitad del día mientras quede temario) y luego el tema en curso, en bloques de hasta 90 min con 10 de descanso.
+- Al terminar un tema se programan sus repasos a 1, 3, 7, 15 y 30 días (curva del olvido). Si un repaso no cabe, pasa al día siguiente y los demás se cuentan desde el día en que se hizo.
+- Los últimos días antes del examen son de repaso general de todo y simulacros. El día del examen se añade con aviso la víspera.
+
+Las sesiones son eventos normales (columnas `study_plan_id`, `study_topic_id`, `study_kind` de `events`, migración `0007_study_plans.sql`) y se marcan como hechas desde la pantalla del plan o desde Inicio. **Recalcular desde hoy** vuelve a repartir todo lo pendiente (también lo atrasado) contando lo que de verdad se ha hecho; **Horario** cambia las horas y recalcula. Borrar un plan quita sus sesiones del calendario, pero los PDFs se quedan en Documentos.
+
 ## Cambiar el logo
 
 El logo vive en `public/logo.png` como silueta transparente, así que la app lo tiñe del color que toque en cada tema. Para sustituirlo por otra imagen (tinta oscura sobre fondo claro):
@@ -121,6 +133,7 @@ src/
     alerts/      campana y lista de avisos (descartar / posponer)
     notes/       carpetas, lista de notas y editor (papel, texto y escritura a mano)
     dashboard/   pantalla de inicio (hoy, próximos 7 días, atrasados)
+    study/       planes de estudio: asistente, reparto del temario y repasos espaciados
     settings/    notificaciones y cuenta
   lib/           cliente Supabase, fechas, push, tipos
   sw.ts          service worker (caché offline + notificaciones)

@@ -134,7 +134,8 @@ function EventForm({ event, defaults, onClose }: { event?: EventWithAlerts; defa
           all_day: f.allDay,
           start_at: start.toISOString(),
           end_at: end?.toISOString() ?? null,
-          completed: isEvent ? false : f.completed,
+          // Los eventos no tienen casilla, pero las sesiones de estudio conservan si están hechas.
+          completed: isEvent ? (event?.completed ?? false) : f.completed,
         },
       })
       onClose()

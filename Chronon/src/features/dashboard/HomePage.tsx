@@ -125,7 +125,7 @@ function EventList({ events, empty, leading }: { events: CalendarEvent[]; empty:
             <span className="w-12 shrink-0 font-mono text-xs tabular-nums text-ink-500">
               {leading === 'time' ? (e.all_day ? 'día' : format(start, 'HH:mm')) : format(start, 'EEE d', { locale: es })}
             </span>
-            {e.type === 'reminder' ? (
+            {e.type === 'reminder' || (e.study_kind && e.study_kind !== 'exam') ? (
               <input
                 type="checkbox"
                 className="size-4 shrink-0 accent-accent-500"

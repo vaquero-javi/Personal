@@ -14,7 +14,7 @@ import { useEventsInRange, useUpdateEvent } from './api'
 
 export function CalendarPage() {
   const [range, setRange] = useState<{ start: Date; end: Date } | null>(null)
-  const [show, setShow] = useState({ event: true, reminder: true })
+  const [show, setShow] = useState({ event: true, reminder: true, study: true })
   const { data: events = [] } = useEventsInRange(range)
   const update = useUpdateEvent()
   const { openNew, openEdit } = useEventEditor()
@@ -32,7 +32,7 @@ export function CalendarPage() {
   const fcEvents = useMemo<EventInput[]>(
     () =>
       events
-        .filter((e) => show[e.type])
+        .filter((e) => (e.study_plan_id ? show.study : show[e.type]))
         .map((e) => ({
           id: e.id,
           title: e.completed ? `✓ ${e.title}` : e.title,
@@ -67,10 +67,10 @@ export function CalendarPage() {
     <div className="space-y-5">
       <PageHeader eyebrow="Mes, semana o día" title="Calendario">
         <div className="flex flex-wrap items-center gap-1.5">
-          {(['event', 'reminder'] as const).map((t) => (
+          {(['event', 'reminder', 'study'] as const).map((t) => (
             <Toggle key={t} on={show[t]} onClick={() => setShow((s) => ({ ...s, [t]: !s[t] }))}>
-              <Icon name={t === 'event' ? 'calendar' : 'bell'} size={14} />
-              {t === 'event' ? 'Eventos' : 'Recordatorios'}
+              <Icon name={t === 'event' ? 'calendar' : t === 'reminder' ? 'bell' : 'study'} size={14} />
+              {t === 'event' ? 'Eventos' : t === 'reminder' ? 'Recordatorios' : 'Estudio'}
             </Toggle>
           ))}
           <Button size="sm" variant="secondary" onClick={() => openNew({ type: 'reminder' })} className="ml-1">
