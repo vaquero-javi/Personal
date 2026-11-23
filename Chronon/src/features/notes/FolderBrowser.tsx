@@ -6,7 +6,18 @@ import { Modal } from '../../components/Modal'
 import { Button, COLORS, ColorPicker, Field, IconButton, Skeleton, inputClass } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import type { NoteSection } from '../../lib/types'
-import { useCreateNote, useCreateSection, useDeleteSection, useImportPdf, useNotes, useSections, useUpdateSections, type NoteSummary } from './api'
+import {
+  useCreateNote,
+  useCreateSection,
+  useDeleteNote,
+  useDeleteSection,
+  useImportPdf,
+  useNotes,
+  useSections,
+  useUpdateNote,
+  useUpdateSections,
+  type NoteSummary,
+} from './api'
 import { NewNoteDialog } from './NewNoteDialog'
 import type { NoteDrawing } from './drawing'
 
@@ -23,6 +34,7 @@ export function FolderBrowser({ sectionId }: { sectionId?: string }) {
   const [searching, setSearching] = useState(false)
   const [dialog, setDialog] = useState<'folder' | 'note' | null>(null)
   const [editing, setEditing] = useState<NoteSection | null>(null)
+  const [editingNote, setEditingNote] = useState<NoteSummary | null>(null)
   const { data: notes = [], isLoading: loadingNotes } = useNotes(section?.id, search)
   const createNote = useCreateNote()
   const importPdf = useImportPdf()
@@ -73,6 +85,7 @@ export function FolderBrowser({ sectionId }: { sectionId?: string }) {
       {dialog === 'folder' && <NewFolderDialog parentId={section?.id ?? null} onClose={() => setDialog(null)} />}
       {dialog === 'note' && <NewNoteDialog onClose={() => setDialog(null)} onCreate={newNote} busy={createNote.isPending} />}
       {editing && <FolderDialog section={editing} onClose={() => setEditing(null)} />}
+      {editingNote && <NoteDialog note={editingNote} onClose={() => setEditingNote(null)} />}
 
       <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <div>
@@ -146,7 +159,7 @@ export function FolderBrowser({ sectionId }: { sectionId?: string }) {
           ))}
           {notes.map((n) => (
             <li key={n.id}>
-              <NoteTile note={n} />
+              <NoteTile note={n} onOptions={() => setEditingNote(n)} />
             </li>
           ))}
         </ul>
@@ -263,25 +276,91 @@ function FolderTile({ section, count, onOptions }: { section: NoteSection; count
   )
 }
 
-function NoteTile({ note }: { note: NoteSummary }) {
+function NoteTile({ note, onOptions }: { note: NoteSummary; onOptions: () => void }) {
   return (
-    <Link
-      to={`/notes/${note.section_id}/${note.id}`}
-      className="group block rounded-2xl p-1.5 text-center transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent-400"
-    >
-      <div
-        className={`paper paper-${note.paper ?? 'ruled'} relative mx-auto aspect-[1/1.414] max-w-[7.5rem] overflow-hidden rounded-md text-left shadow-soft ring-1 ring-ink-200/80`}
-        style={{ ['--paper-cell' as string]: '9px', ['--paper-gutter' as string]: '14px' }}
+    <div className="group relative">
+      <Link
+        to={`/notes/${note.section_id}/${note.id}`}
+        className="block rounded-2xl p-1.5 text-center transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-accent-400"
       >
-        <p className="line-clamp-[9] break-words px-2.5 pt-2 text-[6px] leading-[9px] text-ink-600">{note.content_text}</p>
-        {note.pinned && <Icon name="pin" size={13} className="absolute right-1.5 top-1.5 text-accent-500" />}
-        {note.pdf && (
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-red-600 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white">PDF</span>
-        )}
-      </div>
-      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-tight text-ink-900">{note.title || 'Sin título'}</p>
-      <p className="mt-0.5 text-[11px] text-ink-400">{stamp(note.updated_at)}</p>
-    </Link>
+        <div
+          className={`paper paper-${note.paper ?? 'ruled'} relative mx-auto aspect-[1/1.414] max-w-[7.5rem] overflow-hidden rounded-md text-left shadow-soft ring-1 ring-ink-200/80`}
+          style={{ ['--paper-cell' as string]: '9px', ['--paper-gutter' as string]: '14px' }}
+        >
+          <p className="line-clamp-[9] break-words px-2.5 pt-2 text-[6px] leading-[9px] text-ink-600">{note.content_text}</p>
+          {note.pinned && <Icon name="pin" size={13} className="absolute left-1.5 top-1.5 text-accent-500" />}
+          {note.pdf && (
+            <span className="absolute bottom-1.5 left-1.5 rounded bg-red-600 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white">PDF</span>
+          )}
+        </div>
+        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-tight text-ink-900">{note.title || 'Sin título'}</p>
+        <p className="mt-0.5 text-[11px] text-ink-400">{stamp(note.updated_at)}</p>
+      </Link>
+      <IconButton
+        icon="more"
+        label={`Opciones de ${note.title || 'Sin título'}`}
+        className="absolute right-1 top-1 size-8 bg-surface/80 shadow-soft backdrop-blur md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+        onClick={onOptions}
+      />
+    </div>
+  )
+}
+
+/** Renombrar, mover o borrar una nota o un PDF desde la carpeta, sin abrirlo. */
+function NoteDialog({ note, onClose }: { note: NoteSummary; onClose: () => void }) {
+  const { data: sections = [] } = useSections()
+  const update = useUpdateNote()
+  const del = useDeleteNote()
+  const [title, setTitle] = useState(note.title)
+  const [sectionId, setSectionId] = useState(note.section_id)
+  const [error, setError] = useState('')
+  const name = note.title || 'Sin título'
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      await update.mutateAsync({ id: note.id, title: title.trim(), section_id: sectionId })
+      onClose()
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  async function remove() {
+    if (!confirm(`¿Borrar ${note.pdf ? 'el PDF' : 'la nota'} "${name}"? No se puede deshacer.`)) return
+    setError('')
+    try {
+      await del.mutateAsync(note.id)
+      onClose()
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  return (
+    <Modal title={note.pdf ? 'PDF' : 'Nota'} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-5">
+        <Field label="Nombre">
+          <input className={inputClass} autoFocus value={title} placeholder="Sin título" onChange={(e) => setTitle(e.target.value)} />
+        </Field>
+        <Field label="Carpeta">
+          <select className={inputClass} value={sectionId} onChange={(e) => setSectionId(e.target.value)}>
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </Field>
+        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+        <div className="flex items-center gap-2 border-t border-ink-100 pt-4">
+          <Button type="button" variant="danger" onClick={remove} disabled={del.isPending}>
+            <Icon name="trash" size={15} /> {del.isPending ? 'Borrando…' : 'Borrar'}
+          </Button>
+          <Button type="button" variant="secondary" className="ml-auto" onClick={onClose}>Cancelar</Button>
+          <Button disabled={update.isPending}>Guardar</Button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

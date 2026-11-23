@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router'
 import { AlertsBell } from '../features/alerts/AlertsBell'
 import { useEventEditor } from '../features/calendar/EventEditor'
+import { useReminderRollover } from '../features/calendar/api'
 import { useStudyRollover } from '../features/study/api'
 import { Icon, Logo, type IconName } from './Icon'
 
@@ -16,6 +17,7 @@ const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
 export function Layout() {
   const { openNew } = useEventEditor()
   useStudyRollover()
+  useReminderRollover()
 
   return (
     <div className="min-h-dvh md:flex">

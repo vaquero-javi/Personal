@@ -1,5 +1,6 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { addDays, startOfDay } from 'date-fns'
+import { addDays, differenceInCalendarDays, format, parseISO, startOfDay } from 'date-fns'
 import { supabase, unwrap } from '../../lib/supabase'
 import type { CalendarEvent, EventWithAlerts } from '../../lib/types'
 
@@ -126,4 +127,65 @@ export function useDeleteEvent() {
     mutationFn: async (id: string) => unwrap(await supabase.from('events').delete().eq('id', id)),
     onSuccess: invalidate,
   })
+}
+
+/**
+ * Los recordatorios de días anteriores que no se marcaron como hechos pasan a hoy, a la misma hora,
+ * para hacerlos. Al cambiar de día sus avisos se vuelven a programar (los que ya han pasado no suenan).
+ * Las sesiones de estudio tienen su propio arrastre (ver features/study).
+ * Se comprueba al abrir la app, al volver a ella y cada media hora.
+ */
+export function useReminderRollover() {
+  const invalidate = useInvalidateEvents()
+  useEffect(() => {
+    let lastRun = ''
+    let running = false
+
+    async function run() {
+      const now = new Date()
+      const today = format(now, 'yyyy-MM-dd')
+      if (running || lastRun === today || document.visibilityState === 'hidden') return
+      running = true
+      try {
+        const todayStart = startOfDay(now)
+        const overdue = unwrap(
+          await supabase
+            .from('events')
+            .select('id, start_at, end_at')
+            .eq('type', 'reminder')
+            .eq('completed', false)
+            .is('study_plan_id', null)
+            .lt('start_at', todayStart.toISOString()),
+        ) as Pick<CalendarEvent, 'id' | 'start_at' | 'end_at'>[]
+        await Promise.all(
+          overdue.map((e) => {
+            const days = differenceInCalendarDays(todayStart, parseISO(e.start_at))
+            return supabase
+              .from('events')
+              .update({
+                start_at: addDays(parseISO(e.start_at), days).toISOString(),
+                end_at: e.end_at ? addDays(parseISO(e.end_at), days).toISOString() : null,
+              })
+              .eq('id', e.id)
+              .then(unwrap)
+          }),
+        )
+        lastRun = today
+        if (overdue.length) invalidate()
+      } catch (err) {
+        console.warn('No se han podido pasar los recordatorios atrasados', err)
+      } finally {
+        running = false
+      }
+    }
+
+    run()
+    document.addEventListener('visibilitychange', run)
+    const timer = setInterval(run, 30 * 60_000)
+    return () => {
+      document.removeEventListener('visibilitychange', run)
+      clearInterval(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 }
