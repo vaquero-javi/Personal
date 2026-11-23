@@ -12,6 +12,7 @@ import { isConfigured } from './lib/supabase'
 const CalendarPage = lazy(() => import('./features/calendar/CalendarPage').then((m) => ({ default: m.CalendarPage })))
 const TimelinePage = lazy(() => import('./features/timeline/TimelinePage').then((m) => ({ default: m.TimelinePage })))
 const StudyPage = lazy(() => import('./features/study/StudyPage').then((m) => ({ default: m.StudyPage })))
+const TutorialsPage = lazy(() => import('./features/tutorials/TutorialsPage').then((m) => ({ default: m.TutorialsPage })))
 const NotesPage = lazy(() => import('./features/notes/NotesPage').then((m) => ({ default: m.NotesPage })))
 
 export function App() {
@@ -50,6 +51,7 @@ export function App() {
             <Route path="timeline" element={<Suspense fallback={null}><TimelinePage /></Suspense>} />
             <Route path="notes/:sectionId?/:noteId?" element={<Suspense fallback={null}><NotesPage /></Suspense>} />
             <Route path="study/:planId?" element={<Suspense fallback={null}><StudyPage /></Suspense>} />
+            <Route path="tutorials" element={<Suspense fallback={null}><TutorialsPage /></Suspense>} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, PageHeader, Segmented } from '../../components/ui'
 import { Icon, type IconName } from '../../components/Icon'
@@ -105,7 +106,8 @@ export function SettingsPage() {
       <Card title="Notificaciones">
         {isIosBrowserTab() ? (
           <p className="text-sm leading-relaxed text-ink-600">
-            En iPhone/iPad las notificaciones solo funcionan con la app instalada: pulsa <b className="font-medium text-ink-900">Compartir → Añadir a pantalla de inicio</b>, ábrela desde ahí y vuelve a esta pantalla.
+            En iPhone/iPad las notificaciones solo funcionan con la app instalada: pulsa <b className="font-medium text-ink-900">Compartir → Añadir a pantalla de inicio</b>, ábrela desde ahí y vuelve a esta pantalla.{' '}
+            <Link to="/tutorials" className="font-medium text-accent-600 hover:underline">Ver el vídeo</Link>
           </p>
         ) : !pushSupported() ? (
           <p className="text-sm text-ink-600">Este navegador no admite notificaciones push.</p>

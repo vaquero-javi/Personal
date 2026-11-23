@@ -7,7 +7,9 @@
     "capture": "node capture.mjs",
     "music": "node music.mjs",
     "studio": "remotion studio src/index.jsx",
-    "render": "remotion render src/index.jsx Launch out/chronos-lanzamiento.mp4"
+    "render": "remotion render src/index.jsx Launch out/chronos-lanzamiento.mp4",
+    "render:tutorial": "remotion render src/index.jsx TutorialIOS out/chronos-tutorial-ios.mp4",
+    "render:tutorial-android": "remotion render src/index.jsx TutorialAndroid out/chronos-tutorial-android.mp4"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

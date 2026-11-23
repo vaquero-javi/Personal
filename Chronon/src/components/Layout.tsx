@@ -5,12 +5,13 @@ import { useReminderRollover } from '../features/calendar/api'
 import { useStudyRollover } from '../features/study/api'
 import { Icon, Logo, type IconName } from './Icon'
 
-const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+const NAV: { to: string; label: string; short?: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/calendar', label: 'Calendario', icon: 'calendar' },
   { to: '/timeline', label: 'Timeline', icon: 'timeline' },
-  { to: '/notes', label: 'Documentos', icon: 'notes' },
+  { to: '/notes', label: 'Documentos', short: 'Docs', icon: 'notes' },
   { to: '/study', label: 'Estudio', icon: 'study' },
+  { to: '/tutorials', label: 'Tutoriales', icon: 'play' },
   { to: '/settings', label: 'Ajustes', icon: 'settings' },
 ]
 
@@ -82,7 +83,7 @@ export function Layout() {
 
       <nav
         aria-label="Principal"
-        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid grid-cols-6 rounded-2xl bg-surface/90 p-1 shadow-float ring-1 ring-ink-200/70 backdrop-blur-xl md:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid grid-cols-7 rounded-2xl bg-surface/90 p-1 shadow-float ring-1 ring-ink-200/70 backdrop-blur-xl md:hidden"
       >
         {NAV.map((item) => (
           <NavLink
@@ -90,13 +91,13 @@ export function Layout() {
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 rounded-xl py-2 text-[10.5px] transition-colors duration-200 ${isActive ? 'bg-ink-100 font-medium text-ink-900' : 'text-ink-500'}`
+              `flex min-w-0 flex-col items-center gap-0.5 rounded-xl py-2 text-[10px] tracking-tight transition-colors duration-200 ${isActive ? 'bg-ink-100 font-medium text-ink-900' : 'text-ink-500'}`
             }
           >
             {({ isActive }) => (
               <>
                 <Icon name={item.icon} size={20} className={isActive ? 'text-accent-500' : ''} />
-                {item.label}
+                <span className="max-w-full truncate px-0.5">{item.short ?? item.label}</span>
               </>
             )}
           </NavLink>
