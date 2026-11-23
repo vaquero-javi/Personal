@@ -29,9 +29,21 @@ function dueDate(e: CalendarEvent) {
   return e.all_day && e.type === 'reminder' ? new Date(start.getTime() + 86_400_000 - 1) : start
 }
 
+/** Lo que se marca como hecho: recordatorios y sesiones de estudio (el examen no). */
+export const isCheckable = (e: CalendarEvent) => e.type === 'reminder' || (!!e.study_kind && e.study_kind !== 'exam')
+
 export function getTimelineInfo(e: CalendarEvent, now: Date): TimelineInfo {
   const start = parseISO(e.start_at)
   const due = dueDate(e)
+  const end = e.end_at ? parseISO(e.end_at) : e.all_day ? new Date(start.getTime() + 86_400_000) : start
+
+  // Sesiones de estudio: como un evento mientras dura, pero si termina sin marcar queda atrasada.
+  if (e.type !== 'reminder' && isCheckable(e)) {
+    if (e.completed) return { status: 'done', label: 'Hecho', progress: null }
+    if (now >= end && now > start) return { status: 'overdue', label: `Sin hacer · hace ${formatSpan(differenceInMinutes(now, end))}`, progress: 1 }
+    if (now >= start) return { status: 'in-progress', label: `En curso · queda ${formatSpan(differenceInMinutes(end, now))}`, progress: progressBetween(start, end, now) }
+    return { status: 'pending', label: `Faltan ${formatSpan(differenceInMinutes(start, now))}`, progress: progressBetween(parseISO(e.created_at), start, now) }
+  }
 
   if (e.type === 'reminder') {
     if (e.completed) return { status: 'done', label: 'Hecho', progress: null }
@@ -40,7 +52,6 @@ export function getTimelineInfo(e: CalendarEvent, now: Date): TimelineInfo {
     return { status: 'pending', label: `Faltan ${formatSpan(left)}`, progress: progressBetween(parseISO(e.created_at), due, now) }
   }
 
-  const end = e.end_at ? parseISO(e.end_at) : e.all_day ? new Date(start.getTime() + 86_400_000) : start
   if (now >= end && now > start) return { status: 'finished', label: 'Terminado', progress: null }
   if (now >= start) return { status: 'in-progress', label: `En curso · queda ${formatSpan(differenceInMinutes(end, now))}`, progress: progressBetween(start, end, now) }
   return { status: 'pending', label: `Faltan ${formatSpan(differenceInMinutes(start, now))}`, progress: progressBetween(parseISO(e.created_at), start, now) }

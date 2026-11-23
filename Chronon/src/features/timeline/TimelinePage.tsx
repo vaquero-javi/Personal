@@ -6,7 +6,7 @@ import { Icon } from '../../components/Icon'
 import type { CalendarEvent } from '../../lib/types'
 import { useEventEditor } from '../calendar/EventEditor'
 import { useTimeline, useUpdateEvent } from '../calendar/api'
-import { getTimelineInfo, STATUS_STYLE, type Status } from './status'
+import { getTimelineInfo, isCheckable, STATUS_STYLE, type Status } from './status'
 
 type Filter = 'all' | 'pending' | 'done'
 
@@ -53,15 +53,18 @@ export function TimelinePage() {
     [events, types, filter, now],
   )
 
-  const reminders = events.filter((e) => e.type === 'reminder')
-  const counts = reminders.reduce(
+  // Resumen de todo lo apuntado (con los tipos elegidos): los eventos que ya han terminado cuentan
+  // como hechos y los que están en curso, como pendientes.
+  const counted = events.filter((e) => types[e.type])
+  const byStatus = counted.reduce(
     (acc, e) => {
       acc[getTimelineInfo(e, now).status]++
       return acc
     },
     { done: 0, overdue: 0, pending: 0, 'in-progress': 0, finished: 0 } as Record<Status, number>,
   )
-  const donePct = reminders.length ? Math.round((counts.done / reminders.length) * 100) : 0
+  const counts = { done: byStatus.done + byStatus.finished, pending: byStatus.pending + byStatus['in-progress'], overdue: byStatus.overdue }
+  const donePct = counted.length ? Math.round((counts.done / counted.length) * 100) : 0
 
   // Posición del marcador "Ahora": antes del primer elemento que aún no ha empezado.
   const nowIndex = items.findIndex(({ event }) => parseISO(event.start_at) > now)
@@ -94,7 +97,7 @@ export function TimelinePage() {
 
       <section className="animate-rise rounded-2xl bg-surface p-5 shadow-soft ring-1 ring-ink-200/70">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-[13px] font-medium text-ink-500">Recordatorios</h2>
+          <h2 className="text-[13px] font-medium text-ink-500">Todo lo apuntado</h2>
           <span className="font-mono text-xs tabular-nums text-ink-500">{donePct}% hechos</span>
         </div>
         <div className="mt-4 grid grid-cols-3 divide-x divide-ink-100">
@@ -110,7 +113,7 @@ export function TimelinePage() {
         </div>
         <div className="mt-5 flex h-1.5 gap-0.5 overflow-hidden rounded-full bg-ink-100">
           {summary.map(({ key }) =>
-            counts[key] ? <div key={key} className={`rounded-full ${STATUS_STYLE[key].bar}`} style={{ width: `${(counts[key] / reminders.length) * 100}%` }} /> : null,
+            counts[key] ? <div key={key} className={`rounded-full ${STATUS_STYLE[key].bar}`} style={{ width: `${(counts[key] / counted.length) * 100}%` }} /> : null,
           )}
         </div>
       </section>
@@ -191,7 +194,7 @@ function TimelineItem({ event, info }: { event: CalendarEvent; info: ReturnType<
       >
         <div className="flex items-start gap-3">
           <span className="mt-0.5 h-9 w-[3px] shrink-0 rounded-full" style={{ background: event.color }} />
-          {event.type === 'reminder' && (
+          {isCheckable(event) && (
             <input
               type="checkbox"
               className="mt-0.5 size-4 shrink-0 accent-accent-500"
