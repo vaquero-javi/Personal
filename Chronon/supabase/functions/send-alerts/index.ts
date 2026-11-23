@@ -20,7 +20,25 @@ type DueAlert = {
   user_id: string
   offset_minutes: number
   fire_at: string
-  events: { id: string; title: string; type: 'event' | 'reminder'; start_at: string; all_day: boolean; completed: boolean }
+  events: {
+    id: string
+    title: string
+    type: 'event' | 'reminder'
+    start_at: string
+    end_at: string | null
+    all_day: boolean
+    completed: boolean
+    study_plan_id: string | null
+    study_kind: string | null
+  }
+}
+
+const time = (iso: string) => new Intl.DateTimeFormat('es-ES', { timeZone: TIME_ZONE, hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
+
+/** Sesiones de un plan de estudio: «Empieza ahora · 09:00–10:30». */
+function describeSession(ev: DueAlert['events'], offsetMinutes: number): string {
+  const lead = offsetMinutes === 0 ? 'Empieza ahora' : offsetMinutes % 60 === 0 ? `En ${offsetMinutes / 60} h` : `En ${offsetMinutes} min`
+  return `${lead} · ${time(ev.start_at)}${ev.end_at ? `–${time(ev.end_at)}` : ''}`
 }
 
 function describeWhen(ev: DueAlert['events'], offsetMinutes: number): string {
@@ -60,7 +78,7 @@ Deno.serve(async (req) => {
     .lte('fire_at', now.toISOString())
     .is('sent_at', null)
     .is('dismissed_at', null)
-    .select('id, user_id, offset_minutes, fire_at, events(id, title, type, start_at, all_day, completed)')
+    .select('id, user_id, offset_minutes, fire_at, events(id, title, type, start_at, end_at, all_day, completed, study_plan_id, study_kind)')
     .returns<DueAlert[]>()
 
   if (error) {
@@ -87,11 +105,14 @@ Deno.serve(async (req) => {
       (subs ?? [])
         .filter((s) => s.user_id === alert.user_id)
         .map(async (sub) => {
+          const ev = alert.events
+          // Las sesiones de estudio abren su plan, donde se marcan como hechas.
+          const session = ev.study_plan_id && ev.study_kind && ev.study_kind !== 'exam'
           const payload = JSON.stringify({
-            title: (alert.events.type === 'reminder' ? '🔔 ' : '📅 ') + alert.events.title,
-            body: describeWhen(alert.events, alert.offset_minutes),
+            title: (session ? '📚 ' : ev.type === 'reminder' ? '🔔 ' : '📅 ') + ev.title,
+            body: session ? describeSession(ev, alert.offset_minutes) : describeWhen(ev, alert.offset_minutes),
             tag: alert.id,
-            url: `/calendar?event=${alert.events.id}`,
+            url: session ? `/study/${ev.study_plan_id}` : `/calendar?event=${ev.id}`,
           })
           try {
             await webpush.sendNotification(

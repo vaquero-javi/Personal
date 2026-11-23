@@ -45,7 +45,15 @@ export interface PlanSettings {
   minutesPerPage: number
   /** yyyy-MM-dd del último día en que se pasó lo atrasado al siguiente día. */
   rolledUntil?: string
+  /**
+   * Aviso push de cada sesión: minutos antes de empezar (0 = al empezar). null = sin avisos.
+   * Los planes de antes de que hubiera avisos no lo tienen: cuentan como 0.
+   */
+  notifyOffset?: number | null
 }
+
+/** Antelación de los avisos de las sesiones de un plan, o null si no quiere avisos. */
+export const sessionAlertOffset = (s: PlanSettings) => (s.notifyOffset === undefined ? 0 : s.notifyOffset)
 
 export interface PlannerTopic {
   id: string

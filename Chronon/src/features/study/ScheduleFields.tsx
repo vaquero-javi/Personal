@@ -1,5 +1,15 @@
 import { Field, inputClass } from '../../components/ui'
-import { WEEKDAYS, formatHours, type PlanSettings } from './planner'
+import { WEEKDAYS, formatHours, sessionAlertOffset, type PlanSettings } from './planner'
+
+const NOTIFY_OPTIONS = [
+  { value: '0', label: 'Al empezar' },
+  { value: '5', label: '5 min antes' },
+  { value: '10', label: '10 min antes' },
+  { value: '15', label: '15 min antes' },
+  { value: '30', label: '30 min antes' },
+  { value: '60', label: '1 hora antes' },
+  { value: 'off', label: 'Sin avisos' },
+]
 
 /** Horario de estudio: qué días, cuántas horas y a qué hora. Lo usan el asistente y «Ajustar horario». */
 export function ScheduleFields({
@@ -13,6 +23,7 @@ export function ScheduleFields({
 }) {
   const set = <K extends keyof PlanSettings>(key: K, v: PlanSettings[K]) => onChange({ ...value, [key]: v })
   const weekly = value.hoursByWeekday.reduce((s, h) => s + h, 0)
+  const offset = sessionAlertOffset(value)
 
   function setHours(i: number, hours: number) {
     const next = [...value.hoursByWeekday]
@@ -80,6 +91,23 @@ export function ScheduleFields({
           value={value.finalReviewDays}
           onChange={(e) => set('finalReviewDays', Math.max(0, Math.min(60, Math.round(Number(e.target.value)))))}
         />
+      </Field>
+
+      <Field label="Avisarme de cada sesión">
+        <select
+          className={inputClass}
+          value={offset === null ? 'off' : String(offset)}
+          onChange={(e) => set('notifyOffset', e.target.value === 'off' ? null : Number(e.target.value))}
+        >
+          {NOTIFY_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span className="block text-xs font-normal text-ink-400">
+          Te llega una notificación al móvil u ordenador con lo que toca estudiar. Actívalas en Ajustes → Notificaciones en cada dispositivo.
+        </span>
       </Field>
     </div>
   )

@@ -10,6 +10,7 @@ import {
   firstLapMinutes,
   lapMinutes,
   scheduleTimes,
+  sessionAlertOffset,
   weekdayIndex,
   type Difficulty,
   type PlanSettings,
@@ -191,8 +192,17 @@ function eventRows(plan: Pick<StudyPlan, 'id' | 'title' | 'color'>, sessions: Ti
   }))
 }
 
-async function insertInChunks(rows: object[]) {
-  for (let i = 0; i < rows.length; i += 400) unwrap(await supabase.from('events').insert(rows.slice(i, i + 400)))
+/**
+ * Guarda las sesiones en el calendario, cada una con su aviso push (si el plan los quiere).
+ * Los avisos cuyo momento ya ha pasado se crean descartados y no suenan.
+ */
+async function insertInChunks(rows: object[], settings: PlanSettings) {
+  const offset = sessionAlertOffset(settings)
+  for (let i = 0; i < rows.length; i += 400) {
+    const ids = unwrap(await supabase.from('events').insert(rows.slice(i, i + 400)).select('id')) as { id: string }[]
+    if (offset !== null && ids.length)
+      unwrap(await supabase.from('event_alerts').insert(ids.map((e) => ({ event_id: e.id, offset_minutes: offset }))))
+  }
 }
 
 function useInvalidatePlans() {
@@ -242,7 +252,7 @@ export function useCreatePlan() {
         ) as StudyTopic[]
         topics.sort((a, b) => a.position - b.position)
         const result = buildPlan(topicProgress(topics, []), input.settings, input.examDate)
-        await insertInChunks(eventRows(plan, scheduleTimes(result.sessions, input.settings.startTime)))
+        await insertInChunks(eventRows(plan, scheduleTimes(result.sessions, input.settings.startTime)), input.settings)
 
         // El día del examen, con aviso la víspera.
         const exam = unwrap(
@@ -316,7 +326,7 @@ async function replanBundle(bundle: PlanBundle, settings?: PlanSettings) {
       .neq('study_kind', 'exam')
       .gte('start_at', now.toISOString()),
   )
-  await insertInChunks(eventRows(plan, scheduleTimes(result.sessions, s.startTime, from === today ? firstDayStart : undefined)))
+  await insertInChunks(eventRows(plan, scheduleTimes(result.sessions, s.startTime, from === today ? firstDayStart : undefined)), s)
   return result
 }
 
