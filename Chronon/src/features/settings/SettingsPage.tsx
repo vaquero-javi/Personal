@@ -4,7 +4,7 @@ import { Button, Card, PageHeader, Segmented } from '../../components/ui'
 import { Icon, type IconName } from '../../components/Icon'
 import { supabase, unwrap } from '../../lib/supabase'
 import { disablePush, enablePush, getCurrentSubscription, isIosBrowserTab, pushSupported } from '../../lib/push'
-import { getThemePref, setThemePref, type ThemePref } from '../../lib/theme'
+import { getNotesThemePref, getThemePref, setNotesThemePref, setThemePref, type NotesThemePref, type ThemePref } from '../../lib/theme'
 import { useAuth } from '../auth/AuthProvider'
 
 const THEMES: { value: ThemePref; label: string; icon: IconName }[] = [
@@ -27,6 +27,34 @@ function ThemeCard() {
         options={THEMES.map((t) => ({ value: t.value, label: <><Icon name={t.icon} size={15} /> {t.label}</> }))}
       />
       {theme === 'system' && <p className="mt-3 text-xs text-ink-400">Sigue el modo claro u oscuro de tu dispositivo.</p>}
+    </Card>
+  )
+}
+
+const NOTES_THEMES: { value: NotesThemePref; label: string; icon: IconName }[] = [
+  { value: 'light', label: 'Claro', icon: 'sun' },
+  { value: 'dark', label: 'Oscuro', icon: 'moon' },
+  { value: 'auto', label: 'Automático', icon: 'monitor' },
+]
+
+function NotesThemeCard() {
+  const [theme, setTheme] = useState<NotesThemePref>(getNotesThemePref)
+  return (
+    <Card title="Apariencia de notas y PDF">
+      <Segmented
+        className="w-full"
+        value={theme}
+        onChange={(v) => {
+          setTheme(v)
+          setNotesThemePref(v)
+        }}
+        options={NOTES_THEMES.map((t) => ({ value: t.value, label: <><Icon name={t.icon} size={15} /> {t.label}</> }))}
+      />
+      <p className="mt-3 text-xs text-ink-400">
+        {theme === 'auto'
+          ? 'Las notas y los PDF se ven igual que el resto de la app.'
+          : `Las notas y los PDF se ven siempre en ${theme === 'light' ? 'claro (como en papel)' : 'oscuro'}, aunque la app esté en ${theme === 'light' ? 'oscuro' : 'claro'}.`}
+      </p>
     </Card>
   )
 }
@@ -72,6 +100,7 @@ export function SettingsPage() {
       <PageHeader eyebrow="Tema, avisos y cuenta" title="Ajustes" />
 
       <ThemeCard />
+      <NotesThemeCard />
 
       <Card title="Notificaciones">
         {isIosBrowserTab() ? (

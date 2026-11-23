@@ -43,3 +43,44 @@ export function useIsDark() {
   }, [])
   return dark
 }
+
+/** Apariencia dentro de las notas y PDF: aparte de la de la app. «auto» sigue a la app. */
+export type NotesThemePref = 'light' | 'dark' | 'auto'
+
+const NOTES_KEY = 'chronos-notes-theme'
+const NOTES_EVENT = 'chronos-notes-theme'
+
+export function getNotesThemePref(): NotesThemePref {
+  try {
+    const v = localStorage.getItem(NOTES_KEY)
+    if (v === 'light' || v === 'dark' || v === 'auto') return v
+  } catch {
+    // Sin acceso a localStorage: igual que la app.
+  }
+  return 'auto'
+}
+
+export function setNotesThemePref(pref: NotesThemePref) {
+  try {
+    localStorage.setItem(NOTES_KEY, pref)
+  } catch {
+    // Se aplica igualmente en esta sesión.
+  }
+  window.dispatchEvent(new CustomEvent(NOTES_EVENT, { detail: pref }))
+}
+
+/**
+ * Modo de las notas: la clase para su contenedor (que cambia los colores de todo lo que hay dentro)
+ * y si está en oscuro, para el lienzo y el PDF.
+ */
+export function useNotesTheme() {
+  const appDark = useIsDark()
+  const [pref, setPref] = useState(getNotesThemePref)
+  useEffect(() => {
+    const onChange = (e: Event) => setPref((e as CustomEvent<NotesThemePref>).detail)
+    window.addEventListener(NOTES_EVENT, onChange)
+    return () => window.removeEventListener(NOTES_EVENT, onChange)
+  }, [])
+  const dark = pref === 'auto' ? appDark : pref === 'dark'
+  return { dark, className: pref === 'auto' ? '' : pref }
+}

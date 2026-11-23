@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
-import { useIsDark } from '../../lib/theme'
+import { useNotesTheme } from '../../lib/theme'
 import { PAGE_WIDTH, eraseAt, paintAll, paintStroke, pressureOf, smooth, type Point, type Stroke, type Tool } from './drawing'
 
 interface Props {
@@ -24,7 +24,7 @@ export function DrawingLayer({ strokes, onChange, tool, color, size, fingerDraws
   const drawing = useRef<{ id: number; stroke: Stroke } | null>(null)
   const panning = useRef<{ id: number; y: number } | null>(null)
   const erasing = useRef(false)
-  const dark = useIsDark()
+  const { dark } = useNotesTheme()
   const strokesRef = useRef(strokes)
   strokesRef.current = strokes
 

@@ -4,7 +4,8 @@
 @import '@fontsource/instrument-serif/400.css';
 @import '@fontsource/instrument-serif/400-italic.css';
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Dentro de una zona .light (las notas en claro con la app en oscuro) no se aplica dark:. */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.light, .light *)));
 
 /* ---------- Sistema de diseño ----------
    ink    → neutros cálidos (papel y tinta). En oscuro la escala se invierte.
@@ -99,6 +100,44 @@
 
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 0 0 1px rgb(255 255 255 / 0.03);
   --shadow-float: 0 2px 6px rgb(0 0 0 / 0.3), 0 24px 48px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.05);
+}
+
+/* Claro forzado dentro de la app en oscuro (apariencia propia de las notas): los mismos valores que @theme. */
+.light {
+  color-scheme: light;
+  --color-surface: #fdfcfa;
+  --color-ink-50: #f6f5f1;
+  --color-ink-100: #eeece6;
+  --color-ink-200: #e2dfd7;
+  --color-ink-300: #cdc9bf;
+  --color-ink-400: #a29d92;
+  --color-ink-500: #7b766c;
+  --color-ink-600: #5d5951;
+  --color-ink-700: #44413b;
+  --color-ink-800: #2c2a26;
+  --color-ink-900: #1c1b18;
+  --color-ink-950: #121110;
+
+  --color-accent-50: #fcf1eb;
+  --color-accent-100: #f9e0d3;
+  --color-accent-200: #f3c2aa;
+  --color-accent-300: #ea9b77;
+  --color-accent-600: #b94a20;
+  --color-accent-700: #963c1b;
+  --color-accent-800: #733019;
+
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-100: oklch(96.2% 0.059 95.617);
+  --color-amber-800: oklch(47.3% 0.137 46.201);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-emerald-50: oklch(97.9% 0.021 166.113);
+  --color-emerald-700: oklch(50.8% 0.118 165.612);
+  --color-red-50: oklch(97.1% 0.013 17.38);
+  --color-red-600: oklch(57.7% 0.245 27.325);
+  --color-red-700: oklch(50.5% 0.213 27.518);
+
+  --shadow-soft: 0 1px 2px rgb(44 36 24 / 0.04), 0 4px 16px -6px rgb(44 36 24 / 0.08);
+  --shadow-float: 0 2px 6px rgb(44 36 24 / 0.06), 0 24px 48px -16px rgb(44 36 24 / 0.22);
 }
 
 html {
@@ -393,7 +432,7 @@ button:not(:disabled) {
 .tiptap pre {
   @apply rounded-xl bg-ink-900 p-4 font-mono text-[13px] leading-relaxed text-ink-100;
 }
-.dark .tiptap pre {
+.dark .tiptap pre:not(.light .tiptap pre) {
   @apply bg-ink-100 text-ink-800;
 }
 .tiptap code {
@@ -439,7 +478,7 @@ button:not(:disabled) {
   --paper-gutter: 56px;
   background-color: var(--color-surface);
 }
-.dark .paper {
+.dark .paper:not(.light .paper) {
   --paper-line: rgb(255 255 255 / 0.1);
   --paper-margin: rgb(225 122 80 / 0.24);
 }
@@ -491,7 +530,7 @@ button:not(:disabled) {
     rgb(28 27 24 / 0.05) 18px
   );
 }
-.dark .note-card {
+.dark .note-card:not(.light .note-card) {
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0,

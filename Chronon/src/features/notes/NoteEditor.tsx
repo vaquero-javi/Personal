@@ -8,7 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { Empty, IconButton, Skeleton } from '../../components/ui'
 import { Icon, type IconName } from '../../components/Icon'
 import type { Note } from '../../lib/types'
-import { useIsDark } from '../../lib/theme'
+import { useNotesTheme } from '../../lib/theme'
 import { useDeleteNote, useNote, usePdf, useSections, useUpdateNote } from './api'
 import type { PDFDocumentProxy } from './pdf'
 import { DrawingLayer } from './DrawingLayer'
@@ -56,7 +56,9 @@ function Screen({ children }: { children: ReactNode }) {
       document.body.style.overflow = overflow
     }
   }, [])
-  return <div className="fixed inset-0 z-40 flex flex-col bg-ink-100">{children}</div>
+  // Las notas tienen su propia apariencia (Ajustes): la clase light/dark cambia los colores de todo lo de dentro.
+  const { className } = useNotesTheme()
+  return <div className={`fixed inset-0 z-40 flex flex-col bg-ink-100 text-ink-900 ${className}`}>{children}</div>
 }
 
 function CloseLink({ to }: { to: string }) {
@@ -517,7 +519,7 @@ interface ToolbarProps {
 
 function Toolbar(props: ToolbarProps) {
   const { editor, tool, onTool, paper, onPaper, fingerDraws, onFingerDraws, onUndo, onRedo } = props
-  const dark = useIsDark()
+  const { dark } = useNotesTheme()
   const drawingTool = tool === 'pen' || tool === 'highlighter'
   const current = tool === 'highlighter' ? props.highlighter : props.pen
   const setCurrent = tool === 'highlighter' ? props.onHighlighter : props.onPen
