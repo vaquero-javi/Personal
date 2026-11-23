@@ -4,7 +4,19 @@ import { addDays, addMinutes, differenceInMinutes, format, isSameDay, parseISO, 
 import { supabase, unwrap } from '../../lib/supabase'
 import { fromInputs } from '../../lib/dates'
 import type { CalendarEvent, StudyKind } from '../../lib/types'
-import { REVIEW_INTERVALS, buildPlan, scheduleTimes, weekdayIndex, type PlanSettings, type PlannerTopic, type TimedSession } from './planner'
+import {
+  REVIEW_INTERVALS,
+  buildPlan,
+  firstLapMinutes,
+  lapMinutes,
+  scheduleTimes,
+  weekdayIndex,
+  type Difficulty,
+  type PlanSettings,
+  type PlannerTopic,
+  type TimedSession,
+} from './planner'
+import type { ExamQuestion } from '../notes/study'
 
 export interface StudyPlan {
   id: string
@@ -23,7 +35,11 @@ export interface StudyTopic {
   title: string
   position: number
   pages: number | null
+  /** Lo que dura la 1ª vuelta (ya con la dificultad que tenía al empezar). */
   minutes: number
+  /** Estimación a dificultad media; null en planes antiguos (se usa minutes). */
+  base_minutes: number | null
+  difficulty: Difficulty | null
   /** Carpeta del documento, para enlazarlo. */
   notes: { section_id: string } | null
 }
@@ -38,7 +54,20 @@ export interface TopicDraft {
   title: string
   noteId: string | null
   pages: number | null
-  minutes: number
+  /** Estimación a dificultad media. */
+  baseMinutes: number
+  difficulty: Difficulty | null
+}
+
+export interface StudyMock {
+  id: string
+  plan_id: string
+  title: string
+  topic_ids: string[]
+  content: { questions: ExamQuestion[] }
+  score: number | null
+  total: number | null
+  created_at: string
 }
 
 export const KIND_COLORS: Record<Exclude<StudyKind, 'study'>, string> = {
@@ -106,17 +135,41 @@ export function topicProgress(topics: StudyTopic[], events: CalendarEvent[]): Pl
   return topics.map((t) => {
     const mine = events.filter((e) => e.study_topic_id === t.id && e.completed)
     const studied = mine.filter((e) => e.study_kind === 'study')
-    const doneMinutes = studied.reduce((s, e) => s + durationOf(e), 0)
-    // Unos minutos sueltos no merecen otra sesión: el tema se da por estudiado.
-    const remaining = t.minutes - doneMinutes < 10 ? 0 : t.minutes - doneMinutes
-    const lastStudy = studied.map((e) => e.start_at).sort().at(-1)
-    return {
+    const base = {
       id: t.id,
       title: t.title,
       totalMinutes: t.minutes,
+      baseMinutes: t.base_minutes ?? t.minutes,
+      difficulty: t.difficulty,
+      pages: t.pages,
+      reviewsDone: Math.min(mine.filter((e) => e.study_kind === 'review').length, REVIEW_INTERVALS.length),
+    }
+    // Minutos hechos en cada vuelta. Las sesiones de antes de que hubiera vueltas no la llevan:
+    // llenan la 1ª vuelta y lo que sobre pasa a las siguientes.
+    const lapDone: number[] = []
+    let loose = 0
+    for (const e of studied) {
+      if (e.study_lap) lapDone[e.study_lap - 1] = (lapDone[e.study_lap - 1] ?? 0) + durationOf(e)
+      else loose += durationOf(e)
+    }
+    for (let lap = 1; loose > 0; lap++) {
+      const room = Math.max(0, lapMinutes(base, lap) - (lapDone[lap - 1] ?? 0))
+      const put = lap > 50 ? loose : Math.min(room, loose)
+      lapDone[lap - 1] = (lapDone[lap - 1] ?? 0) + put
+      loose -= put
+    }
+    for (let i = 0; i < lapDone.length; i++) lapDone[i] ??= 0
+    const firstDone = lapDone[0] ?? 0
+    // Unos minutos sueltos no merecen otra sesión: el tema se da por estudiado. También si ya va por otra vuelta.
+    const remaining = t.minutes - firstDone < 10 || lapDone.slice(1).some((m) => m > 0) ? 0 : t.minutes - firstDone
+    const firstLapSessions = studied.filter((e) => (e.study_lap ?? 1) === 1)
+    const lastStudy = (firstLapSessions.length ? firstLapSessions : studied).map((e) => e.start_at).sort().at(-1)
+    return {
+      ...base,
       remainingMinutes: remaining,
       learnedOn: remaining === 0 && lastStudy ? format(parseISO(lastStudy), 'yyyy-MM-dd') : null,
-      reviewsDone: Math.min(mine.filter((e) => e.study_kind === 'review').length, REVIEW_INTERVALS.length),
+      studiedMinutes: studied.reduce((sum, e) => sum + durationOf(e), 0),
+      lapDone,
     }
   })
 }
@@ -134,6 +187,7 @@ function eventRows(plan: Pick<StudyPlan, 'id' | 'title' | 'color'>, sessions: Ti
     study_plan_id: plan.id,
     study_topic_id: s.topicId,
     study_kind: s.kind,
+    study_lap: s.kind === 'study' ? (s.lap ?? 1) : null,
   }))
 }
 
@@ -172,7 +226,18 @@ export function useCreatePlan() {
         const topics = unwrap(
           await supabase
             .from('study_topics')
-            .insert(input.topics.map((t, position) => ({ plan_id: plan.id, note_id: t.noteId, title: t.title, pages: t.pages, minutes: t.minutes, position })))
+            .insert(
+              input.topics.map((t, position) => ({
+                plan_id: plan.id,
+                note_id: t.noteId,
+                title: t.title,
+                pages: t.pages,
+                base_minutes: t.baseMinutes,
+                difficulty: t.difficulty,
+                minutes: firstLapMinutes(t.baseMinutes, t.difficulty),
+                position,
+              })),
+            )
             .select(),
         ) as StudyTopic[]
         topics.sort((a, b) => a.position - b.position)
@@ -353,5 +418,68 @@ export function useDeletePlan() {
     // Las sesiones del calendario se borran en cascada; los PDFs se quedan en Documentos.
     mutationFn: async (id: string) => unwrap(await supabase.from('study_plans').delete().eq('id', id)),
     onSuccess: invalidate,
+  })
+}
+
+/**
+ * Semáforo: cambia la dificultad de un tema y recalcula el plan desde hoy.
+ * Si todavía no se ha empezado, también cambia lo que dura su 1ª vuelta.
+ */
+export function useSetDifficulty(planId: string) {
+  const qc = useQueryClient()
+  const invalidate = useInvalidatePlans()
+  return useMutation({
+    mutationFn: async ({ topic, difficulty }: { topic: StudyTopic; difficulty: Difficulty }) => {
+      const bundle = await fetchPlanBundle(planId)
+      const started = bundle.events.some((e) => e.study_topic_id === topic.id && e.study_kind === 'study' && e.completed)
+      const base = topic.base_minutes ?? topic.minutes
+      unwrap(
+        await supabase
+          .from('study_topics')
+          .update({ difficulty, base_minutes: base, ...(started ? {} : { minutes: firstLapMinutes(base, difficulty) }) })
+          .eq('id', topic.id),
+      )
+      return replanBundle(await fetchPlanBundle(planId))
+    },
+    onMutate: ({ topic, difficulty }) => {
+      qc.setQueryData<PlanBundle>(['plans', 'one', planId], (prev) =>
+        prev ? { ...prev, topics: prev.topics.map((t) => (t.id === topic.id ? { ...t, difficulty } : t)) } : prev,
+      )
+    },
+    onSettled: invalidate,
+  })
+}
+
+export function useMocks(planId: string) {
+  return useQuery({
+    queryKey: ['plans', 'mocks', planId],
+    queryFn: async () =>
+      unwrap(await supabase.from('study_mocks').select('*').eq('plan_id', planId).order('created_at', { ascending: false })) as StudyMock[],
+  })
+}
+
+export function useSaveMock() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (mock: Pick<StudyMock, 'plan_id' | 'title' | 'topic_ids' | 'content'>) =>
+      unwrap(await supabase.from('study_mocks').insert(mock).select().single()) as StudyMock,
+    onSuccess: (m) => qc.invalidateQueries({ queryKey: ['plans', 'mocks', m.plan_id] }),
+  })
+}
+
+export function useScoreMock() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ mock, score, total }: { mock: StudyMock; score: number; total: number }) =>
+      unwrap(await supabase.from('study_mocks').update({ score, total }).eq('id', mock.id).select().single()) as StudyMock,
+    onSuccess: (m) => qc.invalidateQueries({ queryKey: ['plans', 'mocks', m.plan_id] }),
+  })
+}
+
+export function useDeleteMock() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (mock: StudyMock) => unwrap(await supabase.from('study_mocks').delete().eq('id', mock.id)),
+    onSuccess: (_d, m) => qc.invalidateQueries({ queryKey: ['plans', 'mocks', m.plan_id] }),
   })
 }

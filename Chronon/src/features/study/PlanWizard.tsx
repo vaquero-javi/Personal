@@ -9,7 +9,8 @@ import { fromInputs, toDateInput } from '../../lib/dates'
 import { useCreateSection, useImportPdf } from '../notes/api'
 import type { NoteDrawing } from '../notes/drawing'
 import { KIND_COLORS, useCreatePlan, usePdfDocuments } from './api'
-import { buildPlan, formatHours, type PlanSettings, type PlannerTopic } from './planner'
+import { DIFFICULTY_FACTOR, LAP_SPEED, buildPlan, firstLapMinutes, formatHours, type Difficulty, type PlanSettings, type PlannerTopic } from './planner'
+import { DifficultyPicker } from './Difficulty'
 import { ScheduleFields } from './ScheduleFields'
 
 interface Row {
@@ -21,6 +22,7 @@ interface Row {
   manualMinutes: number | null
   /** Horas cambiadas en ese tema: ya no siguen a la media. */
   hoursEdited?: boolean
+  difficulty: Difficulty | null
   uploading?: boolean
   error?: string
 }
@@ -52,7 +54,7 @@ export function PlanWizard() {
   const [listHours, setListHours] = useState(3)
   const fileInput = useRef<HTMLInputElement>(null)
 
-  const plainRow = (title: string): Row => ({ key: crypto.randomUUID(), title, noteId: null, pages: null, manualMinutes: round5(listHours * 60) })
+  const plainRow = (title: string): Row => ({ key: crypto.randomUUID(), title, noteId: null, pages: null, manualMinutes: round5(listHours * 60), difficulty: null })
 
   /** Sin PDFs: un tema por número, para poder seguir cada uno por separado. */
   function setCount(value: number) {
@@ -85,7 +87,10 @@ export function PlanWizard() {
   const importPdf = useImportPdf()
   const createPlan = useCreatePlan()
 
-  const minutesOf = (r: Row) => r.manualMinutes ?? (r.pages ? round5(r.pages * minutesPerPage) : 60)
+  /** Estimación a dificultad media. */
+  const baseOf = (r: Row) => r.manualMinutes ?? (r.pages ? round5(r.pages * minutesPerPage) : 60)
+  /** Lo que dura la 1ª vuelta, con su dificultad. */
+  const minutesOf = (r: Row) => firstLapMinutes(baseOf(r), r.difficulty)
   const patch = (key: string, p: Partial<Row>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...p } : r)))
 
   // El tema elegido va primero; luego los siguientes de la lista y, al final, los que estaban antes.
@@ -104,6 +109,11 @@ export function PlanWizard() {
       remainingMinutes: minutesOf(r),
       learnedOn: null,
       reviewsDone: 0,
+      studiedMinutes: 0,
+      lapDone: [],
+      baseMinutes: baseOf(r),
+      difficulty: r.difficulty,
+      pages: r.pages,
     }))
     return buildPlan(topics, fullSettings, examDate)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +132,7 @@ export function PlanWizard() {
     }
     for (const file of Array.from(files)) {
       const key = crypto.randomUUID()
-      setRows((rs) => [...rs, { key, title: file.name.replace(/\.pdf$/i, ''), noteId: null, pages: null, manualMinutes: null, uploading: true }])
+      setRows((rs) => [...rs, { key, title: file.name.replace(/\.pdf$/i, ''), noteId: null, pages: null, manualMinutes: null, difficulty: null, uploading: true }])
       try {
         const note = await importPdf.mutateAsync({ sectionId: section, file })
         const drawing = note.drawing as NoteDrawing
@@ -176,7 +186,7 @@ export function PlanWizard() {
         color,
         sectionId,
         settings: fullSettings,
-        topics: ordered.map((r) => ({ title: r.title.trim() || 'Tema', noteId: r.noteId, pages: r.pages, minutes: minutesOf(r) })),
+        topics: ordered.map((r) => ({ title: r.title.trim() || 'Tema', noteId: r.noteId, pages: r.pages, baseMinutes: baseOf(r), difficulty: r.difficulty })),
       })
       navigate(`/study/${plan.id}`, { replace: true })
     } catch (err) {
@@ -206,11 +216,11 @@ export function PlanWizard() {
       <section key={step} className="animate-rise space-y-5 rounded-2xl bg-surface p-5 shadow-soft ring-1 ring-ink-200/70 sm:p-7">
         {step === 0 && (
           <>
-            <Heading title="¿Para qué examen te preparas?" hint="Oposición, final de una asignatura, selectividad… Todo el plan se organiza hacia ese día." />
+            <Heading title="¿Para qué te preparas?" hint="Oposición, final de una asignatura, selectividad… Todo el plan se organiza para tenerlo listo en la fecha objetivo." />
             <Field label="Nombre">
               <input autoFocus className={inputClass} placeholder="Oposición Auxiliar Administrativo" value={title} onChange={(e) => setTitle(e.target.value)} />
             </Field>
-            <Field label="Fecha del examen">
+            <Field label="Fecha objetivo (el día del examen)">
               <input type="date" min={toDateInput(addDays(new Date(), 1))} className={inputClass} value={examDate} onChange={(e) => setExamDate(e.target.value)} />
             </Field>
             {daysLeft !== null && daysLeft > 0 && (
@@ -304,7 +314,7 @@ export function PlanWizard() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setRows((rs) => [...rs, { key: crypto.randomUUID(), title: `Tema ${rs.length + 1}`, noteId: null, pages: null, manualMinutes: 120 }])}
+                onClick={() => setRows((rs) => [...rs, { key: crypto.randomUUID(), title: `Tema ${rs.length + 1}`, noteId: null, pages: null, manualMinutes: 120, difficulty: null }])}
               >
                 <Icon name="plus" size={16} /> Tema sin PDF
               </Button>
@@ -356,9 +366,12 @@ export function PlanWizard() {
                           className="w-full truncate bg-transparent text-sm font-medium text-ink-900 outline-none"
                           aria-label="Nombre del tema"
                         />
-                        <p className={`text-xs ${r.error ? 'text-red-600' : 'text-ink-500'}`}>
-                          {r.uploading ? 'Subiendo…' : r.error ? r.error : r.pages ? `${r.pages} páginas` : 'Sin PDF'}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <p className={`text-xs ${r.error ? 'text-red-600' : 'text-ink-500'}`}>
+                            {r.uploading ? 'Subiendo…' : r.error ? r.error : r.pages ? `${r.pages} páginas` : 'Sin PDF'}
+                          </p>
+                          {!r.uploading && !r.error && <DifficultyPicker value={r.difficulty} onChange={(d) => patch(r.key, { difficulty: d })} size="sm" />}
+                        </div>
                       </div>
                       {!r.uploading && !r.error && (
                         <label className="flex items-center gap-1 text-xs text-ink-500" title="Horas para estudiarlo la primera vez">
@@ -367,7 +380,8 @@ export function PlanWizard() {
                             min={0.25}
                             step={0.25}
                             value={Math.round((minutesOf(r) / 60) * 100) / 100}
-                            onChange={(e) => patch(r.key, { manualMinutes: round5(Number(e.target.value) * 60), hoursEdited: true })}
+                            // Las horas que se ven ya llevan la dificultad; se guarda la estimación a dificultad media.
+                            onChange={(e) => patch(r.key, { manualMinutes: round5((Number(e.target.value) * 60) / DIFFICULTY_FACTOR[r.difficulty ?? 'medium']), hoursEdited: true })}
                             className="h-8 w-16 rounded-lg border border-ink-200 bg-surface text-center font-mono text-sm tabular-nums outline-none focus:border-accent-400"
                             aria-label={`Horas para ${r.title}`}
                           />
@@ -395,7 +409,7 @@ export function PlanWizard() {
                   ))}
                 </ol>
                 <p className="text-xs leading-relaxed text-ink-500">
-                  Las horas son lo que te cuesta estudiar cada tema la primera vez; los repasos se calculan solos. Cámbialas si un tema es más duro o ya lo dominas.
+                  Las horas son lo que te cuesta estudiar cada tema la primera vez. Marca cada tema como fácil, medio o difícil: los difíciles llevan más tiempo en cada vuelta y en los repasos, y los fáciles menos. También lo puedes marcar al terminar cada tema.
                 </p>
               </>
             )}
@@ -453,7 +467,7 @@ export function PlanWizard() {
           exclude={rows.flatMap((r) => (r.noteId ? [r.noteId] : []))}
           onClose={() => setPicking(false)}
           onPick={(docs) => {
-            setRows((rs) => [...rs, ...docs.map((d) => ({ key: crypto.randomUUID(), title: d.title || 'Sin título', noteId: d.id, pages: d.pages, manualMinutes: null }))])
+            setRows((rs) => [...rs, ...docs.map((d) => ({ key: crypto.randomUUID(), title: d.title || 'Sin título', noteId: d.id, pages: d.pages, manualMinutes: null, difficulty: null }))])
             setPicking(false)
           }}
         />
@@ -543,9 +557,21 @@ function PlanPreview({
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Temas" value={String(topicCount)} />
         <Stat label="Estudio" value={formatHours(totalMinutes)} />
-        <Stat label="Repasos" value={String(reviews.length)} />
+        <Stat label="Vueltas" value={String(Math.max(1, result.laps))} />
         <Stat label="Temario listo" value={result.finishStudyDay ? format(fromInputs(result.finishStudyDay), 'd MMM', { locale: es }) : '—'} />
       </dl>
+      <p className="text-sm text-ink-600">
+        {result.laps > 1 ? (
+          <>
+            Das <strong>{result.laps} vueltas</strong> al temario antes del examen, cada una más rápida:{' '}
+            {LAP_SPEED.slice(0, Math.min(result.laps, LAP_SPEED.length)).map((f, i) => `${i + 1}ª ${Math.round(f * 100)} %`).join(' · ')}
+            {result.laps > LAP_SPEED.length ? ' …' : ''} del tiempo de la primera.
+          </>
+        ) : (
+          <>Con este tiempo das una vuelta al temario.</>
+        )}{' '}
+        Además, <strong>{reviews.length} repasos</strong> a 1, 3, 7, 15 y 30 días de aprender cada tema.
+      </p>
       {result.finalDays > 0 && (
         <p className="text-sm text-ink-600">
           Los últimos <strong>{result.finalDays} días</strong> son de repaso general de todo el temario y simulacros de examen.

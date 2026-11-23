@@ -1,14 +1,38 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { addDays, differenceInCalendarDays, format, isBefore, isSameDay, parseISO, startOfDay } from 'date-fns'
+import { addDays, differenceInCalendarDays, differenceInMinutes, format, isBefore, isSameDay, parseISO, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Button, Card, Empty, PageHeader, Skeleton } from '../../components/ui'
+import { Button, Card, Empty, PageHeader, Segmented, Skeleton, Toggle } from '../../components/ui'
 import { Icon } from '../../components/Icon'
 import { Modal } from '../../components/Modal'
 import { fromInputs } from '../../lib/dates'
 import type { CalendarEvent } from '../../lib/types'
-import { KIND_LABEL, topicProgress, useDeletePlan, usePlan, usePlans, useReplan, useToggleSession, type PlanBundle } from './api'
-import { REVIEW_INTERVALS, formatHours, type PlanSettings } from './planner'
+import {
+  KIND_LABEL,
+  topicProgress,
+  useDeletePlan,
+  usePlan,
+  usePlans,
+  useReplan,
+  useSetDifficulty,
+  useToggleSession,
+  type PlanBundle,
+  type StudyTopic,
+} from './api'
+import {
+  DIFFICULTY_COLOR,
+  DIFFICULTY_LABEL,
+  REVIEW_INTERVALS,
+  formatHours,
+  lapLabel,
+  lapState,
+  type Difficulty,
+  type PlanSettings,
+  type PlannerTopic,
+} from './planner'
+import { DifficultyDot, DifficultyPicker } from './Difficulty'
+import { StudyMocks } from './StudyMocks'
+import { StudyStats } from './StudyStats'
 import { PlanWizard, Stat } from './PlanWizard'
 import { ScheduleFields } from './ScheduleFields'
 
@@ -39,7 +63,7 @@ function PlanList() {
         <section className="animate-rise rounded-2xl bg-surface p-6 shadow-soft ring-1 ring-ink-200/70 sm:p-8">
           <h2 className="font-display text-3xl leading-none tracking-tight">Planifica tu examen</h2>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-ink-500">
-            Escribe tus temas (o sube sus PDF), dinos por cuál empiezas y cuántas horas tienes al día. Te decimos qué estudiar cada día y cuándo repasar cada tema para que no se te olvide: a 1, 3, 7, 15 y 30 días de aprenderlo. Todo queda en tu calendario.
+            Escribe tus temas (o sube sus PDF), dinos por cuál empiezas y cuántas horas tienes al día. Te organizamos el temario en vueltas, cada una más rápida que la anterior, con repasos a 1, 3, 7, 15 y 30 días para que no se te olvide. Cada día tienes tu misión, un semáforo para los temas que peor llevas, tus estadísticas y simulacros con IA. Todo queda en tu calendario.
           </p>
           <Link to="/study/new" className="mt-5 inline-block">
             <Button variant="accent">
@@ -85,30 +109,36 @@ function PlanDetail({ id }: { id: string }) {
   return <PlanView bundle={data} />
 }
 
+type Tab = 'today' | 'topics' | 'stats' | 'mocks'
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: 'today', label: 'Hoy' },
+  { value: 'topics', label: 'Temas' },
+  { value: 'stats', label: 'Progreso' },
+  { value: 'mocks', label: 'Simulacros' },
+]
+
+const minutesOf = (e: CalendarEvent) => (e.end_at ? differenceInMinutes(parseISO(e.end_at), parseISO(e.start_at)) : 0)
+
 function PlanView({ bundle }: { bundle: PlanBundle }) {
   const { plan, topics, events } = bundle
   const navigate = useNavigate()
   const replan = useReplan()
   const del = useDeletePlan()
+  const [tab, setTab] = useState<Tab>('today')
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
-  const [showPast, setShowPast] = useState(false)
   const now = new Date()
-  const today = startOfDay(now)
 
   const sessions = events.filter((e) => e.study_kind !== 'exam')
   const progress = topicProgress(topics, events)
   const learned = progress.filter((t) => t.remainingMinutes === 0).length
   const total = progress.reduce((s, t) => s + t.totalMinutes, 0)
   const done = progress.reduce((s, t) => s + t.totalMinutes - t.remainingMinutes, 0)
+  const studied = progress.reduce((s, t) => s + t.studiedMinutes, 0)
   const pct = total ? Math.round((done / total) * 100) : 0
-  const todays = sessions.filter((e) => isSameDay(parseISO(e.start_at), now))
-  // Las más recientes primero: lo normal es acordarse de marcar lo de ayer.
-  const overdue = sessions.filter((e) => !e.completed && isBefore(parseISO(e.start_at), today)).reverse()
-  const upcoming = sessions.filter((e) => {
-    const d = parseISO(e.start_at)
-    return d >= addDays(today, 1) && d < addDays(today, 8)
-  })
+  // El temario va por la vuelta del tema más atrasado.
+  const lap = progress.length ? Math.min(...progress.map((p) => lapState(p).lap)) : 1
   const left = daysUntil(plan.exam_date)
 
   async function doReplan(settings?: PlanSettings) {
@@ -116,7 +146,7 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
     try {
       const result = await replan.mutateAsync({ bundle, settings })
       setEditing(false)
-      setNotice(result.warnings[0] ?? 'Plan recalculado desde hoy con lo que llevas hecho.')
+      setNotice(result.warnings[0] ?? 'Plan recalculado desde hoy con lo que tienes pendiente.')
     } catch (err) {
       setNotice((err as Error).message)
     }
@@ -139,7 +169,7 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
           title={plan.title}
         >
           <div className="flex flex-wrap gap-1.5">
-            <Button size="sm" variant="secondary" onClick={() => doReplan()} disabled={replan.isPending}>
+            <Button size="sm" variant="secondary" onClick={() => doReplan()} disabled={replan.isPending} title="Reparte de nuevo lo que tienes pendiente desde hoy">
               <Icon name="refresh" size={14} /> {replan.isPending ? 'Recalculando…' : 'Recalcular desde hoy'}
             </Button>
             <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
@@ -161,7 +191,9 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
 
       <section className="animate-rise space-y-3 rounded-2xl bg-surface p-5 shadow-soft ring-1 ring-ink-200/70">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[13px] font-medium text-ink-500">Temario estudiado</h2>
+          <h2 className="text-[13px] font-medium text-ink-500">
+            Temario estudiado{lap > 1 && <span className="text-ink-900"> · vas por la {lapLabel(lap)}</span>}
+          </h2>
           <span className="font-mono text-sm tabular-nums text-ink-900">{pct}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-ink-100">
@@ -169,10 +201,91 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
         </div>
         <dl className="grid grid-cols-3 gap-2">
           <Stat label="Temas aprendidos" value={`${learned}/${topics.length}`} />
-          <Stat label="Horas hechas" value={formatHours(done)} />
+          <Stat label="Horas hechas" value={formatHours(studied)} />
           <Stat label="Repasos hechos" value={String(sessions.filter((e) => e.completed && e.study_kind === 'review').length)} />
         </dl>
       </section>
+
+      <Segmented value={tab} onChange={setTab} options={TABS} className="w-full" />
+
+      {tab === 'today' && <TodayTab bundle={bundle} progress={progress} onMock={() => setTab('mocks')} left={left} now={now} />}
+      {tab === 'topics' && <TopicsTab bundle={bundle} progress={progress} />}
+      {tab === 'stats' && <StudyStats bundle={bundle} />}
+      {tab === 'mocks' && <StudyMocks bundle={bundle} progress={progress} />}
+
+      {editing && (
+        <EditSchedule
+          initial={plan.settings}
+          busy={replan.isPending}
+          onClose={() => setEditing(false)}
+          onSave={(s) => doReplan(s)}
+        />
+      )}
+    </div>
+  )
+}
+
+function TodayTab({
+  bundle,
+  progress,
+  onMock,
+  left,
+  now,
+}: {
+  bundle: PlanBundle
+  progress: PlannerTopic[]
+  onMock: () => void
+  left: number
+  now: Date
+}) {
+  const [showPast, setShowPast] = useState(false)
+  const today = startOfDay(now)
+  const sessions = bundle.events.filter((e) => e.study_kind !== 'exam')
+  const todays = sessions.filter((e) => isSameDay(parseISO(e.start_at), now))
+  // Las más recientes primero: lo normal es acordarse de marcar lo de ayer.
+  const overdue = sessions.filter((e) => !e.completed && isBefore(parseISO(e.start_at), today)).reverse()
+  const upcoming = sessions.filter((e) => {
+    const d = parseISO(e.start_at)
+    return d >= addDays(today, 1) && d < addDays(today, 8)
+  })
+  const planned = todays.reduce((s, e) => s + minutesOf(e), 0)
+  const doneToday = todays.filter((e) => e.completed).reduce((s, e) => s + minutesOf(e), 0)
+  const missionPct = planned ? Math.round((doneToday / planned) * 100) : 0
+  // Temas que ya has terminado y todavía no tienen dificultad: se pregunta qué tal han ido.
+  const toRate = bundle.topics.filter((t, i) => !t.difficulty && progress[i]?.remainingMinutes === 0)
+
+  return (
+    <div className="space-y-4">
+      <section className="animate-rise rounded-2xl bg-surface p-5 shadow-soft ring-1 ring-ink-200/70">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-[13px] font-medium text-ink-500">
+            <Icon name="target" size={15} /> Misión de hoy
+          </h2>
+          {planned > 0 && (
+            <span className="font-mono text-xs tabular-nums text-ink-500">
+              {formatHours(doneToday)} de {formatHours(planned)}
+            </span>
+          )}
+        </div>
+        {planned > 0 && (
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-ink-100">
+              <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${missionPct}%`, background: bundle.plan.color }} />
+            </div>
+            <span className="font-mono text-sm tabular-nums text-ink-900">{missionPct}%</span>
+          </div>
+        )}
+        {planned > 0 && missionPct === 100 && <p className="mb-3 rounded-xl bg-ink-50 px-3 py-2 text-sm text-ink-700">Misión cumplida. ¡Buen trabajo!</p>}
+        <SessionList
+          events={todays}
+          bundle={bundle}
+          progress={progress}
+          onMock={onMock}
+          empty={left > 0 ? 'Hoy no tienes sesiones. ¡Descansa!' : 'El plan ha terminado.'}
+        />
+      </section>
+
+      {toRate.length > 0 && <RateTopics bundle={bundle} topics={toRate} />}
 
       {overdue.length > 0 && (
         <Card
@@ -194,79 +307,136 @@ function PlanView({ bundle }: { bundle: PlanBundle }) {
           </p>
           {showPast && (
             <div className="mt-3">
-              <SessionList events={overdue} bundle={bundle} empty="" showDay />
+              <SessionList events={overdue} bundle={bundle} progress={progress} onMock={onMock} empty="" showDay />
             </div>
           )}
         </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Hoy toca">
-          <SessionList events={todays} bundle={bundle} empty={left > 0 ? 'Hoy no tienes sesiones. ¡Descansa!' : 'El plan ha terminado.'} />
-        </Card>
-        <Card title="Próximos 7 días">
-          <SessionList events={upcoming} bundle={bundle} empty="Nada en los próximos días." showDay />
-        </Card>
-      </div>
-
-      <Card title="Temas">
-        <ol className="-mx-2">
-          {topics.map((t, i) => {
-            const p = progress[i]
-            const status =
-              p.remainingMinutes === 0
-                ? `Aprendido · repasos ${p.reviewsDone}/${REVIEW_INTERVALS.length}`
-                : p.remainingMinutes < p.totalMinutes
-                  ? `En curso · quedan ${formatHours(p.remainingMinutes)}`
-                  : `Pendiente · ${formatHours(p.totalMinutes)}`
-            return (
-              <li key={t.id} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-50">
-                <span className="w-5 shrink-0 font-mono text-xs tabular-nums text-ink-400">{i + 1}</span>
-                <span
-                  className={`grid size-5 shrink-0 place-items-center rounded-full ${p.remainingMinutes === 0 ? 'text-white' : 'ring-1 ring-inset ring-ink-300'}`}
-                  style={p.remainingMinutes === 0 ? { background: plan.color } : undefined}
-                >
-                  {p.remainingMinutes === 0 && <Icon name="check" size={12} strokeWidth={2.4} />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ink-900">{t.title}</p>
-                  <p className="truncate text-xs text-ink-500">{status}</p>
-                </div>
-                {t.note_id && t.notes && (
-                  <Link
-                    to={`/notes/${t.notes.section_id}/${t.note_id}`}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-accent-600 hover:bg-accent-50"
-                  >
-                    <Icon name="notes" size={14} /> Abrir
-                  </Link>
-                )}
-              </li>
-            )
-          })}
-        </ol>
+      <Card title="Próximos 7 días">
+        <SessionList events={upcoming} bundle={bundle} progress={progress} onMock={onMock} empty="Nada en los próximos días." showDay />
       </Card>
-
-      {editing && (
-        <EditSchedule
-          initial={plan.settings}
-          busy={replan.isPending}
-          onClose={() => setEditing(false)}
-          onSave={(s) => doReplan(s)}
-        />
-      )}
     </div>
   )
 }
 
-function SessionList({ events, bundle, empty, showDay = false }: { events: CalendarEvent[]; bundle: PlanBundle; empty: string; showDay?: boolean }) {
+/** Al terminar un tema, se pregunta qué tal ha ido para ajustar sus vueltas y repasos. */
+function RateTopics({ bundle, topics }: { bundle: PlanBundle; topics: StudyTopic[] }) {
+  const setDifficulty = useSetDifficulty(bundle.plan.id)
+  return (
+    <Card title="¿Qué tal te han ido estos temas?">
+      <p className="mb-3 text-sm text-ink-500">Los has terminado. Márcalos y el plan les dará más o menos tiempo en las próximas vueltas y repasos.</p>
+      <ul className="space-y-2">
+        {topics.map((t) => (
+          <li key={t.id} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink-900">{t.title}</span>
+            <DifficultyPicker value={t.difficulty} disabled={setDifficulty.isPending} onChange={(d) => setDifficulty.mutate({ topic: t, difficulty: d })} />
+          </li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
+type Filter = 'all' | Difficulty | 'none'
+
+/** Semáforo de retención: cada tema en verde, ámbar o rojo, para dar más atención a los que peor llevas. */
+function TopicsTab({ bundle, progress }: { bundle: PlanBundle; progress: PlannerTopic[] }) {
+  const { plan, topics } = bundle
+  const setDifficulty = useSetDifficulty(plan.id)
+  const [filter, setFilter] = useState<Filter>('all')
+  const count = (f: Filter) => topics.filter((t) => (f === 'none' ? !t.difficulty : t.difficulty === f)).length
+  const shown = topics.map((t, i) => ({ t, i })).filter(({ t }) => filter === 'all' || (filter === 'none' ? !t.difficulty : t.difficulty === filter))
+  const filters: { value: Filter; label: string; color?: string }[] = [
+    { value: 'all', label: `Todos ${topics.length}` },
+    ...(['hard', 'medium', 'easy'] as const).map((d) => ({ value: d, label: `${DIFFICULTY_LABEL[d]} ${count(d)}`, color: DIFFICULTY_COLOR[d] })),
+    ...(count('none') ? [{ value: 'none' as const, label: `Sin marcar ${count('none')}` }] : []),
+  ]
+
+  return (
+    <Card title={<span className="flex items-center gap-2"><Icon name="traffic" size={15} /> Semáforo de retención</span>}>
+      <p className="mb-3 text-sm text-ink-500">
+        Marca cada tema según lo llevas. Los difíciles (rojo) reciben más tiempo en cada vuelta y en los repasos, y más preguntas en los simulacros; los fáciles (verde), menos.
+      </p>
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {filters.map((f) => (
+          <Toggle key={f.value} on={filter === f.value} onClick={() => setFilter(f.value)}>
+            {f.color && <span className="size-2 rounded-full" style={{ background: f.color }} />}
+            {f.label}
+          </Toggle>
+        ))}
+      </div>
+      {shown.length === 0 ? (
+        <Empty icon="study">Ningún tema en este color.</Empty>
+      ) : (
+        <ol className="-mx-2 divide-y divide-ink-100">
+          {shown.map(({ t, i }) => {
+            const p = progress[i]
+            const state = lapState(p)
+            const status =
+              p.remainingMinutes === 0
+                ? `Aprendido · repasos ${p.reviewsDone}/${REVIEW_INTERVALS.length}` +
+                  (state.lap > 1 && state.progress > 0 ? ` · ${lapLabel(state.lap)} al ${Math.round(state.progress * 100)} %` : state.lap > 2 ? ` · ${state.lap - 1} vueltas hechas` : '')
+                : p.remainingMinutes < p.totalMinutes
+                  ? `En curso · quedan ${formatHours(p.remainingMinutes)}`
+                  : `Pendiente · ${formatHours(p.totalMinutes)}`
+            return (
+              <li key={t.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 py-2.5">
+                <span className="w-5 shrink-0 font-mono text-xs tabular-nums text-ink-400">{i + 1}</span>
+                <DifficultyDot value={t.difficulty} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-ink-900">{t.title}</p>
+                  <p className="truncate text-xs text-ink-500">{status}</p>
+                </div>
+                <div className="flex w-full items-center justify-between gap-2 pl-8 sm:w-auto sm:pl-0">
+                  <DifficultyPicker value={t.difficulty} size="sm" disabled={setDifficulty.isPending} onChange={(d) => setDifficulty.mutate({ topic: t, difficulty: d })} />
+                  {t.note_id && t.notes && (
+                    <Link
+                      to={`/notes/${t.notes.section_id}/${t.note_id}`}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-accent-600 hover:bg-accent-50"
+                    >
+                      <Icon name="notes" size={14} /> Abrir
+                    </Link>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+      {setDifficulty.isPending && <p className="mt-2 text-xs text-ink-500">Ajustando el plan…</p>}
+    </Card>
+  )
+}
+
+function SessionList({
+  events,
+  bundle,
+  progress,
+  onMock,
+  empty,
+  showDay = false,
+}: {
+  events: CalendarEvent[]
+  bundle: PlanBundle
+  progress: PlannerTopic[]
+  onMock: () => void
+  empty: string
+  showDay?: boolean
+}) {
   const toggle = useToggleSession(bundle.plan.id)
   if (events.length === 0) return <Empty icon="study">{empty}</Empty>
+  const hasPdfs = bundle.topics.some((t) => t.note_id)
 
   return (
     <ul className="-mx-2">
       {events.map((e) => {
         const start = parseISO(e.start_at)
         const topic = bundle.topics.find((t) => t.id === e.study_topic_id)
+        const p = topic && progress.find((x) => x.id === topic.id)
+        const state = p && lapState(p)
+        // En las sesiones de estudio se ve cuánto llevas de la vuelta del tema.
+        const lapPct = e.study_kind === 'study' && state && (e.study_lap ?? 1) === state.lap ? Math.round(state.progress * 100) : null
         return (
           <li key={e.id} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-50">
             <span className="w-12 shrink-0 font-mono text-xs tabular-nums text-ink-500 first-letter:uppercase">
@@ -282,11 +452,26 @@ function SessionList({ events, bundle, empty, showDay = false }: { events: Calen
             <span className="h-8 w-[3px] shrink-0 rounded-full" style={{ background: e.color }} />
             <div className="min-w-0 flex-1">
               <p className={`truncate text-sm font-medium ${e.completed ? 'text-ink-400 line-through' : 'text-ink-900'}`}>{e.title}</p>
-              <p className="truncate text-xs text-ink-500">
-                {e.study_kind ? KIND_LABEL[e.study_kind] : ''}
-                {e.end_at && ` · ${format(start, 'HH:mm')}–${format(parseISO(e.end_at), 'HH:mm')}`}
+              <p className="flex items-center gap-2 truncate text-xs text-ink-500">
+                <span className="truncate">
+                  {e.study_kind ? KIND_LABEL[e.study_kind] : ''}
+                  {e.end_at && ` · ${format(start, 'HH:mm')}–${format(parseISO(e.end_at), 'HH:mm')}`}
+                </span>
+                {lapPct !== null && (
+                  <span className="flex shrink-0 items-center gap-1.5" title="Lo que llevas de este tema en esta vuelta">
+                    <span className="h-1 w-10 overflow-hidden rounded-full bg-ink-200">
+                      <span className="block h-full rounded-full" style={{ width: `${lapPct}%`, background: bundle.plan.color }} />
+                    </span>
+                    <span className="font-mono tabular-nums">{lapPct}%</span>
+                  </span>
+                )}
               </p>
             </div>
+            {e.study_kind === 'mock' && hasPdfs && (
+              <Button size="sm" variant="secondary" onClick={onMock}>
+                <Icon name="sparkles" size={14} /> Hacer
+              </Button>
+            )}
             {topic?.note_id && topic.notes && (
               <Link
                 to={`/notes/${topic.notes.section_id}/${topic.note_id}`}

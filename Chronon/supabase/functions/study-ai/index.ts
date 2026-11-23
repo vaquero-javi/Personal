@@ -1,4 +1,5 @@
 // Estudio con IA sobre un documento (estilo NotebookLM): chat, resúmenes, exámenes de prueba y tarjetas.
+// También simulacros de examen de un plan de estudio a partir de los PDFs de varios temas (action 'mock').
 // La app manda el texto escrito a teclado y las hojas escritas a mano como imágenes; el PDF, si lo hay,
 // se lee aquí desde Storage con los permisos del propio usuario.
 // Respuesta: una línea JSON por evento → {"t":"text","v":"…"} · {"t":"done"} · {"t":"error","v":"…"}
@@ -19,10 +20,18 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-type Action = 'chat' | 'summary' | 'exam' | 'cards'
+type Action = 'chat' | 'summary' | 'exam' | 'cards' | 'mock'
+
+interface MockTopic {
+  title: string
+  noteId: string | null
+  difficulty: 'easy' | 'medium' | 'hard' | null
+}
 
 interface Body {
   noteId: string
+  /** Temas del simulacro (solo en 'mock'). */
+  topics?: MockTopic[]
   action: Action
   /** Texto escrito con el teclado en la nota. */
   text: string
@@ -87,7 +96,17 @@ const CARDS_SCHEMA = {
   additionalProperties: false,
 }
 
-function instruction(action: Exclude<Action, 'chat'>, count: number) {
+const DIFFICULTY_TEXT = { easy: 'fácil para el alumno', medium: 'dificultad media para el alumno', hard: 'difícil para el alumno' }
+
+function mockInstruction(topics: MockTopic[], count: number) {
+  const list = topics.map((t, i) => `${i + 1}. ${t.title}${t.difficulty ? ` (${DIFFICULTY_TEXT[t.difficulty]})` : ''}`).join('\n')
+  return `Haz un simulacro de examen de ${count} preguntas sobre estos temas, que son los que el alumno ya ha estudiado:\n${list}\n\nEl material de cada tema va arriba, en el mismo orden. Imita un examen real de oposición o de final: unas cuatro quintas partes tipo test (4 opciones, una sola correcta, distractores plausibles) y el resto abiertas de respuesta corta. Reparte las preguntas entre todos los temas y pon algo más de los que le resultan difíciles. Mezcla los temas en vez de ir uno detrás de otro. En «source» pon el nombre del tema y, si puedes, la página.`
+}
+
+/** Tope de PDFs que se mandan juntos en un simulacro, para no pasar de lo que acepta Gemini de una vez. */
+const MOCK_MAX_BYTES = 18 * 1024 * 1024
+
+function instruction(action: Exclude<Action, 'chat' | 'mock'>, count: number) {
   switch (action) {
     case 'summary':
       return 'Haz un resumen de estudio de este documento: empieza con una idea general de 2-3 frases, sigue con los conceptos clave organizados por temas (con definiciones, fórmulas y ejemplos que aparezcan) y termina con una lista de «Lo que no puedes olvidar». Que sea fiel a los apuntes y útil para repasar antes de un examen.'
@@ -117,8 +136,38 @@ Deno.serve(async (req) => {
     return fail('Petición no válida')
   }
   const { noteId, action } = body
-  if (!noteId || !['chat', 'summary', 'exam', 'cards'].includes(action)) return fail('Petición no válida')
+  if (!['chat', 'summary', 'exam', 'cards', 'mock'].includes(action)) return fail('Petición no válida')
+  if (action !== 'mock' && !noteId) return fail('Petición no válida')
   const count = Math.min(Math.max(Math.round(body.count ?? 10), 3), 40)
+
+  if (action === 'mock') {
+    const topics = (body.topics ?? []).slice(0, 60)
+    if (!topics.length) return fail('Elige al menos un tema')
+    const ids = topics.flatMap((t) => (t.noteId ? [t.noteId] : []))
+    const { data: notes } = ids.length
+      ? await supabase.from('notes').select('id, title, content_text, pdf:drawing->pdf->>path').in('id', ids)
+      : { data: [] }
+    const byId = new Map((notes ?? []).map((n) => [n.id as string, n as { id: string; title: string; content_text: string; pdf: string | null }]))
+    const parts: Part[] = []
+    let bytes = 0
+    let skipped = 0
+    for (const t of topics) {
+      const note = t.noteId ? byId.get(t.noteId) : undefined
+      parts.push({ text: `Tema «${t.title}»:` })
+      if (note?.pdf) {
+        const { data: file } = await supabase.storage.from('documents').download(note.pdf)
+        if (file && bytes + file.size <= MOCK_MAX_BYTES) {
+          bytes += file.size
+          parts.push({ inlineData: { mimeType: 'application/pdf', data: encodeBase64(await file.arrayBuffer()) } })
+        } else if (file) skipped++
+      }
+      if (note?.content_text?.trim()) parts.push({ text: `<apuntes>\n${note.content_text.trim()}\n</apuntes>` })
+    }
+    if (bytes === 0 && !(notes ?? []).some((n) => (n as { content_text: string }).content_text?.trim()))
+      return fail('Estos temas no tienen PDF ni apuntes: sube sus PDF para hacer el simulacro.')
+    if (skipped) parts.push({ text: `(${skipped} tema(s) no caben en el simulacro por tamaño: pregunta de ellos solo con lo que sepas de su título, marcándolo como «(fuera de tus apuntes)».)` })
+    return streamAnswer([{ role: 'user', parts: [...parts, { text: mockInstruction(topics, count) }] }], EXAM_SCHEMA)
+  }
 
   // La nota se lee con los permisos del usuario: si no es suya, no aparece.
   const { data: note } = await supabase
@@ -158,7 +207,11 @@ Deno.serve(async (req) => {
   }
 
   const schema = action === 'exam' ? EXAM_SCHEMA : action === 'cards' ? CARDS_SCHEMA : null
+  return streamAnswer(contents, schema)
+})
 
+/** Pide la respuesta a Gemini (probando otro modelo si uno no está disponible) y la manda según llega. */
+function streamAnswer(contents: Content[], schema: Record<string, unknown> | null) {
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
@@ -222,4 +275,4 @@ Deno.serve(async (req) => {
   })
 
   return new Response(stream, { headers: { ...CORS, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache' } })
-})
+}

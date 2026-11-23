@@ -58,7 +58,7 @@ export function StudyPanel({ noteId, getSource, onClose }: { noteId: string; get
   )
 }
 
-function Prose({ children }: { children: string }) {
+export function Prose({ children }: { children: string }) {
   return (
     <div className="study-prose text-[14px] leading-relaxed text-ink-800">
       <Markdown remarkPlugins={[remarkGfm]}>{children}</Markdown>
@@ -167,7 +167,7 @@ function Chat({ getSource }: { getSource: () => Promise<StudySource> }) {
   )
 }
 
-function Thinking({ label = 'Leyendo tus apuntes…' }: { label?: string }) {
+export function Thinking({ label = 'Leyendo tus apuntes…' }: { label?: string }) {
   return (
     <p className="flex items-center gap-2 text-[13px] text-ink-500" role="status">
       <span className="size-2 animate-shimmer rounded-full bg-accent-500" />
@@ -285,7 +285,8 @@ function Generated({ noteId, kind, getSource }: { noteId: string; kind: StudyKin
   )
 }
 
-function Exam({ questions }: { questions: ExamQuestion[] }) {
+/** Examen tipo test y de respuesta corta. Al corregir avisa de los aciertos en las de tipo test. */
+export function Exam({ questions, onCorrected }: { questions: ExamQuestion[]; onCorrected?: (right: number, total: number) => void }) {
   const [picked, setPicked] = useState<Record<number, number>>({})
   const [written, setWritten] = useState<Record<number, string>>({})
   const [checked, setChecked] = useState(false)
@@ -353,7 +354,7 @@ function Exam({ questions }: { questions: ExamQuestion[] }) {
           if (checked) {
             setPicked({})
             setWritten({})
-          }
+          } else onCorrected?.(right, tests.length)
           setChecked((c) => !c)
         }}
       >

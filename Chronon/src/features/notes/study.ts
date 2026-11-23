@@ -76,8 +76,14 @@ interface StudyRequest extends StudySource {
   count?: number
 }
 
+export interface MockRequest {
+  action: 'mock'
+  topics: { title: string; noteId: string | null; difficulty: 'easy' | 'medium' | 'hard' | null }[]
+  count: number
+}
+
 /** Llama a la IA y va pasando el texto según llega. Devuelve la respuesta completa. */
-export async function askStudyAi(request: StudyRequest, onText: (sofar: string) => void, signal?: AbortSignal) {
+export async function askStudyAi(request: StudyRequest | MockRequest, onText: (sofar: string) => void, signal?: AbortSignal) {
   const { data } = await supabase.auth.getSession()
   const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-ai`, {
     method: 'POST',

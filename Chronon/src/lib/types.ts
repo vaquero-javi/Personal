@@ -18,6 +18,8 @@ export interface CalendarEvent {
   study_plan_id?: string | null
   study_topic_id?: string | null
   study_kind?: StudyKind | null
+  /** Vuelta al temario de una sesión de estudio (1 = primera vez). */
+  study_lap?: number | null
 }
 
 export interface EventAlert {
