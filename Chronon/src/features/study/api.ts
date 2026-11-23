@@ -5,10 +5,10 @@ import { supabase, unwrap } from '../../lib/supabase'
 import { fromInputs } from '../../lib/dates'
 import type { CalendarEvent, StudyKind } from '../../lib/types'
 import {
-  REVIEW_INTERVALS,
   buildPlan,
   firstLapMinutes,
   lapMinutes,
+  reviewIntervals,
   scheduleTimes,
   sessionAlertOffset,
   weekdayIndex,
@@ -139,11 +139,12 @@ export function topicProgress(topics: StudyTopic[], events: CalendarEvent[]): Pl
     const base = {
       id: t.id,
       title: t.title,
-      totalMinutes: t.minutes,
+      // Lo que no se ha empezado dura lo estimado; lo empezado mantiene lo que tenía (planes de antes).
+      totalMinutes: studied.length === 0 && t.base_minutes ? t.base_minutes : t.minutes,
       baseMinutes: t.base_minutes ?? t.minutes,
       difficulty: t.difficulty,
       pages: t.pages,
-      reviewsDone: Math.min(mine.filter((e) => e.study_kind === 'review').length, REVIEW_INTERVALS.length),
+      reviewsDone: Math.min(mine.filter((e) => e.study_kind === 'review').length, reviewIntervals(t.difficulty).length),
     }
     // Minutos hechos en cada vuelta. Las sesiones de antes de que hubiera vueltas no la llevan:
     // llenan la 1ª vuelta y lo que sobre pasa a las siguientes.
@@ -244,7 +245,7 @@ export function useCreatePlan() {
                 pages: t.pages,
                 base_minutes: t.baseMinutes,
                 difficulty: t.difficulty,
-                minutes: firstLapMinutes(t.baseMinutes, t.difficulty),
+                minutes: firstLapMinutes(t.baseMinutes),
                 position,
               })),
             )
@@ -433,7 +434,8 @@ export function useDeletePlan() {
 
 /**
  * Semáforo: cambia la dificultad de un tema y recalcula el plan desde hoy.
- * Si todavía no se ha empezado, también cambia lo que dura su 1ª vuelta.
+ * No cambia sus horas, sino cuántas veces se repasa y en qué vueltas entra (ver planner).
+ * Si todavía no se ha empezado, su 1ª vuelta vuelve a durar lo estimado (los planes de antes la alargaban o acortaban).
  */
 export function useSetDifficulty(planId: string) {
   const qc = useQueryClient()
@@ -446,7 +448,7 @@ export function useSetDifficulty(planId: string) {
       unwrap(
         await supabase
           .from('study_topics')
-          .update({ difficulty, base_minutes: base, ...(started ? {} : { minutes: firstLapMinutes(base, difficulty) }) })
+          .update({ difficulty, base_minutes: base, ...(started ? {} : { minutes: firstLapMinutes(base) }) })
           .eq('id', topic.id),
       )
       return replanBundle(await fetchPlanBundle(planId))

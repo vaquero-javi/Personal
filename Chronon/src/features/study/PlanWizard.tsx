@@ -9,7 +9,7 @@ import { fromInputs, toDateInput } from '../../lib/dates'
 import { useCreateSection, useImportPdf } from '../notes/api'
 import type { NoteDrawing } from '../notes/drawing'
 import { KIND_COLORS, useCreatePlan, usePdfDocuments } from './api'
-import { DIFFICULTY_FACTOR, LAP_SPEED, buildPlan, firstLapMinutes, formatHours, type Difficulty, type PlanSettings, type PlannerTopic } from './planner'
+import { LAP_SPEED, buildPlan, firstLapMinutes, formatHours, type Difficulty, type PlanSettings, type PlannerTopic } from './planner'
 import { DifficultyPicker } from './Difficulty'
 import { ScheduleFields } from './ScheduleFields'
 
@@ -87,10 +87,10 @@ export function PlanWizard() {
   const importPdf = useImportPdf()
   const createPlan = useCreatePlan()
 
-  /** Estimación a dificultad media. */
+  /** Horas estimadas del tema. */
   const baseOf = (r: Row) => r.manualMinutes ?? (r.pages ? round5(r.pages * minutesPerPage) : 60)
-  /** Lo que dura la 1ª vuelta, con su dificultad. */
-  const minutesOf = (r: Row) => firstLapMinutes(baseOf(r), r.difficulty)
+  /** Lo que dura la 1ª vuelta: lo estimado, sea cual sea la dificultad. */
+  const minutesOf = (r: Row) => firstLapMinutes(baseOf(r))
   const patch = (key: string, p: Partial<Row>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...p } : r)))
 
   // El tema elegido va primero; luego los siguientes de la lista y, al final, los que estaban antes.
@@ -380,8 +380,7 @@ export function PlanWizard() {
                             min={0.25}
                             step={0.25}
                             value={Math.round((minutesOf(r) / 60) * 100) / 100}
-                            // Las horas que se ven ya llevan la dificultad; se guarda la estimación a dificultad media.
-                            onChange={(e) => patch(r.key, { manualMinutes: round5((Number(e.target.value) * 60) / DIFFICULTY_FACTOR[r.difficulty ?? 'medium']), hoursEdited: true })}
+                            onChange={(e) => patch(r.key, { manualMinutes: round5(Number(e.target.value) * 60), hoursEdited: true })}
                             className="h-8 w-16 rounded-lg border border-ink-200 bg-surface text-center font-mono text-sm tabular-nums outline-none focus:border-accent-400"
                             aria-label={`Horas para ${r.title}`}
                           />
@@ -409,7 +408,7 @@ export function PlanWizard() {
                   ))}
                 </ol>
                 <p className="text-xs leading-relaxed text-ink-500">
-                  Las horas son lo que te cuesta estudiar cada tema la primera vez. Marca cada tema como fácil, medio o difícil: los difíciles llevan más tiempo en cada vuelta y en los repasos, y los fáciles menos. También lo puedes marcar al terminar cada tema.
+                  Las horas son lo que te cuesta estudiar cada tema la primera vez. Marca cada tema como fácil, medio o difícil para darle más o menos importancia: los difíciles se repasan más veces, entran en todas las vueltas y van primero; los fáciles se repasan menos y se estudian una vuelta sí y otra no. Las horas de cada tema no cambian. También lo puedes marcar al terminar cada tema.
                 </p>
               </>
             )}
@@ -570,7 +569,7 @@ function PlanPreview({
         ) : (
           <>Con este tiempo das una vuelta al temario.</>
         )}{' '}
-        Además, <strong>{reviews.length} repasos</strong> a 1, 3, 7, 15 y 30 días de aprender cada tema.
+        Además, <strong>{reviews.length} repasos</strong> a 1, 3, 7, 15 y 30 días de aprender cada tema (más en los difíciles, menos en los fáciles).
       </p>
       {result.finalDays > 0 && (
         <p className="text-sm text-ink-600">

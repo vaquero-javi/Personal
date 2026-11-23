@@ -22,10 +22,10 @@ import {
 import {
   DIFFICULTY_COLOR,
   DIFFICULTY_LABEL,
-  REVIEW_INTERVALS,
   formatHours,
   lapLabel,
   lapState,
+  reviewIntervals,
   type Difficulty,
   type PlanSettings,
   type PlannerTopic,
@@ -325,7 +325,7 @@ function RateTopics({ bundle, topics }: { bundle: PlanBundle; topics: StudyTopic
   const setDifficulty = useSetDifficulty(bundle.plan.id)
   return (
     <Card title="¿Qué tal te han ido estos temas?">
-      <p className="mb-3 text-sm text-ink-500">Los has terminado. Márcalos y el plan les dará más o menos tiempo en las próximas vueltas y repasos.</p>
+      <p className="mb-3 text-sm text-ink-500">Los has terminado. Márcalos y el plan repasará más los que te cuestan y menos los que llevas bien.</p>
       <ul className="space-y-2">
         {topics.map((t) => (
           <li key={t.id} className="flex flex-wrap items-center justify-between gap-2">
@@ -356,7 +356,7 @@ function TopicsTab({ bundle, progress }: { bundle: PlanBundle; progress: Planner
   return (
     <Card title={<span className="flex items-center gap-2"><Icon name="traffic" size={15} /> Semáforo de retención</span>}>
       <p className="mb-3 text-sm text-ink-500">
-        Marca cada tema según lo llevas. Los difíciles (rojo) reciben más tiempo en cada vuelta y en los repasos, y más preguntas en los simulacros; los fáciles (verde), menos.
+        Marca cada tema según lo llevas para darle más o menos importancia. Los difíciles (rojo) se repasan más veces y más seguido, entran en todas las vueltas y van primero, y tienen más preguntas en los simulacros. Los fáciles (verde) se repasan menos y se estudian una vuelta sí y otra no. Las horas de cada tema no cambian.
       </p>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {filters.map((f) => (
@@ -375,7 +375,7 @@ function TopicsTab({ bundle, progress }: { bundle: PlanBundle; progress: Planner
             const state = lapState(p)
             const status =
               p.remainingMinutes === 0
-                ? `Aprendido · repasos ${p.reviewsDone}/${REVIEW_INTERVALS.length}` +
+                ? `Aprendido · repasos ${p.reviewsDone}/${reviewIntervals(t.difficulty).length}` +
                   (state.lap > 1 && state.progress > 0 ? ` · ${lapLabel(state.lap)} al ${Math.round(state.progress * 100)} %` : state.lap > 2 ? ` · ${state.lap - 1} vueltas hechas` : '')
                 : p.remainingMinutes < p.totalMinutes
                   ? `En curso · quedan ${formatHours(p.remainingMinutes)}`

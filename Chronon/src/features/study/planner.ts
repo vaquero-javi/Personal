@@ -4,25 +4,38 @@
  * Cada día con horas disponibles:
  *   1. Primero los repasos que tocan (como mucho la mitad del día mientras quede temario).
  *   2. Con lo que queda, se avanza el tema en curso; al terminarlo se empieza el siguiente.
- * Al terminar un tema por primera vez se programan sus repasos a 1, 3, 7, 15 y 30 días. Si un repaso
+ * Al terminar un tema por primera vez se programan sus repasos (a 1, 3, 7, 15 y 30 días si es de dificultad
+ * media; más y más seguidos si es difícil, menos si es fácil). Si un repaso
  * no cabe, pasa al día siguiente y los siguientes se cuentan desde el día en que se hizo de verdad.
  * Al terminar el temario se vuelve a empezar desde el primer tema (2ª vuelta, 3ª vuelta…), cada vuelta
  * más rápida que la anterior, hasta llegar a los días de repaso final o al examen.
- * La dificultad de cada tema (fácil, media, difícil) ajusta el tiempo de sus vueltas y repasos.
+ * La dificultad de cada tema (fácil, media, difícil) no cambia sus horas, sino la atención que recibe:
+ * los difíciles se repasan más veces, entran en todas las vueltas y van primero; los fáciles se repasan
+ * menos y, a partir de la 2ª vuelta, se estudian una vuelta sí y otra no.
  * Los últimos días antes del examen se reservan para un repaso general de todo y simulacros.
  */
 import { addDays, differenceInCalendarDays, format } from 'date-fns'
 import { fromInputs } from '../../lib/dates'
 
-/** Días tras aprender un tema en los que toca repasarlo. */
+/** Días tras aprender un tema (de dificultad media) en los que toca repasarlo. */
 export const REVIEW_INTERVALS = [1, 3, 7, 15, 30]
+
+/** Repasos según la dificultad: los difíciles, más y más seguidos; los fáciles, menos. */
+const REVIEWS_BY_DIFFICULTY: Record<Difficulty, number[]> = {
+  easy: [1, 7, 30],
+  medium: REVIEW_INTERVALS,
+  hard: [1, 2, 4, 7, 12, 20, 30],
+}
+
+export const reviewIntervals = (d: Difficulty | null) => REVIEWS_BY_DIFFICULTY[d ?? 'medium']
 
 export const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
-/** Cuánto tiempo se le dedica a un tema según lo que cuesta, respecto a uno de dificultad media. */
-export const DIFFICULTY_FACTOR: Record<Difficulty, number> = { easy: 0.75, medium: 1, hard: 1.35 }
+/** Orden dentro de cada vuelta (a partir de la 2ª) y entre repasos del mismo día: primero lo que peor llevas. */
+const PRIORITY: Record<Difficulty, number> = { hard: 0, medium: 1, easy: 2 }
+const priorityOf = (d: Difficulty | null) => PRIORITY[d ?? 'medium']
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = { easy: 'Fácil', medium: 'Media', hard: 'Difícil' }
 
@@ -108,16 +121,19 @@ export const weekdayIndex = (d: Date) => (d.getDay() + 6) % 7
 const round5 = (m: number) => Math.max(5, Math.round(m / 5) * 5)
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 const dayKey = (d: Date) => format(d, 'yyyy-MM-dd')
-const factorOf = (d: Difficulty | null) => DIFFICULTY_FACTOR[d ?? 'medium']
 
-/** Lo que dura la 1ª vuelta de un tema con esa estimación y dificultad. */
-export const firstLapMinutes = (baseMinutes: number, difficulty: Difficulty | null) => Math.max(15, round5(baseMinutes * factorOf(difficulty)))
+/** Lo que dura la 1ª vuelta de un tema: lo que se ha estimado, sea cual sea su dificultad. */
+export const firstLapMinutes = (baseMinutes: number) => Math.max(15, round5(baseMinutes))
 
-/** Lo que dura una vuelta de un tema. La 1ª queda fija al empezarla; las demás siguen a la dificultad. */
+/** Los temas fáciles se saltan las vueltas pares (2ª, 4ª…) para dejar más sitio a los que cuestan. */
+const skipsLap = (d: Difficulty | null, lap: number) => d === 'easy' && lap > 1 && lap % 2 === 0
+
+/** Lo que dura una vuelta de un tema (0 si se la salta por ser fácil). La 1ª queda fija al empezarla. */
 export function lapMinutes(t: Pick<PlannerTopic, 'totalMinutes' | 'baseMinutes' | 'difficulty'>, lap: number) {
   if (lap <= 1) return t.totalMinutes
+  if (skipsLap(t.difficulty, lap)) return 0
   const speed = LAP_SPEED[Math.min(lap, LAP_SPEED.length) - 1]
-  return Math.max(15, round5(t.baseMinutes * factorOf(t.difficulty) * speed))
+  return Math.max(15, round5(t.baseMinutes * speed))
 }
 
 /** Vuelta en la que va el tema (1 = primera vez), lo que le queda para terminarla y lo que lleva hecho de ella. */
@@ -127,8 +143,9 @@ export function lapState(t: PlannerTopic) {
   for (;;) {
     const length = lapMinutes(t, lap)
     const done = t.lapDone[lap - 1] ?? 0
-    // Una vuelta está cerrada si se ha hecho (salvo unos minutos sueltos) o si ya se ha empezado otra después.
-    const closed = done > length - 10 || t.lapDone.slice(lap).some((m) => m > 0)
+    // Una vuelta está cerrada si se ha hecho (salvo unos minutos sueltos), si se la salta
+    // o si ya se ha empezado otra después.
+    const closed = length === 0 || done > length - 10 || t.lapDone.slice(lap).some((m) => m > 0)
     if (!closed) return { lap, remaining: length - done, length, progress: done / length }
     lap++
   }
@@ -137,13 +154,13 @@ export function lapState(t: PlannerTopic) {
 /** «2ª vuelta» */
 export const lapLabel = (lap: number) => `${lap}ª vuelta`
 
-export function reviewMinutes(t: Pick<PlannerTopic, 'totalMinutes' | 'difficulty'>, n: number) {
-  // El primer repaso es el más largo; luego basta con refrescar. Los temas difíciles se repasan más.
+export function reviewMinutes(t: Pick<PlannerTopic, 'totalMinutes'>, n: number) {
+  // El primer repaso es el más largo; luego basta con refrescar.
   const share = n === 0 ? 0.2 : n === 1 ? 0.15 : 0.1
-  return round5(clamp(t.totalMinutes * share * factorOf(t.difficulty), 15, 90))
+  return round5(clamp(t.totalMinutes * share, 15, 90))
 }
 
-const finalReviewMinutes = (t: PlannerTopic) => round5(clamp(t.totalMinutes * 0.15 * factorOf(t.difficulty), 20, 90))
+const finalReviewMinutes = (t: PlannerTopic) => round5(clamp(t.totalMinutes * 0.15, 20, 90))
 
 export const formatHours = (minutes: number) => {
   const h = Math.floor(minutes / 60)
@@ -218,7 +235,9 @@ function simulate(input: PlannerTopic[], days: { date: Date; key: string; minute
   const sessions: PlannedSession[] = []
   const studiable = topics.filter((t) => t.totalMinutes > 0)
   let lap = Math.min(...studiable.map((t) => t.lap), 1)
-  const lapQueue = () => studiable.filter((t) => t.lap === lap)
+  // La 1ª vuelta sigue el orden elegido; en las siguientes van primero los difíciles (sort es estable).
+  const lapQueue = () =>
+    studiable.filter((t) => t.lap === lap).sort((a, b) => (lap > 1 ? priorityOf(a.difficulty) - priorityOf(b.difficulty) : 0))
   let queue = lapQueue()
   const reviews: Review[] = []
   let finishStudyDay: string | null = null
@@ -226,9 +245,10 @@ function simulate(input: PlannerTopic[], days: { date: Date; key: string; minute
   let lastLap = Math.max(0, ...studiable.map((t) => (t.lapRemaining < t.lapLength ? t.lap : t.lap - 1)))
 
   for (const t of topics) {
-    if (t.remainingMinutes > 0 || !t.learnedOn || t.reviewsDone >= REVIEW_INTERVALS.length) continue
+    const intervals = reviewIntervals(t.difficulty)
+    if (t.remainingMinutes > 0 || !t.learnedOn || t.reviewsDone >= intervals.length) continue
     const learnedAt = differenceInCalendarDays(fromInputs(t.learnedOn), start)
-    reviews.push({ topic: t, n: t.reviewsDone, due: learnedAt + REVIEW_INTERVALS[t.reviewsDone], learnedAt })
+    reviews.push({ topic: t, n: t.reviewsDone, due: learnedAt + intervals[t.reviewsDone], learnedAt })
   }
 
   for (const day of mainDays) {
@@ -237,7 +257,9 @@ function simulate(input: PlannerTopic[], days: { date: Date; key: string; minute
     const reviewBudget = queue.length || lap > 1 ? Math.round(day.minutes / 2) : day.minutes
     let reviewed = 0
 
-    const due = reviews.filter((r) => r.due <= idx).sort((a, b) => a.due - b.due || b.n - a.n)
+    const due = reviews
+      .filter((r) => r.due <= idx)
+      .sort((a, b) => a.due - b.due || priorityOf(a.topic.difficulty) - priorityOf(b.topic.difficulty) || b.n - a.n)
     for (const r of due) {
       const minutes = reviewMinutes(r.topic, r.n)
       // Siempre cabe al menos un repaso al día aunque pase del presupuesto, para no acumularlos sin fin.
@@ -246,8 +268,8 @@ function simulate(input: PlannerTopic[], days: { date: Date; key: string; minute
       reviewed += minutes
       free -= minutes
       reviews.splice(reviews.indexOf(r), 1)
-      if (r.n + 1 < REVIEW_INTERVALS.length)
-        reviews.push({ ...r, n: r.n + 1, due: Math.max(r.learnedAt + REVIEW_INTERVALS[r.n + 1], idx + 1) })
+      const intervals = reviewIntervals(r.topic.difficulty)
+      if (r.n + 1 < intervals.length) reviews.push({ ...r, n: r.n + 1, due: Math.max(r.learnedAt + intervals[r.n + 1], idx + 1) })
     }
 
     while (free >= 15 && studiable.length) {
@@ -277,9 +299,10 @@ function simulate(input: PlannerTopic[], days: { date: Date; key: string; minute
           t.remainingMinutes = 0
           t.learnedOn = day.key
           finishStudyDay = day.key
-          reviews.push({ topic: t, n: 0, due: idx + REVIEW_INTERVALS[0], learnedAt: idx })
+          reviews.push({ topic: t, n: 0, due: idx + reviewIntervals(t.difficulty)[0], learnedAt: idx })
         }
         t.lap++
+        while (lapMinutes(t, t.lap) === 0) t.lap++
         t.lapLength = lapMinutes(t, t.lap)
         t.lapRemaining = t.lapLength
       }
