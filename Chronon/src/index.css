@@ -312,6 +312,57 @@ button:not(:disabled) {
   .fc .fc-daygrid-day-number {
     @apply m-0.5 size-6 text-[11px];
   }
+  .fc .fc-toolbar-chunk {
+    @apply flex items-center gap-1;
+  }
+  /* Vista de día: los títulos largos (sesiones de estudio) se parten en varias líneas. */
+  .fc .fc-timegrid-event .fc-event-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Mes en el móvil: cada día con su número y puntos de color; lo de ese día se ve debajo. */
+.fc-compact .fc .fc-daygrid-day-top {
+  @apply justify-center;
+}
+.fc-compact .fc .fc-daygrid-day-number,
+.fc-compact .fc .fc-day-today .fc-daygrid-day-number {
+  @apply m-0 h-auto w-full bg-transparent py-1! font-normal;
+}
+.fc-compact .fc .fc-daygrid-day-events {
+  @apply m-0 min-h-0;
+}
+.fc-compact .fc .fc-daygrid-body-natural .fc-daygrid-day-events {
+  @apply mb-0;
+}
+.fc-compact .fc-compact-cell {
+  @apply flex flex-col items-center gap-1;
+}
+.fc-compact .fc-compact-number {
+  @apply grid size-7 place-items-center rounded-full font-mono text-xs text-ink-700;
+  font-variant-numeric: tabular-nums;
+}
+.fc-compact .fc-day-other .fc-compact-number {
+  @apply text-ink-400;
+}
+.fc-compact .fc-day-today .fc-compact-number {
+  @apply bg-accent-500 font-semibold text-white;
+}
+.fc-compact .fc-day-picked .fc-compact-number {
+  @apply ring-2 ring-ink-900;
+}
+.fc-compact .fc-day-picked {
+  background: var(--color-ink-50);
+}
+.fc-compact .fc-compact-dots {
+  @apply flex h-1.5 items-center gap-[3px];
+}
+.fc-compact .fc-compact-dots > span {
+  @apply size-1.5 rounded-full;
+}
+.fc-compact .fc-compact-dots > b {
+  @apply text-[9px] font-semibold leading-none text-ink-500;
 }
 
 /* ---------- Editor de apuntes (TipTap) ---------- */
