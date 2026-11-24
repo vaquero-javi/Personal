@@ -143,8 +143,11 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
 
   const googlePassData = (card: CardRow): GooglePassData => ({
     cardId: card.cardId,
-    totpSeedHex: box.open(card.secretEnc).toString('hex'),
-    qrPattern: googleQrPattern(card.cardId),
+    // La tarjeta estándar (`apple`) lleva en Google el mismo QR fijo que en Apple Wallet.
+    qr:
+      card.wallet === 'apple'
+        ? { kind: 'static', message: appleQrMessage(card.cardId, box.open(card.secretEnc)) }
+        : { kind: 'totp', seedHex: box.open(card.secretEnc).toString('hex'), pattern: googleQrPattern(card.cardId) },
     holderName: card.holderName,
     roleName: card.roleName,
     orgName: card.orgName,
@@ -273,7 +276,7 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
     async googleSaveUrl(ctx: TenantContext, cardId: string): Promise<string> {
       const google = requireGoogle();
       const card = await withTenant(sql, ctx, (tx) => loadCard(tx, z.uuid().parse(cardId)));
-      if (!card || card.wallet !== 'google') throw new DomainError('NOT_FOUND', 'Tarjeta no encontrada');
+      if (!card) throw new DomainError('NOT_FOUND', 'Tarjeta no encontrada');
       if (card.status !== 'active') throw new DomainError('INVALID_STATE', 'La tarjeta está revocada');
       await google.client.upsertObject(googlePassData(card));
       return saveUrl(google.config, card.cardId, [google.config.publicUrl]);
@@ -513,10 +516,11 @@ export function createStaffCardService(sql: Sql, deps: StaffCardDeps) {
             const errors = results.filter((r) => !r.ok && !r.gone);
             if (errors.length > 0) throw new Error(`APNs: ${errors.map((e) => `${e.status} ${e.reason ?? ''}`).join(', ')}`);
           }
-          if (item.wallet === 'google' && deps.google) {
+          if (deps.google) {
             // Sin sesión de usuario: los datos del pase se leen con una sesión de la propia empresa.
+            // Una tarjeta estándar solo está en Google si su titular la añadió: no se crea aquí.
             const card = await googleCardForWorker(sql, item.card_id);
-            if (card) await deps.google.client.upsertObject(googlePassData(card));
+            if (card) await deps.google.client.upsertObject(googlePassData(card), { createIfMissing: card.wallet === 'google' });
           }
           await withoutUser(sql, (tx) => tx`select app.wallet_update_done(${item.update_id}, null)`);
         } catch (error) {

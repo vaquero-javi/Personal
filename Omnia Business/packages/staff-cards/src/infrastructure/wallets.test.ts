@@ -111,7 +111,7 @@ describe('Google Wallet', () => {
   it('objeto con QR rotativo TOTP y capturas bloqueadas', () => {
     const config: GoogleWalletConfig = { issuerId: '3388000000012345678', serviceAccountEmail: 'sa@x.iam.gserviceaccount.com', privateKeyPem: '', publicUrl: 'https://omnia.example' };
     const object = buildGenericObject(config, {
-      cardId: 'abc', totpSeedHex: 'ff'.repeat(20), qrPattern: googleQrPattern('abc'),
+      cardId: 'abc', qr: { kind: 'totp', seedHex: 'ff'.repeat(20), pattern: googleQrPattern('abc') },
       holderName: 'Marta Ruiz', roleName: 'Camarero', orgName: 'Bar La Plaza', discountPct: '20.00', revoked: false,
     });
     expect(object).toMatchObject({
@@ -124,9 +124,21 @@ describe('Google Wallet', () => {
         totpDetails: { periodMillis: '30000', algorithm: 'TOTP_SHA1', parameters: [{ key: 'ff'.repeat(20), valueLength: 8 }] },
       },
     });
-    const revoked = buildGenericObject(config, { ...{ cardId: 'abc', totpSeedHex: 'ff', qrPattern: '', holderName: '', roleName: '', orgName: '', discountPct: null }, revoked: true });
+    const revoked = buildGenericObject(config, { ...{ cardId: 'abc', qr: { kind: 'totp', seedHex: 'ff', pattern: '' }, holderName: '', roleName: '', orgName: '', discountPct: null }, revoked: true });
     expect(revoked.state).toBe('INACTIVE');
     expect('rotatingBarcode' in revoked).toBe(false);
+  });
+
+  it('la tarjeta estándar lleva en Google el mismo QR fijo que en Apple', () => {
+    const config: GoogleWalletConfig = { issuerId: '3388', serviceAccountEmail: 'sa@x.iam.gserviceaccount.com', privateKeyPem: '', publicUrl: 'https://omnia.example' };
+    const message = 'OMN1:7c9e6679-7425-40de-944b-e07fc1f90ae7:' + 'b'.repeat(43);
+    const base = { cardId: 'abc', qr: { kind: 'static' as const, message }, holderName: 'Marta Ruiz', roleName: 'Camarero', orgName: 'Bar La Plaza', discountPct: '20.00' };
+    const object = buildGenericObject(config, { ...base, revoked: false });
+    expect(object).toMatchObject({ state: 'ACTIVE', barcode: { type: 'QR_CODE', value: message } });
+    expect('rotatingBarcode' in object).toBe(false);
+    const revoked = buildGenericObject(config, { ...base, revoked: true });
+    expect(revoked.state).toBe('INACTIVE');
+    expect('barcode' in revoked).toBe(false);
   });
 
   it('el enlace de guardado es un JWT RS256 que solo referencia el objeto (sin la semilla)', async () => {

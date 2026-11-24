@@ -3,10 +3,11 @@ import { Table, Td, Th, Tr } from '@/components/ui/table';
 import { ActionForm, CheckboxField, TextField } from '@/components/ui/form';
 import { SubmitButton } from '@/components/ui/button';
 import { StaffCard } from '@/features/staff-cards/staff-card';
+import { WalletButtons } from '@/features/staff-cards/wallet-buttons';
 import { formatDate } from '@/lib/format';
 import { container } from '@/server/container';
 import { requireOrg } from '@/server/session';
-import { issueStaffCard, myCardQr, revokeStaffCard, saveStaffPolicy } from '../actions';
+import { googleWalletLink, issueStaffCard, myCardQr, revokeStaffCard, saveStaffPolicy } from '../actions';
 
 export const metadata = { title: 'Tarjetas de empleado · Ajustes · Omnia' };
 
@@ -27,6 +28,7 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
     manage ? service.team(ctx) : Promise.resolve([]),
     manage ? service.roles(ctx) : Promise.resolve([]),
   ]);
+  const wallets = service.walletsAvailable();
   const general = policies.find((p) => p.roleId === null);
   const byRole = new Map(policies.filter((p) => p.roleId).map((p) => [p.roleId!, p]));
 
@@ -34,7 +36,7 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
     <>
       <PageHeader
         title="Tarjetas de empleado"
-        description="Un QR personal y permanente para el descuento de empleado en el TPV. El empleado la enseña desde esta pantalla en su móvil."
+        description="Un QR personal y permanente para el descuento de empleado en el TPV. El empleado la enseña desde esta pantalla en su móvil o la guarda en Apple Wallet o Google Wallet."
       />
       <Ruled cols="xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Cell title="Tu tarjeta" className="xl:col-span-2">
@@ -47,13 +49,19 @@ export default async function StaffCardsPage({ params }: { params: Promise<{ org
               {mine.map((card) => (
                 <div key={card.id} className="flex flex-col gap-3">
                   <StaffCard card={card} loadQr={myCardQr.bind(null, org, card.id)} />
+                  <WalletButtons
+                    appleHref={`/o/${org}/ajustes/tarjetas/${card.id}/apple`}
+                    apple={wallets.apple && !isLegacy(card.wallet)}
+                    google={wallets.google}
+                    loadGoogleUrl={googleWalletLink.bind(null, org, card.id)}
+                  />
                   {isLegacy(card.wallet) ? (
                     <p className="text-xs font-medium text-warning">
                       Esta tarjeta es de una prueba anterior (su QR cambia cada 30 segundos). Pide a un responsable que te emita la definitiva.
                     </p>
                   ) : (
                     <p className="text-xs text-ink-3">
-                      Este QR es tuyo y no cambia: sirve para todos tus descuentos. Toca la tarjeta para verla a pantalla completa y enséñala en el TPV; te pedirán tu PIN de Omnia. No la compartas: cada uso queda registrado con tu nombre.
+                      Este QR es tuyo y no cambia: sirve para todos tus descuentos. Toca la tarjeta para verla a pantalla completa, o guárdala en la Wallet de tu móvil, y enséñala en el TPV; te pedirán tu PIN de Omnia. No la compartas: cada uso queda registrado con tu nombre.
                     </p>
                   )}
                 </div>

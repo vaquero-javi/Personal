@@ -1,7 +1,8 @@
 import { SignJWT, importPKCS8 } from 'jose';
 
 /**
- * Google Wallet: pase genérico (GenericObject) con QR rotativo TOTP.
+ * Google Wallet: pase genérico (GenericObject). La tarjeta estándar lleva el
+ * mismo QR fijo que Apple Wallet; las antiguas, un QR rotativo TOTP.
  *
  * Requisitos (Google Pay & Wallet Console, gratis):
  *   GOOGLE_WALLET_ISSUER_ID   id del emisor
@@ -9,9 +10,9 @@ import { SignJWT, importPKCS8 } from 'jose';
  *   GOOGLE_WALLET_SA_KEY      su clave privada (PEM PKCS#8)
  *   WALLET_PUBLIC_URL         https://… (para el logo del pase)
  *
- * La semilla TOTP va en el objeto, que se crea por API desde el servidor. El
- * enlace «Añadir a Google Wallet» solo lleva el id del objeto: la semilla no
- * viaja nunca en una URL.
+ * El QR (o la semilla TOTP) va en el objeto, que se crea por API desde el
+ * servidor. El enlace «Añadir a Google Wallet» solo lleva el id del objeto: el
+ * secreto no viaja nunca en una URL.
  */
 
 export interface GoogleWalletConfig {
@@ -23,8 +24,8 @@ export interface GoogleWalletConfig {
 
 export interface GooglePassData {
   cardId: string;
-  totpSeedHex: string;
-  qrPattern: string;            // OMN1:<id>:{totp_value_0}
+  /** Fijo (OMN1:<id>:<secreto>) o rotativo (patrón OMN1:<id>:{totp_value_0} + semilla). */
+  qr: { kind: 'static'; message: string } | { kind: 'totp'; seedHex: string; pattern: string };
   holderName: string;
   roleName: string;
   orgName: string;
@@ -64,18 +65,20 @@ export function buildGenericObject(config: GoogleWalletConfig, data: GooglePassD
     passConstraints: { screenshotEligibility: 'INELIGIBLE' },
     ...(data.revoked
       ? {}
-      : {
-          rotatingBarcode: {
-            type: 'QR_CODE',
-            valuePattern: data.qrPattern,
-            totpDetails: {
-              periodMillis: '30000',
-              algorithm: 'TOTP_SHA1',
-              parameters: [{ key: data.totpSeedHex, valueLength: 8 }],
+      : data.qr.kind === 'static'
+        ? { barcode: { type: 'QR_CODE', value: data.qr.message, alternateText: data.holderName } }
+        : {
+            rotatingBarcode: {
+              type: 'QR_CODE',
+              valuePattern: data.qr.pattern,
+              totpDetails: {
+                periodMillis: '30000',
+                algorithm: 'TOTP_SHA1',
+                parameters: [{ key: data.qr.seedHex, valueLength: 8 }],
+              },
+              alternateText: data.holderName,
             },
-            alternateText: data.holderName,
-          },
-        }),
+          }),
   };
 }
 
@@ -124,8 +127,11 @@ async function accessToken(config: GoogleWalletConfig, fetchImpl: typeof fetch):
 }
 
 export interface GoogleWalletClient {
-  /** Crea o sustituye el objeto (y la clase, la primera vez). */
-  upsertObject(data: GooglePassData): Promise<void>;
+  /**
+   * Crea o sustituye el objeto (y la clase, la primera vez). Con
+   * `createIfMissing: false` solo actualiza uno que ya exista y devuelve false si no.
+   */
+  upsertObject(data: GooglePassData, options?: { createIfMissing?: boolean }): Promise<boolean>;
 }
 
 export function createGoogleWalletClient(config: GoogleWalletConfig, fetchImpl: typeof fetch = fetch): GoogleWalletClient {
@@ -150,16 +156,18 @@ export function createGoogleWalletClient(config: GoogleWalletConfig, fetchImpl: 
     classReady = true;
   };
   return {
-    async upsertObject(data) {
+    async upsertObject(data, { createIfMissing = true } = {}) {
       await ensureClass();
       const object = buildGenericObject(config, data);
       const updated = await call('PUT', `/genericObject/${object.id}`, object);
       if (updated.status === 404) {
+        if (!createIfMissing) return false;
         const created = await call('POST', '/genericObject', object);
         if (!created.ok) throw new Error(`Google Wallet (alta) ${created.status}: ${await created.text()}`);
       } else if (!updated.ok) {
         throw new Error(`Google Wallet (actualización) ${updated.status}: ${await updated.text()}`);
       }
+      return true;
     },
   };
 }

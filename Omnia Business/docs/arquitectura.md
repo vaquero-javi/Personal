@@ -392,7 +392,7 @@ El cliente nunca manda el porcentaje: lo fija `staff_discount_policies` (por rol
 
 ### Decisión de producto (noviembre de 2026)
 
-Las tarjetas se emiten como **estándar: QR fijo y definitivo** (internamente `wallet = 'apple'`), una por persona; reemitir revoca la anterior. El empleado la enseña desde *Ajustes › Tarjetas de empleado* en el móvil (tarjeta de cristal; al tocarla, a pantalla completa). Como una foto del QR también valdría, la política pide por defecto el **PIN del titular** en el TPV. No se ofrece guardarla en Apple/Google Wallet; la generación de pases oficiales (.pkpass, Google Wallet con QR dinámico, web service de Apple, cola de avisos) sigue implementada y probada en el servidor, sin uso en la interfaz.
+Las tarjetas se emiten como **estándar: QR fijo y definitivo** (internamente `wallet = 'apple'`), una por persona; reemitir revoca la anterior. El empleado la enseña desde *Ajustes › Tarjetas de empleado* en el móvil (tarjeta de cristal; al tocarla, a pantalla completa). Como una foto del QR también valdría, la política pide por defecto el **PIN del titular** en el TPV. Desde «Tu tarjeta» se puede guardar en **Apple Wallet** (.pkpass, en iPhone) y en **Google Wallet** (en Android); en el ordenador salen los dos botones. Los dos pases llevan el mismo QR fijo; cada botón solo aparece si su wallet está configurada (variables de abajo). Al revocar o cambiar la política, la cola actualiza el pase en Apple (push) y, si el titular lo había añadido, en Google (PUT del objeto; nunca lo crea). Las tarjetas antiguas de QR dinámico (`google`) solo se pueden añadir a Google Wallet.
 
 ### Fichar con la tarjeta (migración `0025_card_clock`)
 

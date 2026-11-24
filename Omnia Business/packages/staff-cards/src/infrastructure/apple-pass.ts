@@ -58,8 +58,10 @@ export function buildPassJson(config: Pick<AppleSignerConfig, 'passTypeIdentifie
     labelColor: 'rgb(255, 214, 102)',
     backgroundColor: 'rgb(28, 28, 30)',
     // Actualizaciones: el móvil se registra aquí y recibe los cambios por push.
-    webServiceURL: config.webServiceUrl,
-    authenticationToken: data.authenticationToken,
+    // Wallet rechaza el pase si no es https: en local (http://localhost) se omite y no se actualiza solo.
+    ...(config.webServiceUrl.startsWith('https://')
+      ? { webServiceURL: config.webServiceUrl, authenticationToken: data.authenticationToken }
+      : {}),
     // No se puede reenviar por AirDrop ni «Compartir» (iOS 16+). No evita capturas.
     sharingProhibited: true,
     voided: data.revoked,
@@ -128,13 +130,15 @@ export function buildPkpass(config: AppleSignerConfig, data: StaffPassData, imag
 export function appleConfigFromEnv(env = process.env): AppleSignerConfig | null {
   const { APPLE_PASS_TYPE_ID, APPLE_TEAM_ID, APPLE_PASS_CERT_PEM, APPLE_PASS_KEY_PEM, APPLE_WWDR_PEM, WALLET_PUBLIC_URL } = env;
   if (!APPLE_PASS_TYPE_ID || !APPLE_TEAM_ID || !APPLE_PASS_CERT_PEM || !APPLE_PASS_KEY_PEM || !APPLE_WWDR_PEM || !WALLET_PUBLIC_URL) return null;
+  // Los PEM pueden venir en una sola línea con «\n» (como en .env o en Vercel).
+  const pem = (value: string) => value.replace(/\\n/g, '\n');
   return {
     passTypeIdentifier: APPLE_PASS_TYPE_ID,
     teamIdentifier: APPLE_TEAM_ID,
-    certificatePem: APPLE_PASS_CERT_PEM,
-    privateKeyPem: APPLE_PASS_KEY_PEM,
+    certificatePem: pem(APPLE_PASS_CERT_PEM),
+    privateKeyPem: pem(APPLE_PASS_KEY_PEM),
     privateKeyPassphrase: env.APPLE_PASS_KEY_PASSPHRASE,
-    wwdrPem: APPLE_WWDR_PEM,
+    wwdrPem: pem(APPLE_WWDR_PEM),
     webServiceUrl: `${WALLET_PUBLIC_URL.replace(/\/$/, '')}/api/wallet/apple`,
   };
 }
